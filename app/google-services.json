@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926606784545",
+    "project_id": "gamigos-d2a55",
+    "storage_bucket": "gamigos-d2a55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926606784545:android:cc569739a12bd6e4b48b60",
+        "android_client_info": {
+          "package_name": "com.example.gamigosjava"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1dYylzSLXabAecmNnuas_5MrJPJvfpTQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
