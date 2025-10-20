@@ -12,7 +12,20 @@
           "package_name": "com.example.gamigosjava"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "926606784545-db9srptmt0hig6brf7ccrlv5beun8vgp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.gamigosjava",
+            "certificate_hash": "7031405e4c1788a6eb17ea188895cfb4884b66df"
+          }
+        },
+        {
+          "client_id": "926606784545-2bg7pcteaqbg7nn9rn0enpae0v56mnta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC1dYylzSLXabAecmNnuas_5MrJPJvfpTQ"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "926606784545-2bg7pcteaqbg7nn9rn0enpae0v56mnta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
