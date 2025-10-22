@@ -1,5 +1,6 @@
 package com.example.gamigosjava;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
@@ -13,6 +14,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 // Firebase
+import com.google.firebase.BuildConfig;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -27,7 +29,6 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 
-
 // Google Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "SignIn";
 
+    private static final boolean debugging = true;
+
     private FirebaseAuth mAuth;
     private CredentialManager credentialManager;
     private GetCredentialRequest credentialRequest;
@@ -47,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Force sign-out so user must log in every time while debugging
+        if (debugging) {
+            FirebaseAuth.getInstance().signOut();
+        }
 
         // Initiate Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -64,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         credentialManager = CredentialManager.create(this);
 
         // Link to sign-in button
-        View signInBtn = findViewById(R.id.sign_in_button);
+        View signInBtn = findViewById(R.id.button_signIn);
         if (signInBtn != null) {
             signInBtn.setOnClickListener(v -> {
                 Toast.makeText(this, "Sign-in button CLICKED", Toast.LENGTH_SHORT).show(); // debug
@@ -144,10 +152,17 @@ public class MainActivity extends AppCompatActivity {
     private void updateUI(FirebaseUser user) {
         if (user != null) {
             Log.d(TAG, "Signed in: " + user.getUid());
-            // TODO navigate
+            // Navigate to the landing screen on successful sign-in
+            Intent intent = new Intent(this, LandingActivity.class);
+            startActivity(intent);
+
+            // Don't allow users to go back to the sign-in screen after a successful sign-in
+            finish();
         } else {
             Log.d(TAG, "Signed out / sign-in failed");
-            // TODO show sign-in UI
+            // Show error pop-up
+            // TODO: Modify this in the future to allow for an error-text, instead of a Toast message
+            Toast.makeText(this, "Sign-in failed. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -155,6 +170,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        updateUI(mAuth.getCurrentUser());
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            updateUI(user);
+        }
     }
 }
