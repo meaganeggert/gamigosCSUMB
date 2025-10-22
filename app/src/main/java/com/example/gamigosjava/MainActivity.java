@@ -52,9 +52,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Force sign-out so user must log in every time while debugging
-        if (debugging) {
-            FirebaseAuth.getInstance().signOut();
-        }
+//        if (debugging) {
+//            FirebaseAuth.getInstance().signOut();
+//        }
 
         // Initiate Firebase
         mAuth = FirebaseAuth.getInstance();
