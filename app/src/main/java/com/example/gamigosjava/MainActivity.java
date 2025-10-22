@@ -72,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
         credentialManager = CredentialManager.create(this);
 
         // Link to sign-in button
-        View signInBtn = findViewById(R.id.button_signIn);
-        if (signInBtn != null) {
-            signInBtn.setOnClickListener(v -> {
+        View signInButton = findViewById(R.id.button_signIn);
+        if (signInButton != null) {
+            signInButton.setOnClickListener(v -> {
                 Toast.makeText(this, "Sign-in button CLICKED", Toast.LENGTH_SHORT).show(); // debug
                 Log.d(TAG, "Sign-in button CLICKED"); // debug
                 startGoogleSignIn();

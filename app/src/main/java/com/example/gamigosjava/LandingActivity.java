@@ -1,6 +1,9 @@
 package com.example.gamigosjava;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,12 +40,18 @@ public class LandingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_landing);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        // Link to sign-in button
+        View logoutButton = findViewById(R.id.button_logout);
+        if (logoutButton != null) {
+            logoutButton.setOnClickListener(v -> {
+                Toast.makeText(this, "Logout button CLICKED", Toast.LENGTH_SHORT).show(); // debug
+                Log.d(TAG, "Logout button CLICKED"); // debug
+            });
+        } else {
+            Log.e(TAG, "Logout button NOT FOUND"); // debug
+        }
+
     }
 }
