@@ -16,9 +16,6 @@ import com.google.firebase.auth.FirebaseAuth;
 // Credential Manager (AndroidX)
 import androidx.credentials.CredentialManager;
 
-// Google Identity
-
-
 public class LandingActivity extends AppCompatActivity {
 
     private static final String TAG = "Logout";
@@ -41,6 +38,22 @@ public class LandingActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "Logout button NOT FOUND"); // debug
         }
+
+        // Link to BGGTest Activity
+        // Debugging Purposes
+        View testButton = findViewById(R.id.button_test);
+        if (testButton != null) {
+            testButton.setOnClickListener(v -> {
+//                Toast.makeText(this, "Test button CLICKED", Toast.LENGTH_SHORT).show(); // debug
+                Log.d(TAG, "Test button CLICKED"); // debug
+                // Navigate to BGGTestActivity
+                Intent intent = new Intent(this, BGGTestActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e("TESTBUTTON", "Test button NOT FOUND"); // debug
+        }
+
     } // End onCreate
 
     private void logOut() {

@@ -13,7 +13,7 @@ public class BGGService {
     public static BGG_API getInstance() {
         if (api == null) {
             OkHttpClient client = new OkHttpClient.Builder()
-                    // you can add logging, caching, etc. here later
+                    // add logging, caching, etc. here later
                     .build();
 
             // TikXml parser configuration

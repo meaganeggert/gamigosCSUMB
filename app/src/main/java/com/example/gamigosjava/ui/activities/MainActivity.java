@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Sign-in button NOT FOUND"); // debug
         }
 
-        // (optional) Edge-to-edge / window insets
+        // Default View
         View root = findViewById(R.id.main);
         if (root != null) {
             ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {

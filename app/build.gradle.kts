@@ -69,6 +69,9 @@ dependencies {
     implementation("com.tickaroo.tikxml:retrofit-converter:0.8.13")
     annotationProcessor("com.tickaroo.tikxml:processor:0.8.13")
 
+    implementation ("com.squareup.picasso:picasso:2.8")
+
+
 
 
 }
