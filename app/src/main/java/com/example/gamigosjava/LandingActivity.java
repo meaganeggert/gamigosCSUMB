@@ -5,6 +5,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import android.content.Intent;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -48,10 +50,21 @@ public class LandingActivity extends AppCompatActivity {
             logoutButton.setOnClickListener(v -> {
                 Toast.makeText(this, "Logout button CLICKED", Toast.LENGTH_SHORT).show(); // debug
                 Log.d(TAG, "Logout button CLICKED"); // debug
+                logOut();
             });
         } else {
             Log.e(TAG, "Logout button NOT FOUND"); // debug
         }
+    } // End onCreate
 
-    }
+    private void logOut() {
+        // Sign Out of Firebase
+        FirebaseAuth.getInstance().signOut();
+
+        // Return to sign-in screen
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    } // End logOut
 }
