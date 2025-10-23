@@ -1,4 +1,4 @@
-package com.example.gamigosjava;
+package com.example.gamigosjava.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +14,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 // Firebase
-import com.google.firebase.BuildConfig;
+import com.example.gamigosjava.R;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
