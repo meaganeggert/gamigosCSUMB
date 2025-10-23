@@ -3,7 +3,7 @@ package com.example.gamigosjava.data.model;
 public class GameSummary {
     public final String id;
     public final String title;
-    public final String imageUrl;      // prefer full image; fallback to thumbnail
+    public final String imageUrl;
     public final Integer minPlayers;
     public final Integer maxPlayers;
     public final Integer playingTime;  // minutes

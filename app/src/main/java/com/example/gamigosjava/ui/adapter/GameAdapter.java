@@ -49,6 +49,16 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.ViewHolder> {
         holder.title.setText(game.title != null ? game.title : "Unknown");
         holder.players.setText("Players: " + (game.minPlayers != null ? game.minPlayers : "?"));
         holder.playtime.setText("Playtime: " + (game.playingTime != null ? game.playingTime + " min" : "?"));
+
+        if (game.imageUrl != null && !game.imageUrl.isEmpty()) {
+            Picasso.get()
+                    .load(game.imageUrl)
+                    .placeholder(R.drawable.ic_launcher_background) // optional placeholder
+                    .error(R.drawable.ic_launcher_foreground)       // fallback if broken
+                    .into(holder.image);
+        } else {
+            holder.image.setImageResource(R.drawable.ic_launcher_background);
+        }
     }
 
 
