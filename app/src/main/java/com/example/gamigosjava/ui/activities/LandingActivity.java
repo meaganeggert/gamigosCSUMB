@@ -54,6 +54,19 @@ public class LandingActivity extends AppCompatActivity {
             Log.e("TESTBUTTON", "Test button NOT FOUND"); // debug
         }
 
+        // Link to Firebase Database Test Activity
+        // Debugging Purposes
+        View firebaseTestButton = findViewById(R.id.button_firebaseTest);
+        if (firebaseTestButton != null) {
+            firebaseTestButton.setOnClickListener(v -> {
+                Log.d(TAG, "Firebase Test button CLICKED"); // debug
+                Intent intent = new Intent(this, FirebaseTestActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Firebase Test button NOT FOUND"); // debug
+        }
+
     } // End onCreate
 
     private void logOut() {
