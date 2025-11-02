@@ -54,6 +54,17 @@ public class LandingActivity extends AppCompatActivity {
             Log.e("TESTBUTTON", "Test button NOT FOUND"); // debug
         }
 
+        View createEventButton = findViewById(R.id.button_createEvent);
+        if (createEventButton != null) {
+            createEventButton.setOnClickListener(v -> {
+                Log.d(TAG, "Create Event Button Clicked");
+                Intent intent = new Intent(this, CreateEventActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e("CREATEEVENTBUTTON", "Create event button not found");
+        }
+
     } // End onCreate
 
     private void logOut() {
