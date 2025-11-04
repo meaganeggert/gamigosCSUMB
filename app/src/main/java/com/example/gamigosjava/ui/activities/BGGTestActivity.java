@@ -63,7 +63,14 @@ public class BGGTestActivity extends AppCompatActivity {
     private void fetchGamesForQuery(String query) {
         api.search(query, "boardgame").enqueue(new Callback<SearchResponse>() {
             @Override public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> resp) {
-                if (!resp.isSuccessful() || resp.body() == null || resp.body().items == null || resp.body().items.isEmpty()) {
+                if (!resp.isSuccessful()) {
+                    Toast.makeText(BGGTestActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
+                    String err = null;
+                    try { err = resp.errorBody() != null ? resp.errorBody().string() : null; } catch (Exception ignored) {}
+                    Log.e("BGG", "Search HTTP " + resp.code() + " " + err);
+                    return;
+                }
+                if (resp.body() == null || resp.body().items == null || resp.body().items.isEmpty()) {
                     Toast.makeText(BGGTestActivity.this, "No search results", Toast.LENGTH_SHORT).show();
                     return;
                 }
