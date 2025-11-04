@@ -16,6 +16,7 @@ module.exports = {
     'quote-props': ['error', 'consistent-as-needed'],
     'object-curly-spacing': ['error', 'always'],
     'indent': ['error', 2],
+    'linebreak-style': 'off',
   },
   overrides: [
     {

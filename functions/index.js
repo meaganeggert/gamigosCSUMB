@@ -15,7 +15,7 @@ async function getBggToken() {
 }
 
 exports.bggSearch = onRequest(
-  { region: 'us-central1', cors: true, enforceAppCheck: true },
+  { region: 'us-central1', cors: true },
   async (req, res) => {
     try {
       const token = await getBggToken();
@@ -43,7 +43,7 @@ exports.bggSearch = onRequest(
 );
 
 exports.bggThing = onRequest(
-  { region: 'us-central1', cors: true, enforceAppCheck: true },
+  { region: 'us-central1', cors: true },
   async (req, res) => {
     try {
       const token = await getBggToken();
