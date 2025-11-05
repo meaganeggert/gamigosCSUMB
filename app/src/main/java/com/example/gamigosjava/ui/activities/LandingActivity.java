@@ -67,6 +67,17 @@ public class LandingActivity extends AppCompatActivity {
             Log.e(TAG, "Firebase Test button NOT FOUND"); // debug
         }
 
+        View uploadImageTestButton = findViewById(R.id.button_uploadImageTest);
+        if (uploadImageTestButton != null) {
+            uploadImageTestButton.setOnClickListener(v -> {
+                Log.d(TAG, "Upload Image Test button CLICKED"); // debug
+                Intent intent = new Intent(this, ImageTestActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Upload Image Test button NOT FOUND"); // debug
+        }
+
     } // End onCreate
 
     private void logOut() {

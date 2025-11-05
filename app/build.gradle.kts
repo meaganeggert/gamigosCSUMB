@@ -74,4 +74,7 @@ dependencies {
     // Firebase Database dependency
     implementation("com.google.firebase:firebase-firestore:26.0.2")
 
+    // Firebase Storage dependency
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.2")
+
 }
