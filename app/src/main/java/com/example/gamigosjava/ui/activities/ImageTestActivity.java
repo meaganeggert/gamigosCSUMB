@@ -76,6 +76,7 @@ public class ImageTestActivity extends AppCompatActivity {
             );
         });
 
+        // Uploads the selected image
         uploadButton.setOnClickListener(v -> {
             if (pendingImageUri != null) {
                 uploadImageToFirebase(pendingImageUri);
@@ -87,6 +88,8 @@ public class ImageTestActivity extends AppCompatActivity {
 
     // This is called after selecting an image from the pick image activity.
     // It sends the image to the firebase storage.
+    // NOTICE: THIS USES THE USERS AUTHENTICATION TO UPLOAD THE IMAGE. MAY OR MAY NOT INTERFERE
+    //         WITH SHARING AN IMAGE WITH OTHER USERS. IF SO, CHECK THE FIREBASE STORAGE RULES.
     private void uploadImageToFirebase(Uri uri) {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Toast.makeText(this, "User not signed in.", Toast.LENGTH_SHORT).show();
@@ -95,12 +98,16 @@ public class ImageTestActivity extends AppCompatActivity {
 
         uploadButton.setEnabled(false);
 
+        // Associate the image with the user
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        // Get reference to firebase storage in users upload directory.
+        // Should generate a random id as the file name, can be used for database integration
         StorageReference storageRef = FirebaseStorage.getInstance()
                 .getReference()
                 .child("user_uploads/" + uid + "/" + UUID.randomUUID() + ".jpg");
 
+        // Uploading object
         UploadTask uploadTask = storageRef.putFile(uri);
 
         uploadTask.addOnSuccessListener(taskSnapshot -> {
