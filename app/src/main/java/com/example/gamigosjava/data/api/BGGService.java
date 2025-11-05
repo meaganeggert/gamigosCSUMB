@@ -7,7 +7,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 
 public class BGGService {
-    private static final String BASE_URL = "https://boardgamegeek.com/xmlapi2/";
+    private static final String BASE_URL = "https://us-central1-gamigos-d2a55.cloudfunctions.net/";
     private static BGG_API api;
 
     public static BGG_API getInstance() {
