@@ -20,10 +20,9 @@
                 android:layout_height="?attr/actionBarSize"
                 app:titleCentered="true"
                 app:titleTextColor="@android:color/white"
-                android:background="?attr/colorPrimary">
+                android:background="@color/brown">
 
-                <!-- avatar here -->
-                <!-- RIGHT-SIDE AVATAR -->
+                <!-- Avatar-->
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/imageAvatar"
                     android:layout_width="36dp"
@@ -31,8 +30,10 @@
                     android:layout_gravity="end"
                     android:contentDescription="profile"
                     android:padding="2dp"
+                    android:layout_marginEnd="8dp"
                     app:shapeAppearanceOverlay="@style/CircularImage"
-                    android:src="@drawable/ic_person_24"/>
+                    android:src="@drawable/ic_person_24"
+                    app:tint="@color/white"/>
             </com.google.android.material.appbar.MaterialToolbar>
         </com.google.android.material.appbar.AppBarLayout>
 

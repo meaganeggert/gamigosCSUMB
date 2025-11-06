@@ -78,24 +78,6 @@
     <!--        tools:srcCompat="@tools:sample/avatars[3]" />-->
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonEvents"
-        android:layout_width="165dp"
-        android:layout_height="50dp"
-        android:backgroundTint="@color/yellow"
-        android:fontFamily="serif-monospace"
-        android:maxLines="1"
-        android:text="Events"
-        android:textColor="@color/darkblue"
-        app:autoSizeMaxTextSize="18sp"
-        app:autoSizeMinTextSize="10sp"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform"
-        app:cornerRadius="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/buttonAchievements" />
-
-    <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonAchievements"
         android:layout_width="165dp"
         android:layout_height="50dp"
@@ -112,6 +94,25 @@
         app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        />
+        tools:layout_editor_absoluteY="7dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonEvents"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Events"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonAchievements"
+        tools:layout_editor_absoluteY="7dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 
 import com.example.gamigosjava.R;
@@ -45,6 +46,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         );
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+        toggle.getDrawerArrowDrawable().setColor(
+                ContextCompat.getColor(this, R.color.white)
+        );
 
         // Drawer item navigation (replace with your Activities)
         navView.setNavigationItemSelectedListener(item -> {
