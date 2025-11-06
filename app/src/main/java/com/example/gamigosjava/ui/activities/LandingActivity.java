@@ -8,6 +8,7 @@ import android.widget.Toast;
 import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.gamigosjava.ui.activities.BaseActivity;
 
 // Firebase
 import com.example.gamigosjava.R;
@@ -16,7 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 // Credential Manager (AndroidX)
 import androidx.credentials.CredentialManager;
 
-public class LandingActivity extends AppCompatActivity {
+public class LandingActivity extends BaseActivity {
 
     private static final String TAG = "Logout";
     private FirebaseAuth mAuth;
@@ -25,7 +26,12 @@ public class LandingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_landing);
+//        setContentView(R.layout.activity_landing);
+
+        setChildLayout(R.layout.activity_landing);
+
+        // Set title for NavBar
+        setTopTitle("Home");
 
         // Link to sign-in button
         View logoutButton = findViewById(R.id.button_logout);

@@ -93,7 +93,8 @@
         app:cornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/buttonAchievements" />
+        app:layout_constraintStart_toEndOf="@+id/buttonAchievements"
+        tools:layout_editor_absoluteY="61dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonAchievements"
@@ -112,6 +113,6 @@
         app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        />
+        tools:layout_editor_absoluteY="61dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
