@@ -15,6 +15,12 @@
         android:theme="@style/Theme.GamigosJava"
         tools:targetApi="31">
         <activity
+            android:name=".ui.activities.EventsLandingPage"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.GetPastEventsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.BGGTestActivity"
             android:exported="false" />
         <activity
@@ -29,7 +35,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.activities.FirebaseTestActivity"/>
+        <activity android:name=".ui.activities.FirebaseTestActivity" />
     </application>
 
 </manifest>
