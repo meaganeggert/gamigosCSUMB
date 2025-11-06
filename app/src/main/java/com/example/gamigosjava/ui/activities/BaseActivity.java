@@ -80,7 +80,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
 
         // Optional: give a default title
-        setTitle("HelloWorld");
+//        setTitle("HelloWorld");
     }
 
     /** Inflate each child Activity’s layout into the shared container. */
@@ -91,6 +91,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     /** Call this from children to center a title in the toolbar. */
     protected void setTopTitle(CharSequence title) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(title);
+        }
         toolbar.setTitle(title);
     }
 
