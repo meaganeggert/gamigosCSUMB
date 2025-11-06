@@ -632,3 +632,14 @@
 [debug] [2025-11-04T20:30:37.854Z] <<< [apiv2][status] GET https://artifactregistry.googleapis.com/v1/projects/gamigos-d2a55/locations/us-central1/repositories/gcf-artifacts 200
 [debug] [2025-11-04T20:30:37.854Z] <<< [apiv2][body] GET https://artifactregistry.googleapis.com/v1/projects/gamigos-d2a55/locations/us-central1/repositories/gcf-artifacts {"name":"projects/gamigos-d2a55/locations/us-central1/repositories/gcf-artifacts","format":"DOCKER","description":"This repository is created and used by Cloud Functions for storing function docker images.","labels":{"goog-managed-by":"cloudfunctions"},"createTime":"2025-11-04T00:42:23.139511Z","updateTime":"2025-11-04T20:29:10.150042Z","mode":"STANDARD_REPOSITORY","sizeBytes":"163894587","vulnerabilityScanningConfig":{"lastEnableTime":"2025-11-04T00:42:06.934434314Z","enablementState":"SCANNING_DISABLED","enablementStateReason":"API containerscanning.googleapis.com is not enabled."},"satisfiesPzi":true,"registryUri":"us-central1-docker.pkg.dev/gamigos-d2a55/gcf-artifacts"}
 [warn] !  functions: No cleanup policy detected for repositories in us-central1. This may result in a small monthly bill as container images accumulate over time. 
+[debug] [2025-11-06T17:18:38.683Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\meaga\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:519:28)
+    at Interface.emit (node:domain:488:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1126:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:265:20)
+    at ReadStream.emit (node:events:531:35)
+    at ReadStream.emit (node:domain:488:12)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
