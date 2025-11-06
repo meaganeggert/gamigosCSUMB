@@ -96,7 +96,7 @@ public class BGGTestActivity extends AppCompatActivity {
                     list.add(BGGMappers.toSummary(it));
                 }
 
-                // 🟢 Add this to confirm data size
+                // Add this to confirm data size
                 Toast.makeText(BGGTestActivity.this, "Loaded " + list.size() + " games", Toast.LENGTH_SHORT).show();
                 Log.d("BGG", "Loaded " + list.size() + " game(s)"); // debug
 
