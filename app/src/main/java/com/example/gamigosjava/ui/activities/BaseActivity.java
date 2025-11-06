@@ -55,29 +55,29 @@ public abstract class BaseActivity extends AppCompatActivity {
             drawer.closeDrawer(GravityCompat.START);
             int id = item.getItemId();
             //TODO: WIRE UP INTENTS
-//            if (id == R.id.nav_home && !(this instanceof com.example.gamigosjava.ui.activities.LandingActivity)) {
-//                startActivity(new Intent(this, com.example.gamigosjava.ui.HomeActivity.class));
-//                overridePendingTransition(0,0);
-//                finish();
-//                return true;
+            if (id == R.id.nav_home && !(this instanceof com.example.gamigosjava.ui.activities.LandingActivity)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.LandingActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
 //            } else if (id == R.id.nav_games && !(this instanceof com.example.gamigosjava.ui.GamesActivity)) {
 //                startActivity(new Intent(this, com.example.gamigosjava.ui.GamesActivity.class));
 //                overridePendingTransition(0,0);
 //                finish();
 //                return true;
-//            } else if (id == R.id.nav_profile && !(this instanceof com.example.gamigosjava.ui.ProfileActivity)) {
-//                startActivity(new Intent(this, com.example.gamigosjava.ui.ProfileActivity.class));
-//                overridePendingTransition(0,0);
-//                finish();
-//                return true;
-//            }
+            } else if (id == R.id.nav_profile && !(this instanceof com.example.gamigosjava.ui.activities.ProfileActivity)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.ProfileActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
+            }
             return true;
         });
 
-        // Avatar click → Profile
-//        avatarView.setOnClickListener(v -> {
-//            startActivity(new Intent(this, com.example.gamigosjava.ui.ProfileActivity.class));
-//        });
+        // Avatar click takes you to the profile page
+        avatarView.setOnClickListener(v -> {
+            startActivity(new Intent(this, com.example.gamigosjava.ui.activities.ProfileActivity.class));
+        });
 
         // Optional: give a default title
         setTitle("HelloWorld");
