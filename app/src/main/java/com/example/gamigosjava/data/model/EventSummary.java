@@ -1,0 +1,17 @@
+package com.example.gamigosjava.data.model;
+
+public class EventSummary {
+    public final String id;
+    public final String title;
+    public final String imageUrl;
+    public final String status;
+
+
+
+    public EventSummary(String id, String title, String imageUrl, String status) {
+        this.id = id;
+        this.title = title;
+        this.imageUrl = imageUrl;;
+        this.status = status;
+    }
+}
