@@ -148,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
                         FirebaseUser user = mAuth.getCurrentUser();
                         Log.d(TAG, "Firebase sign-in success: " + (user != null ? user.getUid() : "null"));
                         if (user != null) {
+                            Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
                         }
                         updateUI(user);
@@ -176,11 +177,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureUserDocExists(FirebaseUser firebaseUser) {
+        Log.i(TAG, "ensureUserDocExists function called");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference userDoc = db.collection("users").document(firebaseUser.getUid());
 
         userDoc.get().addOnSuccessListener(doc -> {
             if (!doc.exists()) {
+                Log.d(TAG, "user doc does not exist"); // debug
                 // first time: create basic doc
                 Map<String, Object> data = new HashMap<>();
                 data.put("uid", firebaseUser.getUid());
@@ -190,8 +193,16 @@ public class MainActivity extends AppCompatActivity {
                 if (firebaseUser.getPhotoUrl() != null) {
                     data.put("photoUrl", firebaseUser.getPhotoUrl().toString());
                 }
-                userDoc.set(data);
+                userDoc.set(data)
+                        .addOnSuccessListener(v-> {
+                            Log.d(TAG, "User doc created successfully");
+                        })
+                        .addOnFailureListener(e->{
+                            Log.e(TAG, "Failed to create User doc");
+                            Toast.makeText(this, "FAILED" + e.getMessage(), Toast.LENGTH_LONG).show();
+                        });
             } else {
+                Log.d(TAG, "user doc does exist"); // debug
                 // Fetch existing fields first
                 String currentName = doc.getString("displayName");
                 String currentPhoto = doc.getString("photoUrl");
@@ -209,7 +220,15 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (!updates.isEmpty()) {
-                    userDoc.set(updates, SetOptions.merge());
+                    Log.d(TAG, "updates is not empty"); // debug
+                    userDoc.set(updates, SetOptions.merge())
+                            .addOnSuccessListener(v-> {
+                                Log.d(TAG, "User doc updated successfully");
+                            })
+                            .addOnFailureListener(e->{
+                                Log.e(TAG, "Failed to update User doc");
+                                Toast.makeText(this, "FAILED" + e.getMessage(), Toast.LENGTH_LONG).show();
+                            });
                 }
             }
 
