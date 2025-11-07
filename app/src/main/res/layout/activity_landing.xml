@@ -19,34 +19,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" /> <!-- Hides element and takes up no space -->
+        app:layout_constraintTop_toTopOf="parent" />
 
-
-
-
-
-
-
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonAchievements"
-        android:layout_width="165dp"
-        android:layout_height="50dp"
-        android:backgroundTint="@color/yellow"
-        android:fontFamily="serif-monospace"
-        android:maxLines="1"
-        android:text="Achievements"
-        android:textColor="@color/darkblue"
-        app:autoSizeMaxTextSize="18sp"
-        app:autoSizeMinTextSize="10sp"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform"
-        app:cornerRadius="10dp"
-        app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="7dp" />
-
+<!--    Events Button -->
+<!--    Will work to filter feed by only events -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonEvents"
         android:layout_width="165dp"
@@ -63,17 +39,30 @@
         app:cornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@+id/buttonAchievements"
         tools:layout_editor_absoluteY="7dp" />
 
-    <Button
-        android:id="@+id/btnProfile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="28dp"
-        android:layout_marginTop="28dp"
-        android:text="Profile"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+    <!--    Achievements Button -->
+    <!--    Will work to filter feed by only achievements -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonAchievements"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Achievements"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="7dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
