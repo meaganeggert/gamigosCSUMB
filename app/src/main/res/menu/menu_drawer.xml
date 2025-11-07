@@ -5,12 +5,22 @@
         android:icon="@drawable/ic_home_24" />
 
     <item
-        android:id="@+id/nav_games"
-        android:title="Games"
-        android:icon="@drawable/ic_videogame_24" />
-
-    <item
         android:id="@+id/nav_profile"
         android:title="Profile"
         android:icon="@drawable/ic_person_24" />
+
+    <item
+        android:id="@+id/nav_events"
+        android:title="Events"
+        android:icon="@drawable/ic_event_24" />
+
+    <item
+        android:id="@+id/nav_friends"
+        android:title="Friends"
+        android:icon="@drawable/ic_friends_24" />
+
+    <item
+        android:id="@+id/nav_achievements"
+        android:title="Achievements"
+        android:icon="@drawable/ic_trophy_24" />
 </menu>

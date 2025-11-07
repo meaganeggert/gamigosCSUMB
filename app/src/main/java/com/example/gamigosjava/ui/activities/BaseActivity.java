@@ -60,17 +60,23 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
-//            } else if (id == R.id.nav_games && !(this instanceof com.example.gamigosjava.ui.GamesActivity)) {
-//                startActivity(new Intent(this, com.example.gamigosjava.ui.GamesActivity.class));
-//                overridePendingTransition(0,0);
-//                finish();
-//                return true;
+            } else if (id == R.id.nav_events && !(this instanceof com.example.gamigosjava.ui.activities.EventsLandingPage)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.EventsLandingPage.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             } else if (id == R.id.nav_profile && !(this instanceof com.example.gamigosjava.ui.activities.ProfileActivity)) {
                 startActivity(new Intent(this, com.example.gamigosjava.ui.activities.ProfileActivity.class));
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_achievements && !(this instanceof com.example.gamigosjava.ui.activities.AchievementsActivity)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.AchievementsActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             }
+
             return true;
         });
 
@@ -89,7 +95,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         getLayoutInflater().inflate(layoutRes, container, true);
     }
 
-    /** Call this from children to center a title in the toolbar. */
+    /** Call this from each child activity to show the appropriate title in the header bar. */
     protected void setTopTitle(CharSequence title) {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
@@ -97,17 +103,17 @@ public abstract class BaseActivity extends AppCompatActivity {
         toolbar.setTitle(title);
     }
 
-    /** Call to update avatar (e.g., after login). Accepts null-safe Uri or URL string. */
-    protected void setAvatar(Object photo) {
-        if (photo == null) {
-            avatarView.setImageResource(R.drawable.ic_person_24);
-            return;
-        }
-        Glide.with(this)
-                .load(photo)               // Uri, String, File… Glide handles it
-                .placeholder(R.drawable.ic_person_24)
-                .error(R.drawable.ic_person_24)
-                .circleCrop()
-                .into(avatarView);
-    }
+//    /** Call to update avatar (e.g., after login). Accepts null-safe Uri or URL string. */
+//    protected void setAvatar(Object photo) {
+//        if (photo == null) {
+//            avatarView.setImageResource(R.drawable.ic_person_24);
+//            return;
+//        }
+//        Glide.with(this)
+//                .load(photo)               // Uri, String, File… Glide handles it
+//                .placeholder(R.drawable.ic_person_24)
+//                .error(R.drawable.ic_person_24)
+//                .circleCrop()
+//                .into(avatarView);
+//    }
 }
