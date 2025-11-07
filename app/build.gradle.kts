@@ -58,6 +58,16 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-auth")
 
+    // Firestore Database dependency
+    implementation("com.google.firebase:firebase-firestore:26.0.2")
+
+    // Firebase Storage
+    implementation("com.google.firebase:firebase-storage")
+
+    // Glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
     // Also add the dependencies for the Credential Manager libraries and specify their versions
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
@@ -75,8 +85,4 @@ dependencies {
     annotationProcessor("com.tickaroo.tikxml:processor:0.8.13")
 
     implementation ("com.squareup.picasso:picasso:2.8")
-
-    // Firebase Database dependency
-    implementation("com.google.firebase:firebase-firestore:26.0.2")
-
 }
