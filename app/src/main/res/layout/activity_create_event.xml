@@ -9,19 +9,6 @@
     tools:context=".ui.activities.CreateEventActivity">
 
 <!-- Event Details Section-->
-    <EditText
-        android:id="@+id/editText_eventName"
-        android:layout_width="330dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="16dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="Event Name"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_eventDetails" />
-
     <TextView
         android:id="@+id/textView_eventDetails"
         android:layout_width="wrap_content"
@@ -34,155 +21,220 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/editText_eventDate"
+        android:id="@+id/editText_eventTitle"
         android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:hint="mm-dd-yyyy"
+        android:layout_height="45dp"
+        android:layout_marginTop="16dp"
         android:ems="10"
-        android:inputType="date"
+        android:inputType="text"
+        android:hint="Title"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText_eventName" />
+        app:layout_constraintTop_toBottomOf="@+id/textView_eventDetails" />
 
-    <EditText
-        android:id="@+id/editTextTime_eventTime"
-        android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:hint="Event Start [00:00am]"
-        android:ems="10"
-        android:inputType="time"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText_eventDate" />
-
-    <Button
-        android:id="@+id/button_addFriend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="+ Friend"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.863"
-        app:layout_constraintStart_toEndOf="@+id/button_removeFriend"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout_friend" />
-
-    <Button
-        android:id="@+id/button_removeFriend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="- Friend"
-        app:layout_constraintEnd_toStartOf="@+id/button_addFriend"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout_friend" />
-
-<!-- Section for dynamically added drop down lists for friends. -->
-    <LinearLayout
-        android:id="@+id/linearLayout_friend"
-        android:layout_width="330dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTime_eventTime">
-    </LinearLayout>
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="409dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="32dp"
-        android:background="?android:attr/listDivider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_addFriend" />
-
-
-
-<!-- Match Details section-->
     <TextView
-        android:id="@+id/textView_matchDetails"
+        android:id="@+id/textView_eventStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Match Details"
+        android:ems="15"
+        android:hint="Start Schedule"
+        android:padding="3dp"
+        android:textSize="12dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.126"
+        app:layout_constraintHorizontal_bias="0.211"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/divider" />
+        app:layout_constraintTop_toBottomOf="@+id/editText_eventTitle" />
+
+    <Button
+        android:id="@+id/button_selectSchedule"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="4dp"
+        android:text="Schedule"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.859"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editText_eventTitle" />
 
     <Spinner
-        android:id="@+id/dropdown_gameName"
+        android:id="@+id/dropdown_visibility"
         android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="16dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@android:drawable/btn_dropdown"
+        android:spinnerMode="dropdown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.506"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_selectSchedule" />
+
+    <Spinner
+        android:id="@+id/dropdown_status"
+        android:layout_width="330dp"
+        android:layout_height="wrap_content"
         android:background="@android:drawable/btn_dropdown"
         android:spinnerMode="dropdown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_matchDetails" />
+        app:layout_constraintTop_toBottomOf="@+id/dropdown_visibility" />
 
-    <EditText
-        android:id="@+id/editTextTime_matchEnd"
+    <!-- Section for dynamically added drop down lists for friends. -->
+
+    <LinearLayout
+        android:id="@+id/linearLayout_friend"
         android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="12dp"
-        android:ems="10"
-        android:hint="Match End [00:00am]"
-        android:inputType="time"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTime_matchStart" />
+        app:layout_constraintTop_toBottomOf="@+id/dropdown_status"></LinearLayout>
+
+    <Button
+        android:id="@+id/button_addFriend"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="+"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.886"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout_friend" />
+
+    <Button
+        android:id="@+id/button_removeFriend"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="-"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.715"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout_friend" />
 
     <EditText
-        android:id="@+id/editTextTextMultiLine_rules"
+        android:id="@+id/editTextTextMultiLine_eventNotes"
         android:layout_width="330dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:ems="10"
-        android:gravity="start|top"
-        android:hint="Rule changes..."
-        android:inputType="textMultiLine"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.493"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTime_matchEnd" />
-
-    <EditText
-        android:id="@+id/editTextTextMultiLine_notes"
-        android:layout_width="330dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:ems="10"
+        android:textSize="12dp"
         android:gravity="start|top"
         android:hint="Notes..."
         android:inputType="textMultiLine"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.481"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextMultiLine_rules" />
-
-    <EditText
-        android:id="@+id/editTextTime_matchStart"
-        android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="4dp"
-        android:ems="10"
-        android:hint="Match Start [00:00am]"
-        android:inputType="time"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dropdown_gameName" />
+        app:layout_constraintTop_toBottomOf="@+id/button_addFriend" />
+
+
+
+    <!-- Match Details section-->
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/textView_matchDetails"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="168dp"-->
+    <!--        android:text="Match Details"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.12"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/divider" />-->
+
+    <!--    <Spinner-->
+    <!--        android:id="@+id/dropdown_gameName"-->
+    <!--        android:layout_width="330dp"-->
+    <!--        android:layout_height="40dp"-->
+    <!--        android:layout_marginTop="16dp"-->
+    <!--        android:background="@android:drawable/btn_dropdown"-->
+    <!--        android:spinnerMode="dropdown"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.493"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/textView_matchDetails" />-->
+
+    <!--    <EditText-->
+    <!--        android:id="@+id/editTextTime_matchEnd"-->
+    <!--        android:layout_width="330dp"-->
+    <!--        android:layout_height="40dp"-->
+    <!--        android:layout_marginTop="12dp"-->
+    <!--        android:ems="10"-->
+    <!--        android:hint="Match End [00:00am]"-->
+    <!--        android:inputType="time"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.493"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/editTextTime_matchStart" />-->
+
+    <!--    <EditText-->
+    <!--        android:id="@+id/editTextTextMultiLine_rules"-->
+    <!--        android:layout_width="330dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="4dp"-->
+    <!--        android:ems="10"-->
+    <!--        android:gravity="start|top"-->
+    <!--        android:hint="Rule changes..."-->
+    <!--        android:inputType="textMultiLine"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.493"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/editTextTime_matchEnd" />-->
+
+    <!--    <EditText-->
+    <!--        android:id="@+id/editTextTextMultiLine_notes"-->
+    <!--        android:layout_width="330dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="12dp"-->
+    <!--        android:ems="10"-->
+    <!--        android:gravity="start|top"-->
+    <!--        android:hint="Notes..."-->
+    <!--        android:inputType="textMultiLine"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.481"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/editTextTextMultiLine_rules" />-->
+
+    <!--    <EditText-->
+    <!--        android:id="@+id/editTextTime_matchStart"-->
+    <!--        android:layout_width="330dp"-->
+    <!--        android:layout_height="40dp"-->
+    <!--        android:layout_marginTop="4dp"-->
+    <!--        android:ems="10"-->
+    <!--        android:hint="Match Start [00:00am]"-->
+    <!--        android:inputType="time"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.493"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/dropdown_gameName" />-->
+
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="409dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextMultiLine_eventNotes" />
 
     <Button
         android:id="@+id/button_createEvent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="108dp"
         android:text="Create Event"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextMultiLine_notes" />
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:layout_constraintVertical_bias="0.08" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
