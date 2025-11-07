@@ -24,6 +24,9 @@
             android:name=".ui.activities.BGGTestActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.activities.ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.LandingActivity"
             android:exported="false" />
         <activity

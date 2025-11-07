@@ -27,6 +27,12 @@ public class LandingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
 
+        // Link to Profile Activity
+        View profileButton = findViewById(R.id.btnProfile);
+        profileButton.setOnClickListener(v ->
+                startActivity(new Intent(this, ProfileActivity.class))
+        );
+
         // Link to sign-in button
         View logoutButton = findViewById(R.id.button_logout);
         if (logoutButton != null) {
