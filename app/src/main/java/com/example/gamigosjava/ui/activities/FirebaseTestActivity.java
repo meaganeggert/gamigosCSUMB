@@ -16,7 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FirebaseTestActivity extends AppCompatActivity {
+public class FirebaseTestActivity extends BaseActivity {
 
     private EditText etTitle, etPlayers, etNotes;
     private Button btnSave;
@@ -27,7 +27,12 @@ public class FirebaseTestActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_firebase_test);
+//        setContentView(R.layout.activity_firebase_test);
+
+        setChildLayout(R.layout.activity_firebase_test);
+
+        // Set title for NavBar
+        setTopTitle("Firebase Test");
 
         // UI
         etTitle = findViewById(R.id.etTitle);
