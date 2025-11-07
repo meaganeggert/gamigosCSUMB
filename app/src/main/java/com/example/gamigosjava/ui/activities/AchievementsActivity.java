@@ -10,14 +10,14 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.gamigosjava.R;
 
-public class EventsLandingPage extends BaseActivity {
+public class AchievementsActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setChildLayout(R.layout.activity_events_landing_page);
+        setChildLayout(R.layout.activity_achievements);
 
         // Set title for NavBar
-        setTopTitle("Events");
+        setTopTitle("Achievements");
     }
 }

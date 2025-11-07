@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class BGGTestActivity extends AppCompatActivity {
+public class BGGTestActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private GameAdapter gameAdapter;
@@ -36,7 +36,12 @@ public class BGGTestActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bggtest);
+//        setContentView(R.layout.activity_bggtest);
+
+        setChildLayout(R.layout.activity_bggtest);
+
+        // Set title for NavBar
+        setTopTitle("BGG API Test");
 
         // RecyclerView + Adapter
         recyclerView = findViewById(R.id.recyclerViewGames);

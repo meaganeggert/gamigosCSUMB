@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.activities.LandingActivity">
 
+    <!-- Text display to show that Google sign-in was working correctly -->
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -14,58 +15,54 @@
         android:fontFamily="serif-monospace"
         android:text="YOU SIGNED IN WITH GOOGLE!"
         android:textSize="20sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/button_logout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Log Out"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.573" />
-
-    <Button
-        android:id="@+id/button_test"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to BGG Test Activity"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.672" />
-
-    <Button
-        android:id="@+id/button_firebaseTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Firebase Test"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.773" />
-
-    <Button
-        android:id="@+id/button_createEventTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Create Event Test"
-        app:layout_constraintBottom_toBottomOf="parent"
+<!--    Events Button -->
+<!--    Will work to filter feed by only events -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonEvents"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Events"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.878" />
+        app:layout_constraintStart_toEndOf="@+id/buttonAchievements"
+        tools:layout_editor_absoluteY="7dp" />
+
+    <!--    Achievements Button -->
+    <!--    Will work to filter feed by only achievements -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonAchievements"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Achievements"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="7dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

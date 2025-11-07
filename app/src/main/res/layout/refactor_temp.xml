@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.activities.LandingActivity">
+
+    <!-- Text display to show that Google sign-in was working correctly -->
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="serif-monospace"
+        android:text="YOU SIGNED IN WITH GOOGLE!"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" /> <!-- Hides element and takes up no space -->
+
+    <!-- Log out button -->
+    <Button
+        android:id="@+id/button_logout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Log Out"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.573" />
+
+    <!-- Button to test BGG API -->
+    <Button
+        android:id="@+id/button_test"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to BGG Test Activity"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.672" />
+
+    <!-- Button to test Firebase -->
+    <Button
+        android:id="@+id/button_firebaseTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Firebase Test"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.784" />
+
+
+    <!--    Profile Pic Display -->
+    <!--    <com.google.android.material.imageview.ShapeableImageView-->
+    <!--        android:id="@+id/imageProfile"-->
+    <!--        android:layout_width="112dp"-->
+    <!--        android:layout_height="112dp"-->
+    <!--        android:layout_gravity="center"-->
+    <!--        android:layout_marginTop="44dp"-->
+    <!--        android:scaleType="centerCrop"-->
+    <!--        android:src=""-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintHorizontal_bias="0.498"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"-->
+    <!--        app:shapeAppearanceOverlay="@style/CircularImage"-->
+    <!--        tools:srcCompat="@tools:sample/avatars[3]" />-->
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonEvents"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Events"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonAchievements"
+        tools:layout_editor_absoluteY="61dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonAchievements"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Achievements"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        app:layout_constraintEnd_toStartOf="@+id/buttonEvents"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="61dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
