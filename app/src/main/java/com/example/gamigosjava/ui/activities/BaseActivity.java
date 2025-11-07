@@ -75,6 +75,11 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_friends && !(this instanceof com.example.gamigosjava.ui.activities.FriendsLanding)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.FriendsLanding.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             }
 
             return true;
