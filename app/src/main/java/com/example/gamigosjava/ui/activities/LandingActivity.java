@@ -67,6 +67,17 @@ public class LandingActivity extends AppCompatActivity {
             Log.e(TAG, "Firebase Test button NOT FOUND"); // debug
         }
 
+        View createEventTestButton = findViewById(R.id.button_createEventTest);
+        if (createEventTestButton != null) {
+            createEventTestButton.setOnClickListener(v -> {
+                Log.d(TAG, "Create Event Test button CLICKED"); // debug
+                Intent intent = new Intent(this, CreateEventActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Create Event Test button NOT FOUND"); // debug
+        }
+
     } // End onCreate
 
     private void logOut() {
