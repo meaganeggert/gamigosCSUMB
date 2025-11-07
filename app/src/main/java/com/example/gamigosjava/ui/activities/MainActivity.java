@@ -19,6 +19,9 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 // Credential Manager (AndroidX)
 import androidx.credentials.Credential;
@@ -34,6 +37,9 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 import androidx.annotation.NonNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -141,6 +147,9 @@ public class MainActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         Log.d(TAG, "Firebase sign-in success: " + (user != null ? user.getUid() : "null"));
+                        if (user != null) {
+                            ensureUserDocExists(user);
+                        }
                         updateUI(user);
                     } else {
                         Log.e(TAG, "Firebase sign-in failed", task.getException());
@@ -166,12 +175,55 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void ensureUserDocExists(FirebaseUser firebaseUser) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference userDoc = db.collection("users").document(firebaseUser.getUid());
+
+        userDoc.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) {
+                // first time: create basic doc
+                Map<String, Object> data = new HashMap<>();
+                data.put("uid", firebaseUser.getUid());
+                data.put("email", firebaseUser.getEmail());
+                data.put("displayName", firebaseUser.getDisplayName());
+                data.put("privacyLevel", "friends"); // default
+                if (firebaseUser.getPhotoUrl() != null) {
+                    data.put("photoUrl", firebaseUser.getPhotoUrl().toString());
+                }
+                userDoc.set(data);
+            } else {
+                // Fetch existing fields first
+                String currentName = doc.getString("displayName");
+                String currentPhoto = doc.getString("photoUrl");
+
+                Map<String, Object> updates = new HashMap<>();
+
+                // Only set displayName if it's missing or empty
+                if ((currentName == null || currentName.isEmpty()) && firebaseUser.getDisplayName() != null) {
+                    updates.put("displayName", firebaseUser.getDisplayName());
+                }
+
+                // Only set photoUrl if it's missing or empty
+                if ((currentPhoto == null || currentPhoto.isEmpty()) && firebaseUser.getPhotoUrl() != null) {
+                    updates.put("photoUrl", firebaseUser.getPhotoUrl().toString());
+                }
+
+                if (!updates.isEmpty()) {
+                    userDoc.set(updates, SetOptions.merge());
+                }
+            }
+
+        });
+    }
+
+
 
     @Override
     protected void onStart() {
         super.onStart();
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
+            ensureUserDocExists(user);
             updateUI(user);
         }
     }
