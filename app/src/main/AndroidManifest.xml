@@ -15,8 +15,10 @@
         android:theme="@style/Theme.GamigosJava"
         tools:targetApi="31">
         <activity
-            android:name=".ui.activities.CreateEventActivity"
             android:name=".ui.activities.FriendsLanding"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.CreateEventActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.AchievementsActivity"

@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CreateEventActivity extends AppCompatActivity {
+public class CreateEventActivity extends BaseActivity {
     String TAG = "Create Event";
     FirebaseFirestore db;
     private FirebaseAuth auth;
@@ -52,13 +52,10 @@ public class CreateEventActivity extends AppCompatActivity {
         gameList.add("Monopoly");
 
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_create_event);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        setChildLayout(R.layout.activity_create_event);
+
+        // Set title for NavBar
+        setTopTitle("Create Event");
 
         titleText = findViewById(R.id.editText_eventTitle);
         notesText = findViewById(R.id.editTextTextMultiLine_eventNotes);
