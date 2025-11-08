@@ -14,12 +14,9 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
-import com.example.gamigosjava.ui.activities.BaseActivity;
-import com.example.gamigosjava.ui.activities.LandingActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -86,6 +83,14 @@ public class ProfileActivity extends BaseActivity {
         ivProfilePhoto.setOnClickListener(v -> {
             pickImageLauncher.launch("image/*");
         });
+
+        Button btnLogout = findViewById(R.id.button_logout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> {
+                Toast.makeText(this, "Logging out", Toast.LENGTH_SHORT).show();
+                logOut();
+            });
+        }
     }
 
     private void uploadPhotoToStorage(Uri imageUri) {
@@ -190,4 +195,15 @@ public class ProfileActivity extends BaseActivity {
                         Toast.makeText(ProfileActivity.this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
+
+    private void logOut() {
+        // Sign Out of Firebase
+        FirebaseAuth.getInstance().signOut();
+
+        // Return to sign-in screen
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    } // End logOut
 }

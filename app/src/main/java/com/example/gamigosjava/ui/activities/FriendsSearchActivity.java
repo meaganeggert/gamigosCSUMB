@@ -24,7 +24,6 @@ import com.algolia.search.saas.CompletionHandler;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
 import org.json.JSONArray;
@@ -287,55 +286,6 @@ public class FriendsSearchActivity extends AppCompatActivity {
         });
     }
 
-    private void addFriend(Map<String, Object> user) {
-        if (currentUser == null) {
-            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String myUid = currentUser.getUid();
-        String otherUid = (String) user.get("docId");
-
-        // don't add yourself
-        if (myUid.equals(otherUid)) {
-            Toast.makeText(this, "That's you 😅", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // data we want to store
-        Map<String, Object> friendData = new HashMap<>();
-        friendData.put("uid", otherUid);
-        friendData.put("displayName", user.get("displayName"));
-        friendData.put("photoUrl", user.get("photoUrl"));
-        friendData.put("addedAt", com.google.firebase.Timestamp.now());
-
-        // 1) add to *my* friends list
-        db.collection("users")
-                .document(myUid)
-                .collection("friends")
-                .document(otherUid)
-                .set(friendData, SetOptions.merge())
-                .addOnSuccessListener(aVoid -> {
-                    // 2) (optional) add me to THEIR friends list too
-                    Map<String, Object> meData = new HashMap<>();
-                    meData.put("uid", myUid);
-                    meData.put("displayName", currentUser.getDisplayName());
-                    meData.put("photoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
-                    meData.put("addedAt", com.google.firebase.Timestamp.now());
-
-                    db.collection("users")
-                            .document(otherUid)
-                            .collection("friends")
-                            .document(myUid)
-                            .set(meData, SetOptions.merge());
-
-                    Toast.makeText(FriendsSearchActivity.this, "Friend added ✅", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(FriendsSearchActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-    }
-
     private void onAddClicked(Map<String, Object> user) {
         if (currentUser == null) return;
 
@@ -367,6 +317,8 @@ public class FriendsSearchActivity extends AppCompatActivity {
         reqData.put("from", myUid);
         reqData.put("to", otherUid);
         reqData.put("createdAt", com.google.firebase.Timestamp.now());
+        reqData.put("fromDisplayName", currentUser.getDisplayName());
+        reqData.put("fromPhotoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
 
         batch.set(myOutgoingRef, reqData);
         batch.set(theirIncomingRef, reqData);
