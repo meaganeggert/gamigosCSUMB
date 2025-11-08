@@ -33,6 +33,8 @@ public class GetPastEventsActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Set the layout that should fill the frame
         setChildLayout(R.layout.activity_get_past_events);
 
         // Set title for NavBar

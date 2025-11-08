@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 // screen to show incoming friend requests
-public class FriendRequestsActivity extends AppCompatActivity {
+public class FriendRequestsActivity extends BaseActivity {
 
     private FirebaseUser currentUser;
     private FirebaseFirestore db;
@@ -36,7 +36,11 @@ public class FriendRequestsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_friend_requests);
+        // Set the layout that should fill the frame
+        setChildLayout(R.layout.activity_friend_requests);
+
+        // Set title for NavBar
+        setTopTitle("Friend Requests");
 
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
