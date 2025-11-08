@@ -51,6 +51,8 @@ public class CreateEventActivity extends BaseActivity {
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
 
+    private List<HashMap<String, Object>> matchForms= new ArrayList();
+
 
 
     @Override
@@ -119,6 +121,7 @@ public class CreateEventActivity extends BaseActivity {
         if (createEventButton != null) {
             createEventButton.setOnClickListener(v -> {
                 uploadEvent();
+                uploadMatches();
             });
         } else {
             Log.e(TAG, "Create Event Button not found");
@@ -148,6 +151,7 @@ public class CreateEventActivity extends BaseActivity {
         layout.removeViewAt(layout.getChildCount() - 1);
     }
 
+    //TODO: User input for selecting the date/time work for all timestamps using callback.
     private void showDateTimePicker() {
         // User selects the date
         DatePickerDialog datePicker = new DatePickerDialog(this,
@@ -187,7 +191,11 @@ public class CreateEventActivity extends BaseActivity {
         // Set up schedule creation
         dateTimeText = findViewById(R.id.textView_eventStart);
         Button selectDateButton = findViewById(R.id.button_selectSchedule);
-        selectDateButton.setOnClickListener(v -> showDateTimePicker());
+        selectDateButton.setOnClickListener(v -> {
+            showDateTimePicker();
+//            eventStart = new Timestamp(calendar.getTime());
+//            dateTimeText.setText(calendar.getTime().toString());
+        });
 
         // Set up the values for the visibility dropdown
         List<String> visibilityList = new ArrayList<>();
@@ -312,8 +320,9 @@ public class CreateEventActivity extends BaseActivity {
                 });
     }
 
-    private void uploadMatch() {
+    private void uploadMatches() {
         //TODO: implement match uploads
+
     }
 
     private void uploadFriendInvites() {

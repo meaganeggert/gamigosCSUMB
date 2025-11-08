@@ -20,14 +20,58 @@
         android:background="@android:drawable/btn_dropdown"
         android:spinnerMode="dropdown"/>
 
-    <EditText
-        android:id="@+id/editTextTime_matchEnd"
-        android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="12dp"
-        android:ems="10"
-        android:hint="Match End [00:00am]"
-        android:inputType="time"/>
+<!--    <EditText-->
+<!--        android:id="@+id/editTextTime_matchEnd"-->
+<!--        android:layout_width="330dp"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:layout_marginTop="12dp"-->
+<!--        android:ems="10"-->
+<!--        android:hint="Match End [00:00am]"-->
+<!--        android:inputType="time"/>-->
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <TextView
+            android:id="@+id/textView_matchStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="15"
+            android:hint="Time Start"
+            android:padding="3dp"
+            android:textSize="12dp"/>
+
+        <Button
+            android:id="@+id/button_selectTimeStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="set"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <TextView
+            android:id="@+id/textView_matchEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="15"
+            android:hint="Time End"
+            android:padding="3dp"
+            android:textSize="12dp"/>
+
+        <Button
+            android:id="@+id/button_selectTimeEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="set"/>
+    </LinearLayout>
 
     <EditText
         android:id="@+id/editTextTextMultiLine_rules"
@@ -49,12 +93,12 @@
         android:hint="Notes..."
         android:inputType="textMultiLine"/>
 
-    <EditText
-        android:id="@+id/editTextTime_matchStart"
-        android:layout_width="330dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="4dp"
-        android:ems="10"
-        android:hint="Match Start [00:00am]"
-        android:inputType="time"/>
+<!--    <EditText-->
+<!--        android:id="@+id/editTextTime_matchStart"-->
+<!--        android:layout_width="330dp"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:layout_marginTop="4dp"-->
+<!--        android:ems="10"-->
+<!--        android:hint="Match Start [00:00am]"-->
+<!--        android:inputType="time"/>-->
 </LinearLayout>
