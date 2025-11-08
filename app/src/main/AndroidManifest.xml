@@ -18,6 +18,9 @@
             android:name=".ui.activities.ViewUserProfileActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.activities.FriendRequestsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.FriendsLanding"
             android:exported="false" />
         <activity
