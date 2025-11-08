@@ -1,16 +1,15 @@
 plugins {
     alias(libs.plugins.androidApplication)
     id("com.google.gms.google-services")
-    //    id("com.android.application")
 }
 
 android {
     namespace = "com.example.gamigosjava"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.gamigosjava"
-        minSdk = 34
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -28,56 +27,55 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
 dependencies {
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+    // UI
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.drawerlayout)
+
+    // Firebase (BoM first)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+
+    // Glide
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
+
+    // Credentials
+    implementation(libs.credentials)
+    implementation(libs.credentials.play)
+    implementation(libs.googleid)
+
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.okhttp.logging)
+
+    // TikXml
+    implementation(libs.tikxml.core)
+    implementation(libs.tikxml.annotation)
+    implementation(libs.tikxml.converter)
+    annotationProcessor(libs.tikxml.processor)
+
+    // Picasso (optional)
+    implementation(libs.picasso)
+
+    // Algolia
+    implementation(libs.algolia) {
+        exclude(group = "com.android.support")
+    }
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-    implementation("com.google.firebase:firebase-analytics")
-
-    // Import the BoM for the Firebase platform
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
-
-    // Add the dependency for the Firebase Authentication library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-auth")
-
-    // Firestore Database dependency
-    implementation("com.google.firebase:firebase-firestore:26.0.2")
-
-    // Firebase Storage
-    implementation("com.google.firebase:firebase-storage")
-
-    // Glide
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
-
-    // Also add the dependencies for the Credential Manager libraries and specify their versions
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-
-    // Dependencies for API conversion
-    // Retrofit / OkHttp
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
-    // TikXml (all of these)
-    implementation("com.tickaroo.tikxml:core:0.8.13")
-    implementation("com.tickaroo.tikxml:annotation:0.8.13")
-    implementation("com.tickaroo.tikxml:retrofit-converter:0.8.13")
-    annotationProcessor("com.tickaroo.tikxml:processor:0.8.13")
-
-    implementation ("com.squareup.picasso:picasso:2.8")
 }

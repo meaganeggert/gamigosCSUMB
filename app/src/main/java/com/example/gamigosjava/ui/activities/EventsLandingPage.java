@@ -35,5 +35,17 @@ public class EventsLandingPage extends BaseActivity {
         } else {
             Log.e(TAG, "Create Event Test button NOT FOUND"); // debug
         }
+
+//        Find past events button
+        View pastEventsButton = findViewById(R.id.button_pastEvents);
+        if (pastEventsButton != null) {
+            pastEventsButton.setOnClickListener(v -> {
+                Log.d(TAG, "Past events button CLICKED"); // debug
+                Intent intent = new Intent(this, GetPastEventsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "Past events button NOT FOUND"); // debug
+        }
     }
 }
