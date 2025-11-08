@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/textView_matchDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Match Details"/>
+
+    <Spinner
+        android:id="@+id/dropdown_gameName"
+        android:layout_width="330dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:background="@android:drawable/btn_dropdown"
+        android:spinnerMode="dropdown"/>
+
+    <EditText
+        android:id="@+id/editTextTime_matchEnd"
+        android:layout_width="330dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        android:ems="10"
+        android:hint="Match End [00:00am]"
+        android:inputType="time"/>
+
+    <EditText
+        android:id="@+id/editTextTextMultiLine_rules"
+        android:layout_width="330dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="Rule changes..."
+        android:inputType="textMultiLine"/>
+
+    <EditText
+        android:id="@+id/editTextTextMultiLine_notes"
+        android:layout_width="330dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="Notes..."
+        android:inputType="textMultiLine"/>
+
+    <EditText
+        android:id="@+id/editTextTime_matchStart"
+        android:layout_width="330dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="4dp"
+        android:ems="10"
+        android:hint="Match Start [00:00am]"
+        android:inputType="time"/>
+</LinearLayout>

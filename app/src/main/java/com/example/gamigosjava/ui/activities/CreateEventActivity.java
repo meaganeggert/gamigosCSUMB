@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -14,6 +15,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,12 +39,19 @@ public class CreateEventActivity extends BaseActivity {
     String TAG = "Create Event";
     FirebaseFirestore db;
     private FirebaseAuth auth;
-    private Calendar calendar = Calendar.getInstance();
+
+
+    // Handle on match forms
+    private LinearLayout matchFormContainerHandle;
+
 
     // Values used for uploading/validation
+    private Calendar calendar = Calendar.getInstance();
     private TextView dateTimeText;
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
+
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -57,12 +67,111 @@ public class CreateEventActivity extends BaseActivity {
         // Set title for NavBar
         setTopTitle("Create Event");
 
+        // ===================================Event Details=========================================
+        // Add event form to the page and set the needed textViews/buttons/dropdowns/etc.
+        setChildLayoutForm(R.layout.fragment_event_form, R.id.eventFormContainer);
+
+        // ===================================Match Details=========================================
+        matchFormContainerHandle = findViewById(R.id.matchFormContainer);
+
+        // Add new match details form on button click.
+        Button addMatchButton = findViewById(R.id.button_addMatch);
+        if (addMatchButton != null) {
+            addMatchButton.setOnClickListener(v -> {
+                addMatchForm();
+
+                // TODO: fix board game dropdown values for each match added.
+                // Board Game selection
+                Spinner gameName = findViewById(R.id.dropdown_gameName);
+                if (gameName != null) {
+                    setDropdown(gameName, gameList);
+                } else {
+                    Log.e(TAG, "Game name dropdown not found");
+                }
+                });
+        } else {
+            Log.e(TAG, "Match creation button not found");
+        }
+
+
+        // =====================================Finish==============================================
+        // Finish and upload event details
+        View createEventButton = findViewById(R.id.button_createEvent);
+        if (createEventButton != null) {
+            createEventButton.setOnClickListener(v -> {
+                uploadEvent();
+            });
+        } else {
+            Log.e(TAG, "Create Event Button not found");
+        }
+    }
+
+
+
+
+    private void setDropdown(Spinner dropdown, List<String> list) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
+        dropdown.setAdapter(adapter);
+    }
+
+
+
+    private void addDropdown(LinearLayout layout, List<String> list) {
+        Spinner newSpinner = new Spinner(this);
+        newSpinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        newSpinner.setId(View.generateViewId());
+        newSpinner.setBackgroundResource(android.R.drawable.btn_dropdown);
+
+        setDropdown(newSpinner, list);
+        layout.addView(newSpinner);
+    }
+
+
+
+    private void removeDropdown(LinearLayout layout) {
+        layout.removeViewAt(layout.getChildCount() - 1);
+    }
+
+
+
+    private void showDateTimePicker() {
+        // User selects the date
+        DatePickerDialog datePicker = new DatePickerDialog(this,
+                (view, year, month, day) -> {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, day);
+
+                    // User Selects the time of day
+                    TimePickerDialog timePicker = new TimePickerDialog(this,
+                            (timeView, hour, minute) -> {
+                                calendar.set(Calendar.HOUR_OF_DAY, hour);
+                                calendar.set(Calendar.MINUTE, minute);
+                                calendar.set(Calendar.SECOND, 0);
+
+                                // Display the selected datetime to user
+                                dateTimeText.setText(calendar.getTime().toString());
+
+                            }, calendar.get(Calendar.HOUR_OF_DAY),
+                            calendar.get(Calendar.MINUTE), false); // Show time via am/pm
+                    timePicker.show();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+        datePicker.show();
+    }
+
+
+
+    private void setChildLayoutForm(@LayoutRes int layoutRes, @IdRes int containerId) {
+        ViewGroup container = findViewById(containerId);
+        LayoutInflater.from(this).inflate(layoutRes, container, true);
+
         titleText = findViewById(R.id.editText_eventTitle);
         notesText = findViewById(R.id.editTextTextMultiLine_eventNotes);
 
-
-
-        //======================================Event Details=======================================
         // Set up schedule creation
         dateTimeText = findViewById(R.id.textView_eventStart);
         Button selectDateButton = findViewById(R.id.button_selectSchedule);
@@ -110,7 +219,7 @@ public class CreateEventActivity extends BaseActivity {
                     }
                 });
             } else {
-                Log.e("Add Friend", "Add friend button not found");
+                Log.e(TAG, "Add friend button not found");
             }
 
             // Remove additional friend dropdown
@@ -124,85 +233,21 @@ public class CreateEventActivity extends BaseActivity {
                     }
                 });
             } else {
-                Log.e("Remove Friend", "Remove friend button not found");
+                Log.e(TAG, "Remove friend button not found");
             }
         } else {
-            Log.e("Friend Layout", "Friend layout not found.");
-        }
-
-
-
-        // ===================================Match Details=========================================
-        // Board Game selection
-//        Spinner gameName = findViewById(R.id.dropdown_gameName);
-//        if (gameName != null) {
-//            setDropdown(gameName, gameList);
-//        } else {
-//            Log.e("Game Dropdown", "Game name dropdown not found");
-//        }
-
-
-
-        // =====================================Finish==============================================
-        // Finish and upload event details
-        View createEventButton = findViewById(R.id.button_createEvent);
-        if (createEventButton != null) {
-            // TODO: implement form validation, and data mapping.
-            createEventButton.setOnClickListener(v -> {
-                uploadEvent();
-            });
-        } else {
-            Log.e("Create Event", "Create Event Button not found");
+            Log.e(TAG, "Friend layout not found.");
         }
     }
 
-    private void setDropdown(Spinner dropdown, List<String> list) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
-        dropdown.setAdapter(adapter);
+
+
+    private void addMatchForm() {
+        View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
+        matchFormContainerHandle.addView(match);
     }
 
-    private void addDropdown(LinearLayout layout, List<String> list) {
-        Spinner newSpinner = new Spinner(this);
-        newSpinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        newSpinner.setId(View.generateViewId());
-        newSpinner.setBackgroundResource(android.R.drawable.btn_dropdown);
 
-        setDropdown(newSpinner, list);
-        layout.addView(newSpinner);
-    }
-
-    private void removeDropdown(LinearLayout layout) {
-        layout.removeViewAt(layout.getChildCount() - 1);
-    }
-
-    private void showDateTimePicker() {
-        // User selects the date
-        DatePickerDialog datePicker = new DatePickerDialog(this,
-                (view, year, month, day) -> {
-                    calendar.set(Calendar.YEAR, year);
-                    calendar.set(Calendar.MONTH, month);
-                    calendar.set(Calendar.DAY_OF_MONTH, day);
-
-                    // User Selects the time of day
-                    TimePickerDialog timePicker = new TimePickerDialog(this,
-                            (timeView, hour, minute) -> {
-                                calendar.set(Calendar.HOUR_OF_DAY, hour);
-                                calendar.set(Calendar.MINUTE, minute);
-                                calendar.set(Calendar.SECOND, 0);
-
-                                // Display the selected datetime to user
-                                dateTimeText.setText(calendar.getTime().toString());
-
-                            }, calendar.get(Calendar.HOUR_OF_DAY),
-                            calendar.get(Calendar.MINUTE), false); // Show time via am/pm
-                    timePicker.show();
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-        datePicker.show();
-    }
 
     private void uploadEvent() {
         db = FirebaseFirestore.getInstance();
@@ -231,19 +276,8 @@ public class CreateEventActivity extends BaseActivity {
             return;
         }
 
-//        Log.d(TAG, hostId);
-//        Log.d(TAG, title);
-//        Log.d(TAG, visibility);
-//        Log.d(TAG, status);
-//        Log.d(TAG, notes);
-//        Log.d(TAG, dateTimeText.getText().toString());
-//        Log.d(TAG, createdAt.toString());
-//        Log.d(TAG, endedAt.toString());
-
         Map<String, Object> eventData = new HashMap<>();
-//        eventData.put("hostId", hostId);
         eventData.put("hostId", hostId);
-//        eventData.put("eventId", 1);
         eventData.put("title", title);
         eventData.put("visibility", visibility);
         eventData.put("status", status);
@@ -260,5 +294,13 @@ public class CreateEventActivity extends BaseActivity {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to save event: " + e.getMessage());
                 });
+    }
+
+    private void uploadMatch() {
+        //TODO: implement match uploads
+    }
+
+    private void uploadFriendInvites() {
+        //TODO: implement friend invite uploads
     }
 }
