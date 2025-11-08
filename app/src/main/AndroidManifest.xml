@@ -36,7 +36,7 @@
             android:name=".ui.activities.FriendsSearchActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activities.GetPastEventsActivity"
+            android:name=".ui.activities.GetAllEventsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.BGGTestActivity"

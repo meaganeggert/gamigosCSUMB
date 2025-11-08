@@ -7,4 +7,8 @@
     <color name="orange">#DA6C27</color>
     <color name="yellow">#EFB137</color>
     <color name="darkblue">#292F53</color>
+    <color name="taupe">#938581</color>
+    <color name="grey">#5E5768 </color>
+    <color name="medgrey">#bcb8b1</color>
+    <color name="lightgrey">#C9CAD9</color>
 </resources>
