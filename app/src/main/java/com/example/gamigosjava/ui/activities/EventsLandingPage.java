@@ -11,16 +11,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.EventSummary;
 import com.example.gamigosjava.ui.adapter.EventAdapter;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.Source;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EventsLandingPage extends BaseActivity {
 
-    private static final String TAG = "PastEvents";
+    private static final String TAG = "EventsHome";
     private RecyclerView recyclerViewActive, recyclerViewPast;
     private EventAdapter eventAdapterActive, eventAdapterPast;
 
@@ -31,6 +34,8 @@ public class EventsLandingPage extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_events_landing_page);
+        com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
+        Log.i(TAG, "Today's date: " + now);
 
         // Set title for NavBar
         setTopTitle("Events");
@@ -64,22 +69,26 @@ public class EventsLandingPage extends BaseActivity {
         db = FirebaseFirestore.getInstance();
 
         // Read event collection from database
-        db.collection("events")
-                .whereEqualTo("status", "Planned") // only get planned events
-                .limit(2) // Limit to two results
-                .get()
-                .addOnSuccessListener(query -> {
+        Query query = db.collection("events");
+        query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
+                .orderBy("scheduledAt", Query.Direction.ASCENDING); // Pull active events
+
+        query.get(Source.SERVER)
+                .addOnSuccessListener(q -> {
                     List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : query) {
+                    for (DocumentSnapshot doc : q) {
                         String id = doc.getId();
                         String title = doc.getString("title");
                         String status = doc.getString("status");
+                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
+                        Log.i(TAG, "ScheduledAt " + scheduledTime);
 
                         eventList.add(new EventSummary(id, title, "", status));
                     }
                     eventAdapterActive.setItems(eventList);
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
+
 
 
         // RecyclerView + Adapter
@@ -102,16 +111,19 @@ public class EventsLandingPage extends BaseActivity {
         }
 
         // Read event collection from database
-        db.collection("events")
-                .whereEqualTo("status", "past") // only get past events
-                .limit(2)
-                .get()
-                .addOnSuccessListener(query -> {
+        query = db.collection("events");
+        query = query.whereLessThan("scheduledAt", now)
+                .orderBy("scheduledAt", Query.Direction.DESCENDING); // Pull past events
+
+        query.get(Source.SERVER)
+                .addOnSuccessListener(q -> {
                     List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : query) {
+                    for (DocumentSnapshot doc : q) {
                         String id = doc.getId();
                         String title = doc.getString("title");
                         String status = doc.getString("status");
+                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
+                        Log.i(TAG, "ScheduledAt " + scheduledTime);
 
                         eventList.add(new EventSummary(id, title, "", status));
                     }

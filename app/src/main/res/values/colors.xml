@@ -11,4 +11,6 @@
     <color name="grey">#5E5768 </color>
     <color name="medgrey">#bcb8b1</color>
     <color name="lightgrey">#C9CAD9</color>
+    <color name="neutralbrown">#8a817c</color>
+    <color name="neutraltan">#ccc5b9</color>
 </resources>

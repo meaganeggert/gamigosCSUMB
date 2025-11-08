@@ -11,15 +11,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.EventSummary;
 import com.example.gamigosjava.ui.adapter.EventAdapter;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.Source;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class GetAllEventsActivity extends BaseActivity {
-    private static final String TAG = "PastEvents";
+    private static final String TAG = "AllEvents";
     private RecyclerView recyclerView;
     private EventAdapter eventAdapter;
 
@@ -33,9 +37,11 @@ public class GetAllEventsActivity extends BaseActivity {
         // Set the layout that should fill the frame
         setChildLayout(R.layout.activity_get_all_events);
 
+        // Get current time
+        com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
+        Log.i(TAG, "Today's date: " + now);
+
         String filter = getIntent().getStringExtra("filter");
-        assert filter != null;
-        String statusValue = filter.equals("active") ? "Planned" : "past";
 
         // Set title for NavBar
         setTopTitle(filter.equalsIgnoreCase("active") ? "Active Events" : "Past Events");
@@ -44,15 +50,27 @@ public class GetAllEventsActivity extends BaseActivity {
         db = FirebaseFirestore.getInstance();
 
         // Read event collection from database
-        db.collection("events")
-                .whereEqualTo("status", statusValue) // get the appropriate events based on the filter
-                .get()
-                .addOnSuccessListener(query -> {
+        Query query = db.collection("events");
+            if(filter.equals("active")) {
+                Log.d(TAG, "Looking for active events");
+                query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
+                        .orderBy("scheduledAt", Query.Direction.ASCENDING);
+            }
+            else {
+                Log.d(TAG, "Looking for past events");
+                query = query.whereLessThan("scheduledAt", now)
+                        .orderBy("scheduledAt", Query.Direction.DESCENDING);
+            }
+
+            query.get(Source.SERVER)
+                .addOnSuccessListener(q -> {
                     List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : query) {
+                    for (DocumentSnapshot doc : q) {
                         String id = doc.getId();
                         String title = doc.getString("title");
                         String status = doc.getString("status");
+                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
+                        Log.i(TAG, "ScheduledAt " + scheduledTime);
 
                         eventList.add(new EventSummary(id, title, "", status));
                     }
