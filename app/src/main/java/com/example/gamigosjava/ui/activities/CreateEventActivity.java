@@ -71,6 +71,7 @@ public class CreateEventActivity extends BaseActivity {
         // Add event form to the page and set the needed textViews/buttons/dropdowns/etc.
         setChildLayoutForm(R.layout.fragment_event_form, R.id.eventFormContainer);
 
+
         // ===================================Match Details=========================================
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
 
@@ -80,9 +81,11 @@ public class CreateEventActivity extends BaseActivity {
             addMatchButton.setOnClickListener(v -> {
                 addMatchForm();
 
-                // TODO: fix board game dropdown values for each match added.
-                // Board Game selection
-                Spinner gameName = findViewById(R.id.dropdown_gameName);
+                // Set board game dropdown for each new match form.
+                Spinner gameName = matchFormContainerHandle
+                        .getChildAt(matchFormContainerHandle.getChildCount()-1)
+                        .findViewById(R.id.dropdown_gameName);
+
                 if (gameName != null) {
                     setDropdown(gameName, gameList);
                 } else {
@@ -92,6 +95,22 @@ public class CreateEventActivity extends BaseActivity {
         } else {
             Log.e(TAG, "Match creation button not found");
         }
+
+        // Remove match details form on button click only if a match form was added.
+        Button removeMatchButton = findViewById(R.id.button_removeMatch);
+        if (removeMatchButton != null) {
+            removeMatchButton.setOnClickListener(v -> {
+                if (matchFormContainerHandle.getChildCount() > 0) {
+                    removeMatchForm();
+                } else {
+                    Toast.makeText(this, "No matches to remove.", Toast.LENGTH_SHORT).show();
+                }
+
+            });
+        } else {
+            Log.e(TAG, "Match creation button not found");
+        }
+
 
 
         // =====================================Finish==============================================
@@ -109,12 +128,11 @@ public class CreateEventActivity extends BaseActivity {
 
 
 
+    // =======================================Layout Helpers========================================
     private void setDropdown(Spinner dropdown, List<String> list) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
         dropdown.setAdapter(adapter);
     }
-
-
 
     private void addDropdown(LinearLayout layout, List<String> list) {
         Spinner newSpinner = new Spinner(this);
@@ -126,13 +144,9 @@ public class CreateEventActivity extends BaseActivity {
         layout.addView(newSpinner);
     }
 
-
-
     private void removeDropdown(LinearLayout layout) {
         layout.removeViewAt(layout.getChildCount() - 1);
     }
-
-
 
     private void showDateTimePicker() {
         // User selects the date
@@ -162,8 +176,6 @@ public class CreateEventActivity extends BaseActivity {
         );
         datePicker.show();
     }
-
-
 
     private void setChildLayoutForm(@LayoutRes int layoutRes, @IdRes int containerId) {
         ViewGroup container = findViewById(containerId);
@@ -240,15 +252,19 @@ public class CreateEventActivity extends BaseActivity {
         }
     }
 
-
-
     private void addMatchForm() {
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
     }
 
+    private void removeMatchForm() {
+        matchFormContainerHandle.removeViewAt(matchFormContainerHandle.getChildCount() - 1);
+    }
 
 
+
+
+    // ===================================Database Helpers==========================================
     private void uploadEvent() {
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
