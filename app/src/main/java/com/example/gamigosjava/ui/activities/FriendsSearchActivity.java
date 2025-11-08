@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FriendsSearchActivity extends AppCompatActivity {
+public class FriendsSearchActivity extends BaseActivity {
     private static final String ALGOLIA_APP_ID = "5LHKRX1QE8";
     private static final String ALGOLIA_SEARCH_KEY = "fbdb3c57a5235ca22af1c1d59fece002";
     private static final String ALGOLIA_INDEX_NAME = "users_name_asc";
@@ -67,7 +67,10 @@ public class FriendsSearchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_friends_search);
+        setChildLayout(R.layout.activity_friends_search);
+
+        // Set title for NavBar
+        setTopTitle("Friends");
 
         // Firebase user (to skip self)
         currentUser = FirebaseAuth.getInstance().getCurrentUser();

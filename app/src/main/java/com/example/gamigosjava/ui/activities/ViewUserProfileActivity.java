@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class ViewUserProfileActivity extends AppCompatActivity {
+public class ViewUserProfileActivity extends BaseActivity {
 
     private FirebaseFirestore db;
     private ImageView ivAvatar;
@@ -19,13 +19,17 @@ public class ViewUserProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_user_profile);
+//        setContentView(R.layout.activity_view_user_profile);
+        setChildLayout(R.layout.activity_view_user_profile);
 
         db = FirebaseFirestore.getInstance();
 
         ivAvatar = findViewById(R.id.ivProfilePhoto);
         tvName = findViewById(R.id.tvDisplayName);
         tvEmail = findViewById(R.id.tvEmail);
+
+        // Set title for NavBar
+        setTopTitle((CharSequence) tvName);
 
         String userId = getIntent().getStringExtra("USER_ID");
         if (userId == null) {
