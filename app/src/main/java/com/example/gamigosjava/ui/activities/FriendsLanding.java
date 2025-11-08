@@ -1,12 +1,8 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import android.widget.Button;
 
 import com.example.gamigosjava.R;
 
@@ -19,5 +15,14 @@ public class FriendsLanding extends BaseActivity {
 
         // Set title for NavBar
         setTopTitle("Friends");
+
+        //  Find button
+        Button btnSearchFriends = findViewById(R.id.btnFriendSearchActivity);
+
+        //  Set up click listener
+        btnSearchFriends.setOnClickListener(v -> {
+            Intent intent = new Intent(FriendsLanding.this, FriendsSearchActivity.class);
+            startActivity(intent);
+        });
     }
 }
