@@ -13,3 +13,31 @@
 .externalNativeBuild
 .cxx
 local.properties
+# --- Firebase local backend (firebasecb folder) ---
+firebasecb/.eslintrc.js
+firebasecb/configureAlgolia.js
+firebasecb/firebase.json
+firebasecb/firebase-debug.log
+firebasecb/index.js
+firebasecb/package.json
+firebasecb/package-lock.json
+firebasecb/node_modules/
+firebasecb/.cache/
+firebasecb/.firebase/
+firebasecb/.runtimeconfig.json
+firebasecb/.firebaserc
+# --- Firebase / Node backend ---
+firebase-debug.log
+firebasecb/.env
+firebasecb/.output/
+firebasecb/functions/node_modules/
+firebasecb/functions/.env
+firebase.json
+# --- Common JS / NPM files ---
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# --- Generated or local files ---
+*.iml
+*.log
