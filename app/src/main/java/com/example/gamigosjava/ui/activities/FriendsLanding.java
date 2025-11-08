@@ -67,7 +67,7 @@ public class FriendsLanding extends BaseActivity {
             //  Open profile of friend
             String friendUid = (String) friend.get("uid");
             Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
-            intent.putExtra("userId", friendUid);
+            intent.putExtra("USER_ID", friendUid);
             startActivity(intent);
         });
         rvFriends.setAdapter(friendsAdapter);

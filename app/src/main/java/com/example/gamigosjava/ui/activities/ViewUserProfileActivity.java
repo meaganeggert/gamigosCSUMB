@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,8 +26,7 @@ public class ViewUserProfileActivity extends BaseActivity {
         tvName = findViewById(R.id.tvDisplayName);
         tvEmail = findViewById(R.id.tvEmail);
 
-        // Set title for NavBar
-        setTopTitle((CharSequence) tvName);
+        setTopTitle("Profile");
 
         String userId = getIntent().getStringExtra("USER_ID");
         if (userId == null) {
@@ -46,8 +43,9 @@ public class ViewUserProfileActivity extends BaseActivity {
 
                         tvName.setText(name);
                         tvEmail.setText(email);
+                        // Set title for NavBar
+                        setTopTitle(name);
 
-                        // if you're using Glide/Picasso:
                          Glide.with(this).load(photo).into(ivAvatar);
                     }
                 });
