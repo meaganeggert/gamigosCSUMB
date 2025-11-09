@@ -4,7 +4,9 @@
     android:padding="16dp"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal">
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp">
 
     <TextView
         android:id="@+id/textView_EventDetails"
@@ -32,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="15"
-            android:hint="Start Schedule"
+            android:hint="Event Start"
             android:padding="3dp"
             android:textSize="12dp"/>
 
@@ -40,7 +42,7 @@
             android:id="@+id/button_selectSchedule"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Schedule"/>
+            android:text="Set"/>
     </LinearLayout>
 
 

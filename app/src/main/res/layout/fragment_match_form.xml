@@ -4,7 +4,10 @@
     android:padding="16dp"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal">
+    android:layout_gravity="center_horizontal"
+    android:background="@color/cardview_light_background"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp">
 
     <TextView
         android:id="@+id/textView_matchDetails"
@@ -20,15 +23,6 @@
         android:background="@android:drawable/btn_dropdown"
         android:spinnerMode="dropdown"/>
 
-<!--    <EditText-->
-<!--        android:id="@+id/editTextTime_matchEnd"-->
-<!--        android:layout_width="330dp"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:layout_marginTop="12dp"-->
-<!--        android:ems="10"-->
-<!--        android:hint="Match End [00:00am]"-->
-<!--        android:inputType="time"/>-->
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -40,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="15"
-            android:hint="Time Start"
+            android:hint="Match Start"
             android:padding="3dp"
             android:textSize="12dp"/>
 
@@ -62,7 +56,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="15"
-            android:hint="Time End"
+            android:hint="Match End"
             android:padding="3dp"
             android:textSize="12dp"/>
 
@@ -92,13 +86,4 @@
         android:gravity="start|top"
         android:hint="Notes..."
         android:inputType="textMultiLine"/>
-
-<!--    <EditText-->
-<!--        android:id="@+id/editTextTime_matchStart"-->
-<!--        android:layout_width="330dp"-->
-<!--        android:layout_height="40dp"-->
-<!--        android:layout_marginTop="4dp"-->
-<!--        android:ems="10"-->
-<!--        android:hint="Match Start [00:00am]"-->
-<!--        android:inputType="time"/>-->
 </LinearLayout>

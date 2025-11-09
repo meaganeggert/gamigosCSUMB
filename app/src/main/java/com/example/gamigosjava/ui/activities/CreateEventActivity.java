@@ -18,27 +18,29 @@ import android.widget.Toast;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.model.Friend;
+import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CreateEventActivity extends BaseActivity {
     String TAG = "Create Event";
-    FirebaseFirestore db;
+    private FirebaseFirestore db;
     private FirebaseAuth auth;
+    private FirebaseUser currentUser;
 
 
     // Handle on match forms
@@ -47,21 +49,24 @@ public class CreateEventActivity extends BaseActivity {
 
     // Values used for uploading/validation
     private Calendar calendar = Calendar.getInstance();
-    private TextView dateTimeText;
+    private Date eventStart, eventEnd, matchStart, matchEnd;
+    private TextView eventStartText, matchStartText, matchEndText;
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
 
+    private ArrayAdapter<Friend> friendAdapter;
+    List<Friend> friendList = new ArrayList<>();
+
+    List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
     private List<HashMap<String, Object>> matchForms= new ArrayList();
 
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-
-        // TODO: Get list of owned games from database.
-        List<String> gameList = new ArrayList<>();
-        gameList.add("Catan");
-        gameList.add("Monopoly");
+        auth = FirebaseAuth.getInstance();
+        currentUser = auth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_create_event);
@@ -69,9 +74,11 @@ public class CreateEventActivity extends BaseActivity {
         // Set title for NavBar
         setTopTitle("Create Event");
 
+
         // ===================================Event Details=========================================
         // Add event form to the page and set the needed textViews/buttons/dropdowns/etc.
         setChildLayoutForm(R.layout.fragment_event_form, R.id.eventFormContainer);
+
 
 
         // ===================================Match Details=========================================
@@ -82,17 +89,6 @@ public class CreateEventActivity extends BaseActivity {
         if (addMatchButton != null) {
             addMatchButton.setOnClickListener(v -> {
                 addMatchForm();
-
-                // Set board game dropdown for each new match form.
-                Spinner gameName = matchFormContainerHandle
-                        .getChildAt(matchFormContainerHandle.getChildCount()-1)
-                        .findViewById(R.id.dropdown_gameName);
-
-                if (gameName != null) {
-                    setDropdown(gameName, gameList);
-                } else {
-                    Log.e(TAG, "Game name dropdown not found");
-                }
                 });
         } else {
             Log.e(TAG, "Match creation button not found");
@@ -131,7 +127,7 @@ public class CreateEventActivity extends BaseActivity {
 
 
 
-    // =======================================Layout Helpers========================================
+    // =======================================Global Function Helpers========================================
     private void setDropdown(Spinner dropdown, List<String> list) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
         dropdown.setAdapter(adapter);
@@ -151,8 +147,9 @@ public class CreateEventActivity extends BaseActivity {
         layout.removeViewAt(layout.getChildCount() - 1);
     }
 
-    //TODO: User input for selecting the date/time work for all timestamps using callback.
-    private void showDateTimePicker() {
+    // Show the user an interface to select a date/time
+    private void showDateTimePicker(@Nullable Date initial, OnDateTimePicked callBack) {
+        if (initial != null) calendar.setTime(initial);
         // User selects the date
         DatePickerDialog datePicker = new DatePickerDialog(this,
                 (view, year, month, day) -> {
@@ -167,8 +164,12 @@ public class CreateEventActivity extends BaseActivity {
                                 calendar.set(Calendar.MINUTE, minute);
                                 calendar.set(Calendar.SECOND, 0);
 
-                                // Display the selected datetime to user
-                                dateTimeText.setText(calendar.getTime().toString());
+                                // HEADS UP: Here is where the user is done selecting the time.
+                                // Because this function uses lambda and such, we cannot just
+                                // refer to an outside function, so instead we have to use a
+                                // callback. In short, whenever the user is done selecting the
+                                // date and time, use the callback to set the passed in date object.
+                                callBack.onPicked(calendar.getTime());
 
                             }, calendar.get(Calendar.HOUR_OF_DAY),
                             calendar.get(Calendar.MINUTE), false); // Show time via am/pm
@@ -181,6 +182,8 @@ public class CreateEventActivity extends BaseActivity {
         datePicker.show();
     }
 
+
+    // =======================================Event Form Function Helpers========================================
     private void setChildLayoutForm(@LayoutRes int layoutRes, @IdRes int containerId) {
         ViewGroup container = findViewById(containerId);
         LayoutInflater.from(this).inflate(layoutRes, container, true);
@@ -189,12 +192,14 @@ public class CreateEventActivity extends BaseActivity {
         notesText = findViewById(R.id.editTextTextMultiLine_eventNotes);
 
         // Set up schedule creation
-        dateTimeText = findViewById(R.id.textView_eventStart);
+        eventStartText = findViewById(R.id.textView_eventStart);
         Button selectDateButton = findViewById(R.id.button_selectSchedule);
         selectDateButton.setOnClickListener(v -> {
-            showDateTimePicker();
-//            eventStart = new Timestamp(calendar.getTime());
-//            dateTimeText.setText(calendar.getTime().toString());
+            // When user input for date/time is complete, set the necessary data.
+            showDateTimePicker(eventStart, date -> {
+                eventStart = date;
+                eventStartText.setText(date.toString());
+            });
         });
 
         // Set up the values for the visibility dropdown
@@ -202,7 +207,6 @@ public class CreateEventActivity extends BaseActivity {
         visibilityList.add("Private");
         visibilityList.add("Friends");
         visibilityList.add("Public");
-
         visibilityDropdown = findViewById(R.id.dropdown_visibility);
         setDropdown(visibilityDropdown, visibilityList);
 
@@ -211,31 +215,24 @@ public class CreateEventActivity extends BaseActivity {
         statusList.add("Planned");
         statusList.add("In-Progress");
         statusList.add("Complete");
-
         statusDropdown = findViewById(R.id.dropdown_status);
         setDropdown(statusDropdown, statusList);
-
-        // TODO: Get list of friend's from database.
-        List<String> friendList = new ArrayList<>();
-        friendList.add("Alice");
-        friendList.add("Bob");
-        friendList.add("Charlie");
 
         // Create first friend dropdown, and allow additional friend dropdowns
         // on "+ friend" button click, or remove friend dropdown on "- Friend"
         // button click.
         LinearLayout friendLayout = findViewById(R.id.linearLayout_friend);
         if (friendLayout != null) {
-            addDropdown(friendLayout, friendList);  // initial friend dropdown
+            setFriendDropdown(friendLayout);
 
             // Add additional friend dropdown
             View addFriend = findViewById(R.id.button_addFriend);
             if (addFriend != null) {
                 addFriend.setOnClickListener(v -> {
-                    if (!friendList.isEmpty()) {
-                        addDropdown(friendLayout, friendList);
+                    if (!friendList.isEmpty() && friendLayout.getChildCount() < friendList.size()) {
+                        setFriendDropdown(friendLayout);
                     } else {
-                        Toast.makeText(this, "Friends not found.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "No friend to add.", Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {
@@ -246,7 +243,7 @@ public class CreateEventActivity extends BaseActivity {
             View removeFriend = findViewById(R.id.button_removeFriend);
             if (removeFriend != null) {
                 removeFriend.setOnClickListener(v -> {
-                    if (friendLayout.getChildCount() > 1) {
+                    if (friendLayout.getChildCount() > 0) {
                         removeDropdown(friendLayout);
                     } else {
                         Toast.makeText(this, "No friend to remove.", Toast.LENGTH_SHORT).show();
@@ -260,9 +257,70 @@ public class CreateEventActivity extends BaseActivity {
         }
     }
 
+    // Set the friend list dropdown values to users friends
+    private void setFriendDropdown(LinearLayout layout) {
+        Spinner newSpinner = new Spinner(this);
+        newSpinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        newSpinner.setId(View.generateViewId());
+        newSpinner.setBackgroundResource(android.R.drawable.btn_dropdown);
+
+        friendAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                friendList
+        );
+        friendAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        newSpinner.setAdapter(friendAdapter);
+        layout.addView(newSpinner);
+
+        getFriends();
+    }
+
+
+
+
+    // =======================================Match Form Function Helpers========================================
     private void addMatchForm() {
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
+
+        // TODO: Change so gamelist is populated by users saved games.
+        gameList.add("Catan");
+        gameList.add("Monopoly");
+
+        matchStartText = findViewById(R.id.textView_matchStart);
+        matchEndText = findViewById(R.id.textView_matchEnd);
+
+        // Set board game dropdown for each new match form.
+        Spinner gameName = matchFormContainerHandle
+                .getChildAt(matchFormContainerHandle.getChildCount()-1)
+                .findViewById(R.id.dropdown_gameName);
+
+        if (gameName != null) {
+            setDropdown(gameName, gameList);
+        } else {
+            Log.e(TAG, "Game name dropdown not found");
+        }
+
+        Button matchStartButton = findViewById(R.id.button_selectTimeStart);
+        if (matchStartButton != null) {
+            matchStartButton.setOnClickListener(v2 -> {
+                showDateTimePicker(matchStart, date -> {
+                    matchStart = date;
+                    matchStartText.setText(date.toString());
+                });
+            });
+        }
+
+        Button matchEndButton = findViewById(R.id.button_selectTimeEnd);
+        if (matchEndButton != null) {
+            matchEndButton.setOnClickListener(v2 -> {
+                showDateTimePicker(matchEnd, date -> {
+                    matchEnd = date;
+                    matchEndText.setText(date.toString());
+                });
+            });
+        }
     }
 
     private void removeMatchForm() {
@@ -274,18 +332,15 @@ public class CreateEventActivity extends BaseActivity {
 
     // ===================================Database Helpers==========================================
     private void uploadEvent() {
-        db = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
-
-        if (auth.getCurrentUser() == null) {
+        if (currentUser == null) {
             Log.e(TAG, "Must be logged in.");
             return;
         }
 
-        String hostId = auth.getUid();
+        String hostId = currentUser.getUid();
         String title = titleText.getText().toString();
-        String visibility = visibilityDropdown.getSelectedItem().toString();
-        String status = statusDropdown.getSelectedItem().toString();
+        String visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
+        String status = statusDropdown.getSelectedItem().toString().toLowerCase();
         String notes = notesText.getText().toString();
         Timestamp scheduledAt = new Timestamp(calendar.getTime());
         Timestamp createdAt = Timestamp.now();
@@ -295,7 +350,7 @@ public class CreateEventActivity extends BaseActivity {
             Toast.makeText(this, "Title Required", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (dateTimeText.getText().toString().isEmpty()) {
+        if (eventStartText.getText().toString().isEmpty()) {
             Toast.makeText(this, "Schedule Required", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -327,5 +382,38 @@ public class CreateEventActivity extends BaseActivity {
 
     private void uploadFriendInvites() {
         //TODO: implement friend invite uploads
+    }
+
+    private void getFriends() {
+
+        if (currentUser == null) {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String uid = currentUser.getUid();
+
+        CollectionReference friendsRef = db
+                .collection("users")
+                .document(uid)
+                .collection("friends");
+
+        friendsRef
+                .orderBy("displayName")
+                .get()
+                .addOnSuccessListener(snap -> {
+                    friendList.clear();
+
+                    for (DocumentSnapshot d : snap.getDocuments()) {
+                        String id = d.getId();
+                        String friendUid = d.getString("uid");
+                        String displayName = d.getString("displayName");
+                        friendList.add(new Friend(id, friendUid, displayName));
+                    }
+                    friendAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 }
