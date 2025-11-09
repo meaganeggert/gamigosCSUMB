@@ -17,6 +17,13 @@
         android:orientation="vertical"
         android:layout_gravity="center_horizontal">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Event"
+            android:textSize="24dp"
+            android:layout_gravity="center_horizontal"/>
+
         <FrameLayout
             android:id="@+id/eventFormContainer"
             android:layout_width="wrap_content"
@@ -34,6 +41,12 @@
             android:layout_marginBottom="16dp"
             android:background="?android:attr/listDivider"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Matches"
+            android:textSize="24dp"
+            android:layout_gravity="center_horizontal"/>
         <LinearLayout
             android:id="@+id/matchFormContainer"
             android:layout_width="wrap_content"
@@ -49,14 +62,14 @@
 
             <Button
                 android:id="@+id/button_removeMatch"
-                android:layout_width="wrap_content"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
-                android:text="- Match"/>
+                android:text="-"/>
             <Button
                 android:id="@+id/button_addMatch"
-                android:layout_width="wrap_content"
+                android:layout_width="60dp"
                 android:layout_height="wrap_content"
-                android:text="+ Match"/>
+                android:text="+"/>
         </LinearLayout>
 
 

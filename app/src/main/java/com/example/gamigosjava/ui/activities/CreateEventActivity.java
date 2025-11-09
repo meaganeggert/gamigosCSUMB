@@ -41,6 +41,7 @@ public class CreateEventActivity extends BaseActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+    private String eventId, matchId;
 
 
     // Handle on match forms
@@ -50,7 +51,9 @@ public class CreateEventActivity extends BaseActivity {
     // Values used for uploading/validation
     private Calendar calendar = Calendar.getInstance();
     private Date eventStart, eventEnd, matchStart, matchEnd;
-    private TextView eventStartText, matchStartText, matchEndText;
+
+    List<Date> matchStartList = new ArrayList<>(), matchEndList = new ArrayList<>();
+    private TextView eventStartText;
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
 
@@ -58,8 +61,6 @@ public class CreateEventActivity extends BaseActivity {
     List<Friend> friendList = new ArrayList<>();
 
     List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
-    private List<HashMap<String, Object>> matchForms= new ArrayList();
-
 
 
     @Override
@@ -82,6 +83,10 @@ public class CreateEventActivity extends BaseActivity {
 
 
         // ===================================Match Details=========================================
+        // TODO: Change so gamelist is populated by users saved games.
+        gameList.add("Catan");
+        gameList.add("Monopoly");
+
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
 
         // Add new match details form on button click.
@@ -116,8 +121,7 @@ public class CreateEventActivity extends BaseActivity {
         View createEventButton = findViewById(R.id.button_createEvent);
         if (createEventButton != null) {
             createEventButton.setOnClickListener(v -> {
-                uploadEvent();
-                uploadMatches();
+                uploadAllForms();
             });
         } else {
             Log.e(TAG, "Create Event Button not found");
@@ -280,16 +284,17 @@ public class CreateEventActivity extends BaseActivity {
 
 
     // =======================================Match Form Function Helpers========================================
+    // Adds the match form layout and sets the necessary values.
     private void addMatchForm() {
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
 
-        // TODO: Change so gamelist is populated by users saved games.
-        gameList.add("Catan");
-        gameList.add("Monopoly");
+        int matchIndex = matchFormContainerHandle.getChildCount() - 1;
+        matchStartList.add(matchIndex, new Date());
+        matchEndList.add(matchIndex, new Date());
 
-        matchStartText = findViewById(R.id.textView_matchStart);
-        matchEndText = findViewById(R.id.textView_matchEnd);
+        TextView matchStartText = match.findViewById(R.id.textView_matchStart);
+        TextView matchEndText = match.findViewById(R.id.textView_matchEnd);
 
         // Set board game dropdown for each new match form.
         Spinner gameName = matchFormContainerHandle
@@ -302,22 +307,24 @@ public class CreateEventActivity extends BaseActivity {
             Log.e(TAG, "Game name dropdown not found");
         }
 
-        Button matchStartButton = findViewById(R.id.button_selectTimeStart);
+        Button matchStartButton = match.findViewById(R.id.button_selectTimeStart);
         if (matchStartButton != null) {
             matchStartButton.setOnClickListener(v2 -> {
                 showDateTimePicker(matchStart, date -> {
                     matchStart = date;
                     matchStartText.setText(date.toString());
+                    matchStartList.set(matchIndex, date);
                 });
             });
         }
 
-        Button matchEndButton = findViewById(R.id.button_selectTimeEnd);
+        Button matchEndButton = match.findViewById(R.id.button_selectTimeEnd);
         if (matchEndButton != null) {
             matchEndButton.setOnClickListener(v2 -> {
                 showDateTimePicker(matchEnd, date -> {
                     matchEnd = date;
                     matchEndText.setText(date.toString());
+                    matchEndList.set(matchIndex, date);
                 });
             });
         }
@@ -331,7 +338,11 @@ public class CreateEventActivity extends BaseActivity {
 
 
     // ===================================Database Helpers==========================================
-    private void uploadEvent() {
+
+    // This function was originally meant to to upload the event form to firebase separately
+    // from the matches forms, but we want the matches to upload after, only on success of uploading
+    // the event. So at the bottom, in the .onSuccessListener the uploadMatches function will be called.
+    private void uploadAllForms() {
         if (currentUser == null) {
             Log.e(TAG, "Must be logged in.");
             return;
@@ -351,7 +362,7 @@ public class CreateEventActivity extends BaseActivity {
             return;
         }
         if (eventStartText.getText().toString().isEmpty()) {
-            Toast.makeText(this, "Schedule Required", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Event Start Required", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -368,15 +379,65 @@ public class CreateEventActivity extends BaseActivity {
         db.collection("events")
                 .add(eventData)
                 .addOnSuccessListener(documentReference -> {
-                    Log.d(TAG, "Saved Event: " + documentReference.getId());
+                    eventId = documentReference.getId();
+                    Log.d(TAG, "Saved Event: " + eventId);
+                    uploadMatches();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to save event: " + e.getMessage());
                 });
     }
 
+    // Uploads the matches to firebase.
     private void uploadMatches() {
-        //TODO: implement match uploads
+        if (currentUser == null) {
+            Log.e(TAG, "Must be logged in.");
+            return;
+        }
+
+        if (matchFormContainerHandle.getChildCount() < 1) {
+            Log.d(TAG, "No matches to upload, skipping uploadMatches");
+            return;
+        }
+
+        for (int i = 0; i < matchFormContainerHandle.getChildCount(); i++) {
+            View matchForm = matchFormContainerHandle.getChildAt(i);
+
+            TextView matchStartText = matchForm.findViewById(R.id.textView_matchStart);
+            TextView matchEndText = matchForm.findViewById(R.id.textView_matchEnd);
+            EditText ruleChangeValue = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
+            EditText notesValue = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
+            Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
+
+            Timestamp matchStartValue = null;
+            Timestamp matchEndValue = null;
+            if (!matchStartText.getText().toString().isEmpty()) {
+                matchStartValue = new Timestamp(matchStartList.get(i));
+            }
+            if (!matchEndText.getText().toString().isEmpty()) {
+                matchEndValue = new Timestamp(matchEndList.get(i));
+            }
+
+
+            HashMap<String, Object> match = new HashMap<>();
+            match.put("gameId", null);
+            match.put("eventId", eventId);
+            match.put("notes", notesValue.getText().toString());
+            match.put("rules_variant", ruleChangeValue.getText().toString());
+            match.put("startedAt", matchStartValue);
+            match.put("endedAt", matchEndValue);
+
+//            Log.d(TAG, "Match " + i + " details:\n" + match.toString() + "\nMatch start size: ");
+
+            db.collection("matches").add(match)
+                    .addOnSuccessListener(documentReference -> {
+                        matchId = documentReference.getId();
+                        Log.d(TAG, "Saved Match: " + matchId);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to save match: " + e.getMessage());
+                    });
+        }
 
     }
 
@@ -384,6 +445,8 @@ public class CreateEventActivity extends BaseActivity {
         //TODO: implement friend invite uploads
     }
 
+    // This gets the users friends from the database and loads it into an array adapter to be used
+    // in the dropdown of friends to invite.
     private void getFriends() {
 
         if (currentUser == null) {
