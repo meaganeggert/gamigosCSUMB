@@ -8,30 +8,128 @@
     tools:context=".ui.activities.EventsLandingPage">
 
 <!--    Create Event Button -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_createEventTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="165dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="serif-monospace"
+        android:maxLines="1"
+        android:text="Create Event"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
         android:layout_marginTop="19dp"
-        android:text="Create Event Test"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toTopOf="@id/activeEventsTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"  />
 
-<!--    Get Past Events Button -->
-    <Button
-        android:id="@+id/button_pastEvents"
-        android:layout_width="wrap_content"
+<!--    Active Events Text Title -->
+    <TextView
+        android:id="@+id/activeEventsTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="19dp"
-        android:text="Show Past Events"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:text="Active Events"
+        android:gravity="center"
+        android:textColor="@color/grey"
+        android:textSize="13sp"
+        app:layout_constraintTop_toBottomOf="@id/button_createEventTest"
+        app:layout_constraintBottom_toTopOf="@id/activeHR"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintEnd_toEndOf="parent" />
+
+<!--    Horizontal Rule -->
+    <View
+        android:id="@+id/activeHR"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/medgrey"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        app:layout_constraintTop_toBottomOf="@+id/activeEventsTitle"
+        app:layout_constraintBottom_toTopOf="@id/recyclerViewActiveEvents"
+        />
+
+<!--    Active Events Recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewActiveEvents"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#EEEEEE"
+        android:padding="8dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        tools:listitem="@layout/event_row"
+        tools:itemCount="2"
+        app:layout_constraintTop_toBottomOf="@id/activeHR"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/pastEventsTitle" />
+
+    <!--    Past Events Text Title -->
+    <TextView
+        android:id="@+id/pastEventsTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Past Events"
+        android:gravity="center"
+        android:textColor="@color/grey"
+        android:textSize="13sp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/recyclerViewActiveEvents"
+        app:layout_constraintBottom_toTopOf="@id/pastHR"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!--    Horizontal Rule -->
+    <View
+        android:id="@+id/pastHR"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/medgrey"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        app:layout_constraintTop_toBottomOf="@id/pastEventsTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/recyclerViewPastEvents" />
+
+    <!--    Get Past Events Button -->
+<!--    <Button-->
+<!--        android:id="@+id/button_pastEvents"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="19dp"-->
+<!--        android:text="Show Past Events"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.5"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintVertical_bias="0.0" />-->
+
+<!--    Past Events Recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPastEvents"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#EEEEEE"
+        android:padding="8dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        tools:listitem="@layout/event_row"
+        tools:itemCount="2"
+        app:layout_constraintTop_toBottomOf="@id/pastHR"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
