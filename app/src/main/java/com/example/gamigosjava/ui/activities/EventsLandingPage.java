@@ -71,7 +71,8 @@ public class EventsLandingPage extends BaseActivity {
         // Read event collection from database
         Query query = db.collection("events");
         query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
-                .orderBy("scheduledAt", Query.Direction.ASCENDING); // Pull active events
+                .orderBy("scheduledAt", Query.Direction.ASCENDING)
+                .limit(2); // Pull active events
 
         query.get(Source.SERVER)
                 .addOnSuccessListener(q -> {
@@ -113,7 +114,8 @@ public class EventsLandingPage extends BaseActivity {
         // Read event collection from database
         query = db.collection("events");
         query = query.whereLessThan("scheduledAt", now)
-                .orderBy("scheduledAt", Query.Direction.DESCENDING); // Pull past events
+                .orderBy("scheduledAt", Query.Direction.DESCENDING)
+                .limit(2); // Pull past events
 
         query.get(Source.SERVER)
                 .addOnSuccessListener(q -> {
