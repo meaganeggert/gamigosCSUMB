@@ -17,4 +17,14 @@
     <string name="requesting_user">Requesting User</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
+    <string name="user_profile">User Profile</string>
+    <string name="email">Email</string>
+    <string name="send_friend_request">Send friend request</string>
+    <string name="deny">Deny</string>
+    <string name="add_friend">Add Friend</string>
+    <string name="requests">Requests</string>
+    <string name="user_name">User name</string>
+    <string name="pending">Pending</string>
+    <string name="unfriend">Unfriend</string>
+    <string name="friend">Friend</string>
 </resources>

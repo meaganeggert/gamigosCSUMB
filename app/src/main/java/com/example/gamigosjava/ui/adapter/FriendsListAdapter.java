@@ -3,19 +3,18 @@ package com.example.gamigosjava.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.ui.viewholder.FriendViewHolder;
 
 import java.util.List;
 import java.util.Map;
 
-public class FriendsListAdapter extends RecyclerView.Adapter<FriendsListAdapter.FriendViewHolder> {
+public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
 
     public interface OnFriendClickListener {
         void onFriendClick(Map<String, Object> friend);
@@ -49,7 +48,6 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendsListAdapter.
         Glide.with(holder.itemView.getContext())
                 .load(photoUrl)
                 .placeholder(android.R.drawable.ic_menu_gallery)
-                .circleCrop()
                 .into(holder.ivPhoto);
 
         holder.itemView.setOnClickListener(v -> {
@@ -60,16 +58,5 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendsListAdapter.
     @Override
     public int getItemCount() {
         return friends.size();
-    }
-
-    static class FriendViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName;
-        ImageView ivPhoto;
-
-        public FriendViewHolder(@NonNull View itemView) {
-            super(itemView);
-            tvName = itemView.findViewById(R.id.tvName);
-            ivPhoto = itemView.findViewById(R.id.ivPhoto);
-        }
     }
 }
