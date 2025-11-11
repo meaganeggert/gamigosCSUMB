@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.FrameLayout;
+import android.widget.RadioButton;
 
 import androidx.annotation.LayoutRes;
 import com.bumptech.glide.Glide;
@@ -16,6 +17,11 @@ import androidx.core.view.GravityCompat;
 import com.example.gamigosjava.R;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -27,6 +33,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected ShapeableImageView avatarView;
     private ActionBarDrawerToggle toggle;
 
+    private FirebaseFirestore db;
+    private FirebaseUser currentUser;
+    private DocumentReference userDocRef;
+
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
@@ -35,6 +45,14 @@ public abstract class BaseActivity extends AppCompatActivity {
         navView = findViewById(R.id.navigationView);
         toolbar = findViewById(R.id.toolbar);
         avatarView = findViewById(R.id.imageAvatar);
+
+        db = FirebaseFirestore.getInstance();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            userDocRef = db.collection("users").document(currentUser.getUid());
+        }
+
+        loadAvatar();
 
         setSupportActionBar(toolbar);
 
@@ -91,16 +109,16 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
 
         // Optional: give a default title
-//        setTitle("HelloWorld");
+        // setTitle("HelloWorld");
     }
 
-    /** Inflate each child Activity’s layout into the shared container. */
+    // Inflate each child Activity’s layout into the shared container.
     protected void setChildLayout(@LayoutRes int layoutRes) {
         FrameLayout container = findViewById(R.id.contentContainer);
         getLayoutInflater().inflate(layoutRes, container, true);
     }
 
-    /** Call this from each child activity to show the appropriate title in the header bar. */
+    // Function to set navbar title
     protected void setTopTitle(CharSequence title) {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
@@ -108,17 +126,21 @@ public abstract class BaseActivity extends AppCompatActivity {
         toolbar.setTitle(title);
     }
 
-//    /** Call to update avatar (e.g., after login). Accepts null-safe Uri or URL string. */
-//    protected void setAvatar(Object photo) {
-//        if (photo == null) {
-//            avatarView.setImageResource(R.drawable.ic_person_24);
-//            return;
-//        }
-//        Glide.with(this)
-//                .load(photo)               // Uri, String, File… Glide handles it
-//                .placeholder(R.drawable.ic_person_24)
-//                .error(R.drawable.ic_person_24)
-//                .circleCrop()
-//                .into(avatarView);
-//    }
+    // TODO: SET UP AVATAR DISPLAY
+    private void loadAvatar() {
+
+        userDocRef.get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                String photoUrl = doc.getString("photoUrl");
+
+                if (photoUrl != null && !photoUrl.isEmpty()) {
+                    Glide.with(this)
+                            .load(photoUrl)
+                            .placeholder(android.R.drawable.ic_menu_camera)
+                            .into(avatarView);
+                }
+            }
+        });
+    }
+
 }
