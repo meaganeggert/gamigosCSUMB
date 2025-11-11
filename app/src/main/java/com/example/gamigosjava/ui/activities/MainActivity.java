@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 // Firebase
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.repository.AchievementsRepo;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -141,6 +142,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void firebaseAuthWithGoogle(String idToken) {
+        AchievementsRepo repo = new AchievementsRepo(
+                FirebaseFirestore.getInstance()
+        );
+
         AuthCredential firebaseCred = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(firebaseCred)
                 .addOnCompleteListener(this, task -> {
@@ -150,6 +155,9 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null) {
                             Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
+                            repo.checkAndIncrementLoginCount(user.getUid())
+                                    .addOnSuccessListener(v-> Log.d(TAG, "Metrics set up and incremented successfully"))
+                                    .addOnFailureListener(e-> Log.e(TAG, "Metrics set up FAILED", e));
                         }
                         updateUI(user);
                     } else {
