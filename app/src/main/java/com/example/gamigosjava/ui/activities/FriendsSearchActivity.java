@@ -7,7 +7,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,10 +19,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.algolia.search.saas.Client;
 import com.algolia.search.saas.Index;
 import com.algolia.search.saas.Query;
-import com.algolia.search.saas.CompletionHandler;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.WriteBatch;
 
 import org.json.JSONArray;
@@ -42,10 +41,8 @@ public class FriendsSearchActivity extends BaseActivity {
     private static final String ALGOLIA_SEARCH_KEY = "fbdb3c57a5235ca22af1c1d59fece002";
     private static final String ALGOLIA_INDEX_NAME = "users_name_asc";
     private static final int PAGE_SIZE = 25;
-    private Client algoliaClient;
     private Index algoliaIndex;
     private EditText etSearch;
-    private RecyclerView rvResults;
     private UserAdapter adapter;
     private final List<Map<String, Object>> userList = new ArrayList<>();
     private FirebaseUser currentUser;
@@ -58,10 +55,16 @@ public class FriendsSearchActivity extends BaseActivity {
     // for button states
     private final Set<String> myFriends = new HashSet<>();
     private final Set<String> myOutgoing = new HashSet<>();
+    private final Set<String> myIncoming = new HashSet<>();
     // status constants
     private static final int STATUS_NONE = 0;
     private static final int STATUS_PENDING = 1;
     private static final int STATUS_FRIEND = 2;
+    private static final int STATUS_INCOMING = 3;
+    private ListenerRegistration friendsListener;
+    private ListenerRegistration incomingListener;
+    private ListenerRegistration outgoingListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,17 +79,27 @@ public class FriendsSearchActivity extends BaseActivity {
         db = FirebaseFirestore.getInstance();
 
         // Algolia init
-        algoliaClient = new Client(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
+        Client algoliaClient = new Client(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
         algoliaIndex = algoliaClient.getIndex(ALGOLIA_INDEX_NAME);
 
         etSearch = findViewById(R.id.etSearch);
-        rvResults = findViewById(R.id.rvResults);
+        RecyclerView rvResults = findViewById(R.id.rvResults);
         Button btnSearch = findViewById(R.id.btnSearch);
 
         rvResults.setLayoutManager(new LinearLayoutManager(this));
         adapter = new UserAdapter(
                 userList,
-                this::onAddClicked,
+                new UserAdapter.FriendActionClickListener() {
+                    @Override
+                    public void onAddClick(Map<String, Object> user) {
+                        onAddClicked(user);
+                    }
+
+                    @Override
+                    public void onDenyClick(Map<String, Object> user) {
+                        onDenyClicked(user);
+                    }
+                },
                 this::onUserClicked
         );
         rvResults.setAdapter(adapter);
@@ -122,7 +135,7 @@ public class FriendsSearchActivity extends BaseActivity {
         String myUid = currentUser.getUid();
 
         // friends
-        db.collection("users").document(myUid)
+        friendsListener = db.collection("users").document(myUid)
                 .collection("friends")
                 .addSnapshotListener((snap, e) -> {
                     if (e != null || snap == null) return;
@@ -134,13 +147,24 @@ public class FriendsSearchActivity extends BaseActivity {
                 });
 
         // outgoing friend requests
-        db.collection("users").document(myUid)
+        outgoingListener = db.collection("users").document(myUid)
                 .collection("friendRequests_outgoing")
                 .addSnapshotListener((snap, e) -> {
                     if (e != null || snap == null) return;
                     myOutgoing.clear();
                     for (DocumentSnapshot doc : snap.getDocuments()) {
                         myOutgoing.add(doc.getId());
+                    }
+                    refreshStatuses();
+                });
+
+        incomingListener = db.collection("users").document(myUid)
+                .collection("friendRequests_incoming")
+                .addSnapshotListener((snap, e) -> {
+                    if (e != null || snap == null) return;
+                    myIncoming.clear();
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        myIncoming.add(doc.getId());
                     }
                     refreshStatuses();
                 });
@@ -155,6 +179,8 @@ public class FriendsSearchActivity extends BaseActivity {
                 user.put("status", STATUS_FRIEND);
             } else if (myOutgoing.contains(uid)) {
                 user.put("status", STATUS_PENDING);
+            } else if (myIncoming.contains(uid)) {
+                user.put("status", STATUS_INCOMING);
             } else {
                 user.put("status", STATUS_NONE);
             }
@@ -192,101 +218,94 @@ public class FriendsSearchActivity extends BaseActivity {
                 .setPage(currentPage)
                 .setHitsPerPage(PAGE_SIZE);
 
-        algoliaIndex.searchAsync(query, new CompletionHandler() {
-            @Override
-            public void requestCompleted(JSONObject content,
-                                         com.algolia.search.saas.AlgoliaException e) {
+        algoliaIndex.searchAsync(query, (content, e) -> runOnUiThread(() -> {
+            isLoading = false;
 
-                runOnUiThread(() -> {
-                    isLoading = false;
-
-                    if (e != null) {
-                        Toast.makeText(FriendsSearchActivity.this,
-                                "Search failed: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (content == null) {
-                        Toast.makeText(FriendsSearchActivity.this,
-                                "No results",
-                                Toast.LENGTH_SHORT).show();
-                        hasMore = false;
-                        return;
-                    }
-
-                    try {
-                        JSONArray hits = content.getJSONArray("hits");
-
-                        // case 1: Algolia really returned nothing
-                        if (hits.length() == 0) {
-                            hasMore = false;
-                            if (userList.isEmpty()) {
-                                Toast.makeText(FriendsSearchActivity.this,
-                                        "No users found",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                            return;
-                        }
-
-                        // case 2: Algolia returned *something*, but maybe we skipped all of them
-                        int addedThisPage = 0;
-
-                        for (int i = 0; i < hits.length(); i++) {
-                            JSONObject hit = hits.getJSONObject(i);
-
-                            String uid = hit.optString("objectID", "");
-                            // skip self
-                            if (currentUser != null && uid.equals(currentUser.getUid())) {
-                                continue;
-                            }
-
-                            //  Create user object to add to userlist
-
-                            Map<String, Object> user = new HashMap<>();
-                            user.put("docId", uid);
-                            user.put("displayName", hit.optString("displayName", ""));
-                            user.put("email", hit.optString("email", ""));
-                            user.put("photoUrl", hit.optString("photoUrl", ""));
-                            user.put("privacyLevel", hit.optString("privacyLevel", ""));
-
-                            // set initial status based on loaded sets
-                            if (myFriends.contains(uid)) {
-                                user.put("status", STATUS_FRIEND);
-                            } else if (myOutgoing.contains(uid)) {
-                                user.put("status", STATUS_PENDING);
-                            } else {
-                                user.put("status", STATUS_NONE);
-                            }
-
-                            userList.add(user);
-                            addedThisPage++;
-                        }
-
-                        // if we got hits, but all were filtered out (e.g. only yourself)
-                        if (addedThisPage == 0) {
-                            // no more to load for this query
-                            hasMore = false;
-                            if (userList.isEmpty()) {
-                                Toast.makeText(FriendsSearchActivity.this,
-                                        "No users found",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                            return;
-                        }
-
-                        // normal path
-                        adapter.notifyDataSetChanged();
-                        currentPage++;
-
-                    } catch (JSONException jsonException) {
-                        Toast.makeText(FriendsSearchActivity.this,
-                                "Parse error: " + jsonException.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+            if (e != null) {
+                Toast.makeText(FriendsSearchActivity.this,
+                        "Search failed: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
+
+            if (content == null) {
+                Toast.makeText(FriendsSearchActivity.this,
+                        "No results",
+                        Toast.LENGTH_SHORT).show();
+                hasMore = false;
+                return;
+            }
+
+            try {
+                JSONArray hits = content.getJSONArray("hits");
+
+                // case 1: Algolia really returned nothing
+                if (hits.length() == 0) {
+                    hasMore = false;
+                    if (userList.isEmpty()) {
+                        Toast.makeText(FriendsSearchActivity.this,
+                                "No users found",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    return;
+                }
+
+                // case 2: Algolia returned *something*, but maybe we skipped all of them
+                int addedThisPage = 0;
+
+                for (int i = 0; i < hits.length(); i++) {
+                    JSONObject hit = hits.getJSONObject(i);
+
+                    String uid = hit.optString("objectID", "");
+                    // skip self
+                    if (currentUser != null && uid.equals(currentUser.getUid())) {
+                        continue;
+                    }
+
+                    //  Create user object to add to userlist
+
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("docId", uid);
+                    user.put("displayName", hit.optString("displayName", ""));
+                    user.put("email", hit.optString("email", ""));
+                    user.put("photoUrl", hit.optString("photoUrl", ""));
+                    user.put("privacyLevel", hit.optString("privacyLevel", ""));
+
+                    // set initial status based on loaded sets
+                    if (myFriends.contains(uid)) {
+                        user.put("status", STATUS_FRIEND);
+                    } else if (myOutgoing.contains(uid)) {
+                        user.put("status", STATUS_PENDING);
+                    } else {
+                        user.put("status", STATUS_NONE);
+                    }
+
+                    userList.add(user);
+                    addedThisPage++;
+                }
+
+                // if we got hits, but all were filtered out (e.g. only yourself)
+                if (addedThisPage == 0) {
+                    // no more to load for this query
+                    hasMore = false;
+                    if (userList.isEmpty()) {
+                        Toast.makeText(FriendsSearchActivity.this,
+                                "No users found",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    return;
+                }
+
+                // normal path
+                adapter.notifyDataSetChanged();
+                currentPage++;
+
+            } catch (JSONException jsonException) {
+                Toast.makeText(FriendsSearchActivity.this,
+                        "Parse error: " + jsonException.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }));
     }
 
     private void onAddClicked(Map<String, Object> user) {
@@ -303,7 +322,40 @@ public class FriendsSearchActivity extends BaseActivity {
             return;
         }
 
-        // write two docs in a batch
+        if (status == STATUS_INCOMING) {
+            acceptIncomingRequest(otherUid, user);
+            return;
+        }
+
+        sendFriendRequest(user, myUid, otherUid);
+    }
+
+    private void onDenyClicked(Map<String, Object> user) {
+        String otherUid = (String) user.get("docId");
+        if (currentUser == null || otherUid == null) return;
+        String myUid = currentUser.getUid();
+
+        var batch = db.batch();
+
+        DocumentReference myIncomingRef = db.collection("users").document(myUid)
+                .collection("friendRequests_incoming").document(otherUid);
+        DocumentReference theirOutgoingRef = db.collection("users").document(otherUid)
+                .collection("friendRequests_outgoing").document(myUid);
+
+        batch.delete(myIncomingRef);
+        batch.delete(theirOutgoingRef);
+
+        batch.commit()
+                .addOnSuccessListener(aVoid -> {
+                    user.put("status", STATUS_NONE);
+                    adapter.notifyDataSetChanged();
+                    Toast.makeText(this, "Request denied", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+
+    private void sendFriendRequest(Map<String, Object> user, String myUid, String otherUid) {
         WriteBatch batch = db.batch();
 
         DocumentReference myOutgoingRef = db.collection("users")
@@ -317,11 +369,13 @@ public class FriendsSearchActivity extends BaseActivity {
                 .document(myUid);
 
         Map<String, Object> reqData = new HashMap<>();
-        reqData.put("from", myUid);
-        reqData.put("to", otherUid);
         reqData.put("createdAt", com.google.firebase.Timestamp.now());
+        reqData.put("from", myUid);
         reqData.put("fromDisplayName", currentUser.getDisplayName());
-        reqData.put("fromPhotoUrl", currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
+        reqData.put("fromPhotoUrl", currentUser.getPhotoUrl());
+        reqData.put("to", otherUid);
+        reqData.put("toDisplayName", user.get("displayName"));
+        reqData.put("toPhotoUrl", user.get("photoUrl"));
 
         batch.set(myOutgoingRef, reqData);
         batch.set(theirIncomingRef, reqData);
@@ -333,8 +387,60 @@ public class FriendsSearchActivity extends BaseActivity {
                     adapter.notifyDataSetChanged();
                     Toast.makeText(this, "Request sent", Toast.LENGTH_SHORT).show();
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    private void acceptIncomingRequest(String otherUid, Map<String, Object> user) {
+        String myUid = currentUser.getUid();
+
+        db.collection("users").document(otherUid).get()
+                .addOnSuccessListener(otherDoc -> {
+                    String otherName = otherDoc.getString("displayName");
+                    String otherPhoto = otherDoc.getString("photoUrl");
+
+                    var batch = db.batch();
+
+                    // my friends/{other}
+                    DocumentReference myFriendRef = db.collection("users").document(myUid)
+                            .collection("friends").document(otherUid);
+
+                    // their friends/{me}
+                    DocumentReference theirFriendRef = db.collection("users").document(otherUid)
+                            .collection("friends").document(myUid);
+
+                    // delete my incoming & their outgoing
+                    DocumentReference myIncomingRef = db.collection("users").document(myUid)
+                            .collection("friendRequests_incoming").document(otherUid);
+                    DocumentReference theirOutgoingRef = db.collection("users").document(otherUid)
+                            .collection("friendRequests_outgoing").document(myUid);
+
+                    Map<String, Object> myFriendData = new HashMap<>();
+                    myFriendData.put("uid", otherUid);
+                    myFriendData.put("displayName", otherName);
+                    myFriendData.put("photoUrl", otherPhoto);
+                    myFriendData.put("createdAt", com.google.firebase.Timestamp.now());
+
+                    Map<String, Object> theirFriendData = new HashMap<>();
+                    theirFriendData.put("uid", currentUser.getUid());
+                    theirFriendData.put("displayName", currentUser.getDisplayName());
+                    theirFriendData.put("photoUrl", currentUser.getPhotoUrl());
+                    theirFriendData.put("createdAt", com.google.firebase.Timestamp.now());
+
+                    batch.set(myFriendRef, myFriendData);
+                    batch.set(theirFriendRef, theirFriendData);
+                    batch.delete(myIncomingRef);
+                    batch.delete(theirOutgoingRef);
+
+                    batch.commit()
+                            .addOnSuccessListener(v -> {
+                                // update local UI
+                                user.put("status", STATUS_FRIEND);
+                                adapter.notifyDataSetChanged();
+                                Toast.makeText(this, "Friend request accepted", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                 });
     }
 
@@ -347,4 +453,11 @@ public class FriendsSearchActivity extends BaseActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (friendsListener != null) friendsListener.remove();
+        if (outgoingListener != null) outgoingListener.remove();
+        if (incomingListener != null) incomingListener.remove();
+    }
 }

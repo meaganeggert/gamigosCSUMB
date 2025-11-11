@@ -3,23 +3,22 @@ package com.example.gamigosjava.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.ui.viewholder.UserViewHolder;
 
 import java.util.List;
 import java.util.Map;
 
-public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
+public class UserAdapter extends RecyclerView.Adapter<UserViewHolder> {
 
-    public interface OnAddClickListener {
+    public interface FriendActionClickListener {
         void onAddClick(Map<String, Object> user);
+        void onDenyClick(Map<String, Object> user);
     }
 
     public interface OnUserClickListener {
@@ -27,15 +26,16 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     }
 
     private final List<Map<String, Object>> userList;
-    private final OnAddClickListener listener;
+    private final FriendActionClickListener listener;
     private final OnUserClickListener userClickListener;
 
     // same constants as activity
     private static final int STATUS_NONE = 0;
     private static final int STATUS_PENDING = 1;
     private static final int STATUS_FRIEND = 2;
+    private static final int STATUS_INCOMING = 3;
 
-    public UserAdapter(List<Map<String, Object>> userList, OnAddClickListener listener, OnUserClickListener userClickListener) {
+    public UserAdapter(List<Map<String, Object>> userList, FriendActionClickListener listener, OnUserClickListener userClickListener) {
         this.userList = userList;
         this.listener = listener;
         this.userClickListener = userClickListener;
@@ -70,14 +70,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             case STATUS_NONE:
                 holder.btnAddFriend.setText("Add");
                 holder.btnAddFriend.setEnabled(true);
+                holder.btnDenyFriend.setVisibility(View.GONE);
                 break;
             case STATUS_PENDING:
                 holder.btnAddFriend.setText("Pending");
                 holder.btnAddFriend.setEnabled(false);
+                holder.btnDenyFriend.setVisibility(View.GONE);
                 break;
             case STATUS_FRIEND:
                 holder.btnAddFriend.setText("Friend");
                 holder.btnAddFriend.setEnabled(false);
+                holder.btnDenyFriend.setVisibility(View.GONE);
+                break;
+            case STATUS_INCOMING:
+                holder.btnAddFriend.setText("Accept");
+                holder.btnAddFriend.setEnabled(true);
+                holder.btnDenyFriend.setVisibility(View.VISIBLE);
                 break;
         }
 
@@ -91,6 +99,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
                 listener.onAddClick(user);
             }
         });
+
+        holder.btnDenyFriend.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onDenyClick(user);
+            }
+        });
     }
 
     @Override
@@ -98,16 +112,5 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         return userList.size();
     }
 
-    static class UserViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName;
-        ImageView ivPhoto;
-        Button btnAddFriend;
 
-        UserViewHolder(View itemView) {
-            super(itemView);
-            tvName = itemView.findViewById(R.id.tvName);
-            ivPhoto = itemView.findViewById(R.id.ivPhoto);
-            btnAddFriend = itemView.findViewById(R.id.btnAddFriend);
-        }
-    }
 }
