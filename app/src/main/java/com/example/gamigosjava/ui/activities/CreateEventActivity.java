@@ -20,12 +20,15 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
 
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
+import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -41,26 +44,22 @@ public class CreateEventActivity extends BaseActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
-    private String eventId, matchId;
-
 
     // Handle on match forms
     private LinearLayout matchFormContainerHandle;
 
-
     // Values used for uploading/validation
     private Calendar calendar = Calendar.getInstance();
-    private Date eventStart, eventEnd, matchStart, matchEnd;
-
+    private Event eventItem;
+    private Date eventStart, matchStart, matchEnd; // May not be useful at the moment
     List<Date> matchStartList = new ArrayList<>(), matchEndList = new ArrayList<>();
     private TextView eventStartText;
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
-
     private ArrayAdapter<Friend> friendAdapter;
     List<Friend> friendList = new ArrayList<>();
-
     List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
+    List<Match> matchList;
 
 
     @Override
@@ -68,6 +67,9 @@ public class CreateEventActivity extends BaseActivity {
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
+
+        eventItem = new Event();
+        matchList = new ArrayList<>();
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_create_event);
@@ -203,6 +205,7 @@ public class CreateEventActivity extends BaseActivity {
             showDateTimePicker(eventStart, date -> {
                 eventStart = date;
                 eventStartText.setText(date.toString());
+                eventItem.scheduledAt = new Timestamp(date);
             });
         });
 
@@ -290,6 +293,7 @@ public class CreateEventActivity extends BaseActivity {
         matchFormContainerHandle.addView(match);
 
         int matchIndex = matchFormContainerHandle.getChildCount() - 1;
+        matchList.add(matchIndex, new Match());
         matchStartList.add(matchIndex, new Date());
         matchEndList.add(matchIndex, new Date());
 
@@ -313,7 +317,8 @@ public class CreateEventActivity extends BaseActivity {
                 showDateTimePicker(matchStart, date -> {
                     matchStart = date;
                     matchStartText.setText(date.toString());
-                    matchStartList.set(matchIndex, date);
+                    matchList.get(matchIndex).startedAt = new Timestamp(date);
+//                    matchStartList.set(matchIndex, date);
                 });
             });
         }
@@ -324,13 +329,16 @@ public class CreateEventActivity extends BaseActivity {
                 showDateTimePicker(matchEnd, date -> {
                     matchEnd = date;
                     matchEndText.setText(date.toString());
-                    matchEndList.set(matchIndex, date);
+                    matchList.get(matchIndex).endedAt = new Timestamp(date);
+//                    matchEndList.set(matchIndex, date);
                 });
             });
         }
     }
 
+    // Removes the last match form created.
     private void removeMatchForm() {
+        matchList.remove(matchFormContainerHandle.getChildCount()- 1 );
         matchFormContainerHandle.removeViewAt(matchFormContainerHandle.getChildCount() - 1);
     }
 
@@ -348,16 +356,18 @@ public class CreateEventActivity extends BaseActivity {
             return;
         }
 
-        String hostId = currentUser.getUid();
-        String title = titleText.getText().toString();
-        String visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
-        String status = statusDropdown.getSelectedItem().toString().toLowerCase();
-        String notes = notesText.getText().toString();
-        Timestamp scheduledAt = new Timestamp(calendar.getTime());
-        Timestamp createdAt = Timestamp.now();
-        Timestamp endedAt = null;
+        eventItem.hostId = currentUser.getUid();
+        eventItem.title = titleText.getText().toString();
+        eventItem.visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
+        eventItem.status = statusDropdown.getSelectedItem().toString().toLowerCase();
+        eventItem.notes = notesText.getText().toString();
+//        Timestamp scheduledAt = new Timestamp(calendar.getTime());
+        eventItem.createdAt = Timestamp.now();
+        eventItem.endedAt = null;
+        // Timestamp scheduledAt should already be set in the showDateTime function
 
-        if (title.isEmpty()) {
+        // Small validation
+        if (eventItem.title.isEmpty()) {
             Toast.makeText(this, "Title Required", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -366,21 +376,24 @@ public class CreateEventActivity extends BaseActivity {
             return;
         }
 
+        // Connect user values to hashmap to upload.
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put("hostId", hostId);
-        eventData.put("title", title);
-        eventData.put("visibility", visibility);
-        eventData.put("status", status);
-        eventData.put("notes", notes);
-        eventData.put("scheduledAt", scheduledAt);
-        eventData.put("createdAt", createdAt);
-        eventData.put("endedAt", endedAt);
+        eventData.put("hostId", eventItem.hostId);
+        eventData.put("title", eventItem.title);
+        eventData.put("visibility", eventItem.visibility);
+        eventData.put("status", eventItem.status);
+        eventData.put("notes", eventItem.notes);
+        eventData.put("scheduledAt", eventItem.scheduledAt);
+        eventData.put("createdAt", eventItem.createdAt);
+        eventData.put("endedAt", eventItem.endedAt);
 
+        // Upload the event then upload the match if the event was uploaded successfully.
         db.collection("events")
                 .add(eventData)
                 .addOnSuccessListener(documentReference -> {
-                    eventId = documentReference.getId();
-                    Log.d(TAG, "Saved Event: " + eventId);
+                    eventItem.id = documentReference.getId();
+                    Log.d(TAG, "Saved Event: " + eventItem.id);
+                    uploadFriendInvites();
                     uploadMatches();
                 })
                 .addOnFailureListener(e -> {
@@ -402,37 +415,33 @@ public class CreateEventActivity extends BaseActivity {
 
         for (int i = 0; i < matchFormContainerHandle.getChildCount(); i++) {
             View matchForm = matchFormContainerHandle.getChildAt(i);
+            Match matchItem = matchList.get(i);
 
-            TextView matchStartText = matchForm.findViewById(R.id.textView_matchStart);
-            TextView matchEndText = matchForm.findViewById(R.id.textView_matchEnd);
+            // Get text values from the UI
             EditText ruleChangeValue = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
             EditText notesValue = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
             Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
 
-            Timestamp matchStartValue = null;
-            Timestamp matchEndValue = null;
-            if (!matchStartText.getText().toString().isEmpty()) {
-                matchStartValue = new Timestamp(matchStartList.get(i));
-            }
-            if (!matchEndText.getText().toString().isEmpty()) {
-                matchEndValue = new Timestamp(matchEndList.get(i));
-            }
+            // Connect values to the match object.
+            matchItem.eventId = eventItem.id;
+            matchItem.notes = notesValue.getText().toString();
+            matchItem.rulesVariant = ruleChangeValue.getText().toString();
+            // Timestamps will have been set by the showDateTime interface.
 
-
+            // Connect values from the match object to the hashmap to be uploaded.
             HashMap<String, Object> match = new HashMap<>();
-            match.put("gameId", null);
-            match.put("eventId", eventId);
-            match.put("notes", notesValue.getText().toString());
-            match.put("rules_variant", ruleChangeValue.getText().toString());
-            match.put("startedAt", matchStartValue);
-            match.put("endedAt", matchEndValue);
+            match.put("gameId", matchItem.gameId);
+            match.put("eventId", matchItem.eventId);
+            match.put("notes", matchItem.notes);
+            match.put("rules_variant", matchItem.rulesVariant);
+            match.put("startedAt", matchItem.startedAt);
+            match.put("endedAt", matchItem.endedAt);
 
-//            Log.d(TAG, "Match " + i + " details:\n" + match.toString() + "\nMatch start size: ");
-
+            // Upload the match
             db.collection("matches").add(match)
                     .addOnSuccessListener(documentReference -> {
-                        matchId = documentReference.getId();
-                        Log.d(TAG, "Saved Match: " + matchId);
+                        matchItem.id = documentReference.getId();
+                        Log.d(TAG, "Saved Match: " + matchItem.id);
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save match: " + e.getMessage());
@@ -441,8 +450,37 @@ public class CreateEventActivity extends BaseActivity {
 
     }
 
+    // Uploads the invited friends to the database.
     private void uploadFriendInvites() {
-        //TODO: implement friend invite uploads
+        List<Friend> friendsInvited = new ArrayList<>();
+        LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
+
+        // Filters out repeated invites.
+        for (int i = 0; i < friendSection.getChildCount(); i++) {
+            Spinner friendSpinner = (Spinner) friendSection.getChildAt(i);
+            Friend friendItem = (Friend) friendSpinner.getSelectedItem();
+
+            if (!friendsInvited.contains(friendItem)) {
+                friendsInvited.add(friendItem);
+            }
+        }
+
+        // Uploads friend invites to the database one by one.
+        for (int i = 0; i < friendsInvited.size(); i++) {
+            Friend friendItem = friendsInvited.get(i);
+
+            DocumentReference inviteRef = db.collection("events")
+                    .document(eventItem.id)
+                    .collection("invitees")
+                    .document(friendItem.id);
+
+            Map<String, Object> invite = new HashMap<>();
+            invite.put("status", "invited");
+            invite.put("userRef", db.collection("users").document(friendItem.friendUId));
+
+            inviteRef.set(invite);
+        }
+
     }
 
     // This gets the users friends from the database and loads it into an array adapter to be used
