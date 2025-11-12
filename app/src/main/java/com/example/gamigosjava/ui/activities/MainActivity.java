@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null) {
                             Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
-                            repo.checkAndIncrementLoginCount(user.getUid())
+                            repo.loginTracker(user.getUid())
                                     .addOnSuccessListener(v-> Log.d(TAG, "Metrics set up and incremented successfully"))
                                     .addOnFailureListener(e-> Log.e(TAG, "Metrics set up FAILED", e));
                         }
