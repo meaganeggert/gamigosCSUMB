@@ -11,6 +11,7 @@ import com.google.firebase.firestore.WriteBatch;
 
 import org.w3c.dom.Document;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public final class AchievementAwarder {
     }
 
     // Task to award login-related achievements
-    public Task<Void> awardLoginAchievements(String userId) {
+    public Task<List<String>> awardLoginAchievements(String userId) {
         // References
         // Reference to loginCount
         DocumentReference loginCount_Met = db.collection("users")
@@ -75,6 +76,10 @@ public final class AchievementAwarder {
             WriteBatch batch = db.batch();
             int writes = 0;
 
+            // Create a list to keep track of earned achievements
+            // Return this for use with award banners in the desired activity
+            List<String> earned = new ArrayList<>();
+
             // Achievement - first_login
             if (firstLoginAchieve_snap.exists() && firstLoginAchieve_snap.getBoolean("isActive") == true) {
                 long goal = firstLoginAchieve_snap.contains("goal") ? firstLoginAchieve_snap.getLong("goal") : 1L;
@@ -83,6 +88,7 @@ public final class AchievementAwarder {
                     updates.put("earned", true);
                     updates.put("earnedAt", FieldValue.serverTimestamp());
                     batch.set(earned_firstLogin, updates, SetOptions.merge());
+                    earned.add("Welcome");
                     writes++;
                 }
             }
@@ -95,14 +101,15 @@ public final class AchievementAwarder {
                     updates.put("earned", true);
                     updates.put("earnedAt", FieldValue.serverTimestamp());
                     batch.set(earned_streak3, updates, SetOptions.merge());
+                    earned.add("Third Day's the Charm");
                     writes++;
                 }
             }
 
             if (writes > 0) {
-                return batch.commit();
+                return batch.commit().continueWith(x -> earned);
             } else {
-                return Tasks.forResult(null); // We don't have anything to update, but return successfully - Works like Promise.resolve()
+                return Tasks.forResult(earned); // We don't have anything to update, but return successfully - Works like Promise.resolve()
             }
         });
     }

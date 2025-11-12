@@ -161,7 +161,13 @@ public class MainActivity extends AppCompatActivity {
                                             new AchievementAwarder(FirebaseFirestore.getInstance())
                                     .awardLoginAchievements(user.getUid()) // check for any earned achievements
                                     )
-                                    .addOnSuccessListener(v-> Log.d(TAG, "Metrics set up and incremented successfully & relevant achievements awarded"))
+                                    .addOnSuccessListener( earned -> {
+                                        if (earned != null && !earned.isEmpty()) {
+                                            for (String title : earned) {
+                                                Toast.makeText(this, "\uD83C\uDFC6 Achievement Unlocked: " + title + "!", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    })
                                     .addOnFailureListener(e-> Log.e(TAG, "Metrics & Achievement flow FAILED", e));
                         }
                         updateUI(user);
