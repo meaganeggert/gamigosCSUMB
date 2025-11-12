@@ -69,7 +69,7 @@ public final class AchievementAwarder {
 
             // Make sure the metrics exist. Otherwise, send 0.
             long count = (loginCountMet_snap.exists() && loginCountMet_snap.contains("count")) ? loginCountMet_snap.getLong("count") : 0L;
-            long current = (loginCountMet_snap.exists() && loginCountMet_snap.contains("current")) ? loginCountMet_snap.getLong("current") : 0L;
+            long current = (loginStreakMet_snap.exists() && loginStreakMet_snap.contains("current")) ? loginStreakMet_snap.getLong("current") : 0L;
 
             // Set up the batch
             WriteBatch batch = db.batch();
