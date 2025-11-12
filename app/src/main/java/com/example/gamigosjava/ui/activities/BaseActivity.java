@@ -126,7 +126,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         toolbar.setTitle(title);
     }
 
-    // TODO: SET UP AVATAR DISPLAY
+
     private void loadAvatar() {
 
         userDocRef.get().addOnSuccessListener(doc -> {
