@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 // Firebase
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.repository.AchievementAwarder;
 import com.example.gamigosjava.data.repository.AchievementsRepo;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
@@ -156,8 +157,18 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
                             repo.loginTracker(user.getUid())
-                                    .addOnSuccessListener(v-> Log.d(TAG, "Metrics set up and incremented successfully"))
-                                    .addOnFailureListener(e-> Log.e(TAG, "Metrics set up FAILED", e));
+                                    .continueWithTask(t->
+                                            new AchievementAwarder(FirebaseFirestore.getInstance())
+                                    .awardLoginAchievements(user.getUid()) // check for any earned achievements
+                                    )
+                                    .addOnSuccessListener( earned -> {
+                                        if (earned != null && !earned.isEmpty()) {
+                                            for (String title : earned) {
+                                                Toast.makeText(this, "\uD83C\uDFC6 Achievement Unlocked: " + title + "!", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    })
+                                    .addOnFailureListener(e-> Log.e(TAG, "Metrics & Achievement flow FAILED", e));
                         }
                         updateUI(user);
                     } else {
