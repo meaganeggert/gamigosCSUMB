@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.repository.AchievementAwarder;
 import com.example.gamigosjava.data.repository.AchievementsRepo;
+import com.example.gamigosjava.ui.AchievementNotifier;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -163,14 +164,20 @@ public class MainActivity extends AppCompatActivity {
                                     )
                                     .addOnSuccessListener( earned -> {
                                         if (earned != null && !earned.isEmpty()) {
+                                            AchievementNotifier notifier = new AchievementNotifier(this, findViewById(R.id.main));
                                             for (String title : earned) {
-                                                Toast.makeText(this, "\uD83C\uDFC6 Achievement Unlocked: " + title + "!", Toast.LENGTH_SHORT).show();
+                                                notifier.pickAchievementBanner(title, null);
                                             }
                                         }
+                                        updateUI(user);
                                     })
-                                    .addOnFailureListener(e-> Log.e(TAG, "Metrics & Achievement flow FAILED", e));
+                                    .addOnFailureListener(e-> {
+                                        Log.e(TAG, "Metrics & Achievement flow FAILED", e);
+                                        updateUI(user);
+                                    }
+                            );
                         }
-                        updateUI(user);
+
                     } else {
                         Log.e(TAG, "Firebase sign-in failed", task.getException());
                         updateUI(null);
