@@ -16,16 +16,17 @@ import java.util.Map;
 
 public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
 
-    public interface OnFriendClickListener {
-        void onFriendClick(Map<String, Object> friend);
+    public interface FriendActionListener {
+        void onProfileClick(Map<String, Object> friend);
+        void onMessageClick(Map<String, Object> friend);
     }
 
-    private final List<Map<String, Object>> friends;
-    private final OnFriendClickListener listener;
+    private final List<Map<String, Object>> items;
+    private final FriendActionListener listener;
 
-    public FriendsListAdapter(List<Map<String, Object>> friends,
-                              OnFriendClickListener listener) {
-        this.friends = friends;
+    public FriendsListAdapter(List<Map<String, Object>> items,
+                              FriendActionListener listener) {
+        this.items = items;
         this.listener = listener;
     }
 
@@ -39,7 +40,7 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
-        Map<String, Object> friend = friends.get(position);
+        Map<String, Object> friend = items.get(position);
         String name = (String) friend.get("displayName");
         String photoUrl = (String) friend.get("photoUrl");
 
@@ -51,12 +52,15 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
                 .into(holder.ivPhoto);
 
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onFriendClick(friend);
+            if (listener != null) listener.onProfileClick(friend);
+        });
+        holder.btnMessage.setOnClickListener(v -> {
+            if (listener != null) listener.onMessageClick(friend);
         });
     }
 
     @Override
     public int getItemCount() {
-        return friends.size();
+        return items.size();
     }
 }
