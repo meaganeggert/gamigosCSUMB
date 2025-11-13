@@ -27,4 +27,7 @@
     <string name="pending">Pending</string>
     <string name="unfriend">Unfriend</string>
     <string name="friend">Friend</string>
+    <string name="message">Message</string>
+    <string name="send">Send</string>
+    <string name="message_ellipses">Message...</string>
 </resources>

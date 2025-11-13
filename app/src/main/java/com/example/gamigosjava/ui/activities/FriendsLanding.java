@@ -84,20 +84,76 @@ public class FriendsLanding extends BaseActivity {
         });
 
         //  Setting up recycler view
+        // in FriendsLanding.onCreate(...)
         RecyclerView rvFriends = findViewById(R.id.rvFriends);
         rvFriends.setLayoutManager(new LinearLayoutManager(this));
-        friendsAdapter = new FriendsListAdapter(friendlist, friend -> {
-            //  Open profile of friend
-            String friendUid = (String) friend.get("uid");
-            Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
-            intent.putExtra("USER_ID", friendUid);
-            startActivity(intent);
+
+        friendsAdapter = new FriendsListAdapter(friendlist, new FriendsListAdapter.FriendActionListener() {
+            @Override
+            public void onProfileClick(Map<String, Object> friend) {
+                String friendUid = (String) friend.get("uid");
+                Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
+                intent.putExtra("USER_ID", friendUid);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onMessageClick(Map<String, Object> friend) {
+                String friendUid = (String) friend.get("uid");
+                String friendName = (String) friend.get("displayName");
+                ensureDmAndOpen(friendUid, friendName);
+            }
         });
         rvFriends.setAdapter(friendsAdapter);
         listenForFriends();
         listenForIncomingRequests();
         listenForOutgoingRequests();
     }
+
+    private String dmId(String a, String b) {
+        return (a.compareTo(b) < 0) ? a + "_" + b : b + "_" + a;
+    }
+
+    private void ensureDmAndOpen(String otherUid, String title) {
+        if (currentUser == null) {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String myUid = currentUser.getUid();
+        String convoId = dmId(myUid, otherUid);
+        DocumentReference convoRef = db.collection("conversations").document(convoId);
+
+        convoRef.get().addOnSuccessListener(snap -> {
+            if (snap.exists()) {
+                // open
+                startActivity(MessagesActivity.newIntent(this, convoId, title, otherUid));
+            } else {
+                // create then open (hybrid model)
+                Map<String, Object> data = new HashMap<>();
+                data.put("participants", java.util.Arrays.asList(myUid, otherUid));
+                data.put("isGroup", false);
+                data.put("lastMessage", "");
+                data.put("lastMessageAt", null);
+
+                convoRef.set(data).addOnSuccessListener(unused -> {
+                    // seed participantsData
+                    createParticipantData(convoRef, myUid);
+                    createParticipantData(convoRef, otherUid);
+                    startActivity(MessagesActivity.newIntent(this, convoId, title, otherUid));
+                });
+            }
+        });
+    }
+
+    private void createParticipantData(DocumentReference convoRef, String uid) {
+        Map<String, Object> pd = new HashMap<>();
+        pd.put("joinedAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        pd.put("lastReadAt", null);
+        pd.put("unreadCount", 0);
+        pd.put("role", "member");
+        convoRef.collection("participantsData").document(uid).set(pd);
+    }
+
 
     private void listenForFriends() {
         if (currentUser == null) {
@@ -152,8 +208,6 @@ public class FriendsLanding extends BaseActivity {
                 });
     }
 
-    // We get two different snapshots (incoming + outgoing), so we need to keep them both.
-    // Easiest: we keep two small lists and merge into requestRows.
     private final List<FriendRequestRowAdapter.RequestRow> incomingCache = new ArrayList<>();
     private final List<FriendRequestRowAdapter.RequestRow> outgoingCache = new ArrayList<>();
 

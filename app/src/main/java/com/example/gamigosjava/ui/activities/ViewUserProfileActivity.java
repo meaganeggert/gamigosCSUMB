@@ -1,5 +1,6 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -12,6 +13,7 @@ import com.example.gamigosjava.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
@@ -38,6 +40,10 @@ public class ViewUserProfileActivity extends BaseActivity {
     private ListenerRegistration outgoingListener;
     private ListenerRegistration incomingListener;
 
+    //  DM id helper
+        private String dmId(String userA, String userB) {
+        return (userA.compareTo(userB) < 0) ? userA + "_" + userB : userB + "_" + userA;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +81,7 @@ public class ViewUserProfileActivity extends BaseActivity {
                 case REL_NONE -> sendFriendRequest();
                 case REL_INCOMING -> acceptFriendRequest();
                 case REL_OUTGOING -> Toast.makeText(this, "Request pending.", Toast.LENGTH_SHORT).show();
+                case REL_FRIEND -> startOrOpenDM();
             }
         });
 
@@ -174,8 +181,8 @@ public class ViewUserProfileActivity extends BaseActivity {
                 btnSecondary.setVisibility(View.VISIBLE);
             }
             case REL_FRIEND -> {
-                btnPrimary.setText(R.string.friend);
-                btnPrimary.setEnabled(false);
+                btnPrimary.setText(R.string.message);
+                btnPrimary.setEnabled(true);
                 btnSecondary.setText(R.string.unfriend);
                 btnSecondary.setVisibility(View.VISIBLE);
             }
@@ -316,6 +323,62 @@ public class ViewUserProfileActivity extends BaseActivity {
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    //  DM helper
+    private void startOrOpenDM() {
+            if (viewedName == null) {
+                Toast.makeText(this, "Loading profile...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            btnPrimary.setEnabled(false);
+            String convoId = dmId(myUid, otherUid);
+            var convoRef = db.collection("conversations").document(convoId);
+
+            //  Check DB for convo. If exists, open that convo. If not, then create it.
+            convoRef.get().addOnSuccessListener(snapshot -> {
+                if (snapshot.exists()) {
+                    launchMessages(convoId, viewedName, otherUid);
+                    btnPrimary.setEnabled(true);
+                } else {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("participants", java.util.Arrays.asList(myUid, otherUid));
+                    data.put("isGroup", false);
+                    data.put("lastMessage", "");
+                    data.put("lastMessageAt", null);
+
+                    convoRef.set(data).addOnSuccessListener(aVoid -> {
+                        createParticipantData(convoRef, myUid);
+                        createParticipantData(convoRef, otherUid);
+                        btnPrimary.setEnabled(true);
+                        launchMessages(convoId, viewedName, otherUid);
+                    }).addOnFailureListener(error -> {
+                        btnPrimary.setEnabled(true);
+                        Toast.makeText(this,
+                                "Failed to start chat: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }).addOnFailureListener(error -> {
+                btnPrimary.setEnabled(true);
+                Toast.makeText(this,
+                        "Failed to load conversation: " + error.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            });
+    }
+
+    private void createParticipantData(DocumentReference convoRef, String uid) {
+            Map<String, Object> participantData = new HashMap<>();
+            participantData.put("joinedAt", FieldValue.serverTimestamp());
+            participantData.put("lastReadAt", null);
+            participantData.put("unreadCount", 0);
+            participantData.put("role", "member");
+            convoRef.collection("participantsData").document(uid).set(participantData);
+    }
+
+    private void launchMessages(String conversationId, String title, String otherUid) {
+            Intent intent = MessagesActivity.newIntent(this, conversationId, title, otherUid);
+            startActivity(intent);
     }
 
     @Override
