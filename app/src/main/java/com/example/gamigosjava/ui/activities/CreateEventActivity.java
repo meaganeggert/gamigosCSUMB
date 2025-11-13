@@ -20,8 +20,10 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
 
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.model.BGGItem;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
+import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.google.firebase.Timestamp;
@@ -52,14 +54,15 @@ public class CreateEventActivity extends BaseActivity {
     private Calendar calendar = Calendar.getInstance();
     private Event eventItem;
     private Date eventStart, matchStart, matchEnd; // May not be useful at the moment
-    List<Date> matchStartList = new ArrayList<>(), matchEndList = new ArrayList<>();
     private TextView eventStartText;
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
     private ArrayAdapter<Friend> friendAdapter;
-    List<Friend> friendList = new ArrayList<>();
-    List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
+    private ArrayAdapter<GameSummary> gameAdapter;
+    List<Friend> friendList;
+//    List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
     List<Match> matchList;
+    List<GameSummary> gameList;
 
 
     @Override
@@ -70,6 +73,8 @@ public class CreateEventActivity extends BaseActivity {
 
         eventItem = new Event();
         matchList = new ArrayList<>();
+        friendList = new ArrayList<>();
+        gameList = new ArrayList<>();
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_create_event);
@@ -86,8 +91,10 @@ public class CreateEventActivity extends BaseActivity {
 
         // ===================================Match Details=========================================
         // TODO: Change so gamelist is populated by users saved games.
-        gameList.add("Catan");
-        gameList.add("Monopoly");
+//        gameList.add("Catan");
+//        gameList.add("Monopoly");
+        getGames();
+
 
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
 
@@ -294,8 +301,6 @@ public class CreateEventActivity extends BaseActivity {
 
         int matchIndex = matchFormContainerHandle.getChildCount() - 1;
         matchList.add(matchIndex, new Match());
-        matchStartList.add(matchIndex, new Date());
-        matchEndList.add(matchIndex, new Date());
 
         TextView matchStartText = match.findViewById(R.id.textView_matchStart);
         TextView matchEndText = match.findViewById(R.id.textView_matchEnd);
@@ -306,7 +311,8 @@ public class CreateEventActivity extends BaseActivity {
                 .findViewById(R.id.dropdown_gameName);
 
         if (gameName != null) {
-            setDropdown(gameName, gameList);
+//            setDropdown(gameName, gameList);
+            setGameDropdown(gameName);
         } else {
             Log.e(TAG, "Game name dropdown not found");
         }
@@ -318,7 +324,6 @@ public class CreateEventActivity extends BaseActivity {
                     matchStart = date;
                     matchStartText.setText(date.toString());
                     matchList.get(matchIndex).startedAt = new Timestamp(date);
-//                    matchStartList.set(matchIndex, date);
                 });
             });
         }
@@ -330,7 +335,6 @@ public class CreateEventActivity extends BaseActivity {
                     matchEnd = date;
                     matchEndText.setText(date.toString());
                     matchList.get(matchIndex).endedAt = new Timestamp(date);
-//                    matchEndList.set(matchIndex, date);
                 });
             });
         }
@@ -342,6 +346,58 @@ public class CreateEventActivity extends BaseActivity {
         matchFormContainerHandle.removeViewAt(matchFormContainerHandle.getChildCount() - 1);
     }
 
+    private void getGames() {
+        if (currentUser == null) {
+            Toast.makeText(this, "User is not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String uid = currentUser.getUid();
+
+        CollectionReference gamesRef = db
+                .collection("users")
+                .document(uid)
+                .collection("gamesOwned");
+
+        gamesRef
+                .orderBy("title")
+                .get()
+                .addOnSuccessListener(snap -> {
+                    gameList.clear();
+
+                    for (DocumentSnapshot d : snap.getDocuments()) {
+                        String id = d.getId();
+                        String title = d.getString("title");
+                        String imageUrl = d.getString("imageUrl");
+                        Integer minPlayers = (Integer) d.get("minPlayers");
+                        Integer maxPlayers = (Integer) d.get("maxPlayers");
+                        Integer playTime = (Integer) d.get("time");
+
+                        gameList.add(new GameSummary(id, title, imageUrl,
+                                minPlayers, maxPlayers, playTime));
+                    }
+                    gameAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load games: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void setGameDropdown(Spinner spinner) {
+        spinner = new Spinner(this);
+        spinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        spinner.setId(View.generateViewId());
+        spinner.setBackgroundResource(android.R.drawable.btn_dropdown);
+
+        gameAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                gameList
+        );
+        gameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(gameAdapter);
+//        layout.addView(newSpinner);
+    }
 
 
 
@@ -361,10 +417,8 @@ public class CreateEventActivity extends BaseActivity {
         eventItem.visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
         eventItem.status = statusDropdown.getSelectedItem().toString().toLowerCase();
         eventItem.notes = notesText.getText().toString();
-//        Timestamp scheduledAt = new Timestamp(calendar.getTime());
         eventItem.createdAt = Timestamp.now();
         eventItem.endedAt = null;
-        // Timestamp scheduledAt should already be set in the showDateTime function
 
         // Small validation
         if (eventItem.title.isEmpty()) {
