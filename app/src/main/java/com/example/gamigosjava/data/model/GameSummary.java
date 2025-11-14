@@ -1,5 +1,7 @@
 package com.example.gamigosjava.data.model;
 
+import androidx.annotation.NonNull;
+
 public class GameSummary {
     public final String id;
     public final String title;
@@ -16,5 +18,12 @@ public class GameSummary {
         this.minPlayers = minPlayers;
         this.maxPlayers = maxPlayers;
         this.playingTime = playingTime;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        if ( title!= null) return title;
+        else return "";
     }
 }
