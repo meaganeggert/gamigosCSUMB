@@ -98,6 +98,15 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_logout) {
+                // Sign Out of Firebase
+                FirebaseAuth.getInstance().signOut();
+
+                // Return to sign-in screen
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             }
 
             return true;
@@ -126,7 +135,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         toolbar.setTitle(title);
     }
 
-    // TODO: SET UP AVATAR DISPLAY
+
     private void loadAvatar() {
 
         userDocRef.get().addOnSuccessListener(doc -> {

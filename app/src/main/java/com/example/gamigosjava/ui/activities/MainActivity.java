@@ -15,6 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 // Firebase
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.repository.AchievementAwarder;
+import com.example.gamigosjava.data.repository.AchievementsRepo;
+import com.example.gamigosjava.ui.AchievementNotifier;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -141,6 +144,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void firebaseAuthWithGoogle(String idToken) {
+        AchievementsRepo repo = new AchievementsRepo(
+                FirebaseFirestore.getInstance()
+        );
+
         AuthCredential firebaseCred = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(firebaseCred)
                 .addOnCompleteListener(this, task -> {
@@ -150,8 +157,27 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null) {
                             Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
+                            repo.loginTracker(user.getUid())
+                                    .continueWithTask(t->
+                                            new AchievementAwarder(FirebaseFirestore.getInstance())
+                                    .awardLoginAchievements(user.getUid()) // check for any earned achievements
+                                    )
+                                    .addOnSuccessListener( earned -> {
+                                        if (earned != null && !earned.isEmpty()) {
+                                            AchievementNotifier notifier = new AchievementNotifier(this, findViewById(R.id.main));
+                                            for (String title : earned) {
+                                                notifier.pickAchievementBanner(title, null);
+                                            }
+                                        }
+                                        updateUI(user);
+                                    })
+                                    .addOnFailureListener(e-> {
+                                        Log.e(TAG, "Metrics & Achievement flow FAILED", e);
+                                        updateUI(user);
+                                    }
+                            );
                         }
-                        updateUI(user);
+
                     } else {
                         Log.e(TAG, "Firebase sign-in failed", task.getException());
                         updateUI(null);
