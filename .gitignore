@@ -1,19 +1,36 @@
+# --- IDE / Gradle ---
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.gradle/
+local.properties
+
+# --- IntelliJ / Android Studio ---
+.idea/*
+!.idea/codeStyles
+!.idea/runConfigurations
+
+# macOS
 .DS_Store
-/build
+
+# --- Build outputs ---
+/build/
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+
+# --- Node / NPM / JS ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
 # --- Firebase local backend (firebasecb folder) ---
+firebasecb/node_modules/
+firebasecb/.cache/
+firebasecb/.firebase/
+firebasecb/.runtimeconfig.json
+firebasecb/.firebaserc
+firebasecb/.output/
+firebasecb/.env
+
 firebasecb/.eslintrc.js
 firebasecb/configureAlgolia.js
 firebasecb/firebase.json
@@ -21,23 +38,9 @@ firebasecb/firebase-debug.log
 firebasecb/index.js
 firebasecb/package.json
 firebasecb/package-lock.json
-firebasecb/node_modules/
-firebasecb/.cache/
-firebasecb/.firebase/
-firebasecb/.runtimeconfig.json
-firebasecb/.firebaserc
-# --- Firebase / Node backend ---
-firebase-debug.log
-firebasecb/.env
-firebasecb/.output/
 firebasecb/functions/node_modules/
 firebasecb/functions/.env
-firebase.json
-# --- Common JS / NPM files ---
-node_modules/
-npm-debug.log
-yarn-error.log
 
-# --- Generated or local files ---
-*.iml
-*.log
+# --- Global Firebase logs / config you don't want in repo ---
+firebase-debug.log
+firebase.jso
