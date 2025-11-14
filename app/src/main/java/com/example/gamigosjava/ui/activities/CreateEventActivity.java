@@ -7,25 +7,33 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.api.BGGMappers;
+import com.example.gamigosjava.data.api.BGGService;
+import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
+import com.example.gamigosjava.data.model.SearchResponse;
+import com.example.gamigosjava.data.model.ThingResponse;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -42,11 +50,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class CreateEventActivity extends BaseActivity {
     String TAG = "Create Event";
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+    BGG_API api;
 
     // Handle on match forms
     private LinearLayout matchFormContainerHandle;
@@ -59,10 +72,16 @@ public class CreateEventActivity extends BaseActivity {
     private EditText titleText, notesText;
     private Spinner visibilityDropdown, statusDropdown;
     private ArrayAdapter<Friend> friendAdapter;
-    private ArrayAdapter<GameSummary> gameAdapter;
+    private ArrayAdapter<GameSummary> userGameAdapter;
+    private ArrayAdapter<GameSummary> apiGameAdapter;
+
+    boolean useSearchBar;
+
+
     List<Friend> friendList;
     List<Match> matchList;
-    List<GameSummary> gameList;
+    List<GameSummary> userGameList;
+    List<GameSummary> apiGameList;
 
 
     @Override
@@ -74,13 +93,26 @@ public class CreateEventActivity extends BaseActivity {
         eventItem = new Event();
         matchList = new ArrayList<>();
         friendList = new ArrayList<>();
-        gameList = new ArrayList<>();
-        gameAdapter = new ArrayAdapter<>(
+        userGameList = new ArrayList<>();
+        apiGameList = new ArrayList<>();
+        useSearchBar = false;
+
+        userGameAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
-                gameList
+                userGameList
         );
-        gameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        userGameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        apiGameAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                apiGameList
+        );
+        apiGameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        getGames();
+
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_create_event);
@@ -96,9 +128,6 @@ public class CreateEventActivity extends BaseActivity {
 
 
         // ===================================Match Details=========================================
-        // TODO: Change so gamelist is populated by users saved games.
-
-
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
 
         // Add new match details form on button click.
@@ -299,6 +328,8 @@ public class CreateEventActivity extends BaseActivity {
     // =======================================Match Form Function Helpers========================================
     // Adds the match form layout and sets the necessary values.
     private void addMatchForm() {
+        api = BGGService.getInstance();
+
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
 
@@ -314,13 +345,34 @@ public class CreateEventActivity extends BaseActivity {
                 .findViewById(R.id.dropdown_gameName);
 
         if (gameName != null) {
-//            setDropdown(gameName, gameList);
-            setGameDropdown(gameName);
+            gameName.setAdapter(userGameAdapter);
         } else {
             Log.e(TAG, "Game name dropdown not found");
         }
 
-        getGames();
+        SearchView search = match.findViewById(R.id.searchView_bggSearch);
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String s) {
+                if (s.isEmpty()) {
+                    Log.d(TAG, "Added gameSelection via userDB");
+                    gameName.setAdapter(userGameAdapter);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                if (!s.isEmpty()) {
+                    Log.d(TAG, "added gameSelection via API");
+                    fetchGamesForQuery(s);
+                    gameName.setAdapter(apiGameAdapter);
+                    search.clearFocus();
+                }
+                return true;
+            }
+        });
 
         Button matchStartButton = match.findViewById(R.id.button_selectTimeStart);
         if (matchStartButton != null) {
@@ -359,7 +411,7 @@ public class CreateEventActivity extends BaseActivity {
 
         String uid = currentUser.getUid();
 
-        gameList.clear();
+        userGameList.clear();
         // Get games the user previously played
         CollectionReference gamesRef = db
                 .collection("users")
@@ -402,8 +454,8 @@ public class CreateEventActivity extends BaseActivity {
                     Log.d(TAG, "Failed to user BGG collection.");
                 });
 
-        gameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
-        gameAdapter.notifyDataSetChanged();
+        userGameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
+        userGameAdapter.notifyDataSetChanged();
     }
 
     private void applyKnownUserGames(QuerySnapshot snap) {
@@ -422,8 +474,8 @@ public class CreateEventActivity extends BaseActivity {
             GameSummary game = new GameSummary(id, title, imageUrl,
                     minPlayers, maxPlayers, playTime);
 
-            if (!gameList.contains(game)) {
-                gameList.add(new GameSummary(id, title, imageUrl,
+            if (!userGameList.contains(game)) {
+                userGameList.add(new GameSummary(id, title, imageUrl,
                         minPlayers, maxPlayers, playTime));
             }
 
@@ -431,9 +483,6 @@ public class CreateEventActivity extends BaseActivity {
 //        gameAdapter.notifyDataSetChanged();
     }
 
-    private void setGameDropdown(Spinner spinner) {
-        spinner.setAdapter(gameAdapter);
-    }
 
 
 
@@ -503,6 +552,8 @@ public class CreateEventActivity extends BaseActivity {
             return;
         }
 
+        String uid = currentUser.getUid();
+
         for (int i = 0; i < matchFormContainerHandle.getChildCount(); i++) {
             View matchForm = matchFormContainerHandle.getChildAt(i);
             Match matchItem = matchList.get(i);
@@ -511,11 +562,13 @@ public class CreateEventActivity extends BaseActivity {
             EditText ruleChangeValue = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
             EditText notesValue = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
             Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
+            GameSummary game = (GameSummary) gameName.getSelectedItem();
 
             // Connect values to the match object.
             matchItem.eventId = eventItem.id;
             matchItem.notes = notesValue.getText().toString();
             matchItem.rulesVariant = ruleChangeValue.getText().toString();
+            matchItem.gameId = game.id;
             // Timestamps will have been set by the showDateTime interface.
 
             // Connect values from the match object to the hashmap to be uploaded.
@@ -536,8 +589,47 @@ public class CreateEventActivity extends BaseActivity {
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save match: " + e.getMessage());
                     });
+
+            // TODO: Change database layout. (i.e. make the hosted/played collections different)
+            uploadUserGamesHosted(uid, game);
+            uploadUserGamesPlayed(uid, game);
+
         }
 
+    }
+
+    private void uploadUserGamesHosted(String uid, GameSummary gameSummary) {
+        if (gameSummary.id == null) return;
+
+        DocumentReference gamePlayed = db.collection("users")
+                .document(uid)
+                .collection("gamesHosted")
+                .document(gameSummary.id);
+
+        HashMap<String, Object> gameHash = new HashMap<>();
+        gameHash.put("id", gameSummary.id);
+        gameHash.put("imageUrl", gameSummary.imageUrl);
+        gameHash.put("maxPlayers", gameSummary.maxPlayers);
+        gameHash.put("minPlayers", gameSummary.minPlayers);
+        gameHash.put("playingTime", gameSummary.playingTime);
+        gamePlayed.set(gameHash);
+    }
+
+    private void uploadUserGamesPlayed(String uid, GameSummary gameSummary) {
+        if (gameSummary.id == null) return;
+
+        DocumentReference gamePlayed = db.collection("users")
+                .document(uid)
+                .collection("gamesPlayed")
+                .document(gameSummary.id);
+
+        HashMap<String, Object> gameHash = new HashMap<>();
+        gameHash.put("id", gameSummary.id);
+        gameHash.put("imageUrl", gameSummary.imageUrl);
+        gameHash.put("maxPlayers", gameSummary.maxPlayers);
+        gameHash.put("minPlayers", gameSummary.minPlayers);
+        gameHash.put("playingTime", gameSummary.playingTime);
+        gamePlayed.set(gameHash);
     }
 
     // Uploads the invited friends to the database.
@@ -606,5 +698,63 @@ public class CreateEventActivity extends BaseActivity {
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void fetchGamesForQuery(String query) {
+        api.search(query, "boardgame").enqueue(new Callback<SearchResponse>() {
+            @Override public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> resp) {
+                if (!resp.isSuccessful()) {
+                    Toast.makeText(CreateEventActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
+                    String err = null;
+                    try { err = resp.errorBody() != null ? resp.errorBody().string() : null; } catch (Exception ignored) {}
+                    Log.e("BGG", "Search HTTP " + resp.code() + " " + err);
+                    return;
+                }
+                if (resp.body() == null || resp.body().items == null || resp.body().items.isEmpty()) {
+                    Toast.makeText(CreateEventActivity.this, "No search results", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Build CSV of a few IDs to batch the /thing call
+                StringBuilder ids = new StringBuilder();
+                int max = Math.min(10, resp.body().items.size());
+                for (int i = 0; i < max; i++) {
+                    if (i > 0) ids.append(',');
+                    ids.append(resp.body().items.get(i).id);
+                }
+                fetchThingDetails(ids.toString());
+            }
+
+            @Override public void onFailure(@NonNull Call<SearchResponse> call, @NonNull Throwable t) {
+                Toast.makeText(CreateEventActivity.this, "Search failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void fetchThingDetails(String idsCsv) {
+        api.thing(idsCsv, 0).enqueue(new Callback<ThingResponse>() {
+            @Override public void onResponse(Call<ThingResponse> call, Response<ThingResponse> resp) {
+                if (!resp.isSuccessful() || resp.body() == null || resp.body().items == null) {
+                    Toast.makeText(CreateEventActivity.this, "No details", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                List<GameSummary> list = new ArrayList<>();
+                for (BGGItem it : resp.body().items) {
+                    list.add(BGGMappers.toSummary(it));
+                }
+
+                // 🟢 Add this to confirm data size
+                Toast.makeText(CreateEventActivity.this, "Loaded " + list.size() + " games", Toast.LENGTH_SHORT).show();
+                Log.d("BGG", "Loaded " + list.size() + " game(s)"); // debug
+
+                apiGameList.clear();
+                apiGameList.addAll(list);
+                apiGameAdapter.notifyDataSetChanged();
+            }
+
+            @Override public void onFailure(Call<ThingResponse> call, Throwable t) {
+                Toast.makeText(CreateEventActivity.this, "Thing failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
