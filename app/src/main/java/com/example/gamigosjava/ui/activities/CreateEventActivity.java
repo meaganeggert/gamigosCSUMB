@@ -33,6 +33,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -60,7 +61,6 @@ public class CreateEventActivity extends BaseActivity {
     private ArrayAdapter<Friend> friendAdapter;
     private ArrayAdapter<GameSummary> gameAdapter;
     List<Friend> friendList;
-//    List<String> gameList = new ArrayList<>(); // TODO: Get list of owned games from database.
     List<Match> matchList;
     List<GameSummary> gameList;
 
@@ -75,6 +75,12 @@ public class CreateEventActivity extends BaseActivity {
         matchList = new ArrayList<>();
         friendList = new ArrayList<>();
         gameList = new ArrayList<>();
+        gameAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                gameList
+        );
+        gameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_create_event);
@@ -91,9 +97,6 @@ public class CreateEventActivity extends BaseActivity {
 
         // ===================================Match Details=========================================
         // TODO: Change so gamelist is populated by users saved games.
-//        gameList.add("Catan");
-//        gameList.add("Monopoly");
-        getGames();
 
 
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
@@ -317,6 +320,8 @@ public class CreateEventActivity extends BaseActivity {
             Log.e(TAG, "Game name dropdown not found");
         }
 
+        getGames();
+
         Button matchStartButton = match.findViewById(R.id.button_selectTimeStart);
         if (matchStartButton != null) {
             matchStartButton.setOnClickListener(v2 -> {
@@ -354,49 +359,80 @@ public class CreateEventActivity extends BaseActivity {
 
         String uid = currentUser.getUid();
 
+        gameList.clear();
+        // Get games the user previously played
         CollectionReference gamesRef = db
                 .collection("users")
                 .document(uid)
-                .collection("gamesOwned");
+                .collection("gamesPlayed");
 
         gamesRef
                 .orderBy("title")
                 .get()
-                .addOnSuccessListener(snap -> {
-                    gameList.clear();
-
-                    for (DocumentSnapshot d : snap.getDocuments()) {
-                        String id = d.getId();
-                        String title = d.getString("title");
-                        String imageUrl = d.getString("imageUrl");
-                        Integer minPlayers = (Integer) d.get("minPlayers");
-                        Integer maxPlayers = (Integer) d.get("maxPlayers");
-                        Integer playTime = (Integer) d.get("time");
-
-                        gameList.add(new GameSummary(id, title, imageUrl,
-                                minPlayers, maxPlayers, playTime));
-                    }
-                    gameAdapter.notifyDataSetChanged();
-                })
+                .addOnSuccessListener(this::applyKnownUserGames)
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to load games: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Failed to find games previously played.");
                 });
+
+        // Get games the user previously hosted.
+        gamesRef = db
+                .collection("users")
+                .document(uid)
+                .collection("gamesHosted");
+
+        gamesRef
+                .orderBy("title")
+                .get()
+                .addOnSuccessListener(this::applyKnownUserGames)
+                .addOnFailureListener(e -> {
+                    Log.d(TAG, "Failed to find games previously hosted.");
+                });
+
+        // Get games the user owns in BGG
+        gamesRef = db
+                .collection("users")
+                .document(uid)
+                .collection("userBGGCollection");
+
+        gamesRef
+                .orderBy("title")
+                .get()
+                .addOnSuccessListener(this::applyKnownUserGames)
+                .addOnFailureListener(e -> {
+                    Log.d(TAG, "Failed to user BGG collection.");
+                });
+
+        gameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
+        gameAdapter.notifyDataSetChanged();
+    }
+
+    private void applyKnownUserGames(QuerySnapshot snap) {
+        if (snap.isEmpty()) {
+            return;
+        }
+
+        for (DocumentSnapshot d : snap.getDocuments()) {
+            String id = d.getId();
+            String title = d.getString("title");
+            String imageUrl = d.getString("imageUrl");
+            Integer minPlayers = d.get("minPlayers", Integer.class);
+            Integer maxPlayers = d.get("maxPlayers", Integer.class);
+            Integer playTime = d.get("time", Integer.class);
+
+            GameSummary game = new GameSummary(id, title, imageUrl,
+                    minPlayers, maxPlayers, playTime);
+
+            if (!gameList.contains(game)) {
+                gameList.add(new GameSummary(id, title, imageUrl,
+                        minPlayers, maxPlayers, playTime));
+            }
+
+        }
+//        gameAdapter.notifyDataSetChanged();
     }
 
     private void setGameDropdown(Spinner spinner) {
-        spinner = new Spinner(this);
-        spinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        spinner.setId(View.generateViewId());
-        spinner.setBackgroundResource(android.R.drawable.btn_dropdown);
-
-        gameAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_dropdown_item,
-                gameList
-        );
-        gameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(gameAdapter);
-//        layout.addView(newSpinner);
     }
 
 
