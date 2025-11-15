@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -257,12 +256,12 @@ public class CreateEventActivity extends BaseActivity {
         setDropdown(visibilityDropdown, visibilityList);
 
         // Set up the values for the status dropdown
-        List<String> statusList = new ArrayList<>();
-        statusList.add("Planned");
-        statusList.add("In-Progress");
-        statusList.add("Complete");
-        statusDropdown = findViewById(R.id.dropdown_status);
-        setDropdown(statusDropdown, statusList);
+//        List<String> statusList = new ArrayList<>();
+//        statusList.add("Planned");
+//        statusList.add("In-Progress");
+//        statusList.add("Complete");
+//        statusDropdown = findViewById(R.id.dropdown_status);
+//        setDropdown(statusDropdown, statusList);
 
         // Create first friend dropdown, and allow additional friend dropdowns
         // on "+ friend" button click, or remove friend dropdown on "- Friend"
@@ -500,7 +499,7 @@ public class CreateEventActivity extends BaseActivity {
         eventItem.hostId = currentUser.getUid();
         eventItem.title = titleText.getText().toString();
         eventItem.visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
-        eventItem.status = statusDropdown.getSelectedItem().toString().toLowerCase();
+        eventItem.status = "planned";
         eventItem.notes = notesText.getText().toString();
         eventItem.createdAt = Timestamp.now();
         eventItem.endedAt = null;

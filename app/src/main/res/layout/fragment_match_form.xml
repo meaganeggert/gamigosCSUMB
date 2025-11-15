@@ -15,6 +15,12 @@
         android:layout_height="wrap_content"
         android:text="Match Details"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Game"
+        android:textSize="12dp"
+        android:layout_marginTop="12dp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,7 +30,6 @@
             android:id="@+id/dropdown_gameName"
             android:layout_width="330dp"
             android:layout_height="40dp"
-            android:layout_marginTop="16dp"
             android:background="@android:drawable/btn_dropdown"
             android:spinnerMode="dropdown"/>
 
@@ -36,6 +41,12 @@
     </LinearLayout>
 
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date and Time"
+        android:textSize="12dp"
+        android:layout_marginTop="12dp"/>
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -80,21 +91,31 @@
             android:text="set"/>
     </LinearLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rule Changes"
+        android:textSize="12dp"
+        android:layout_marginTop="12dp"/>
     <EditText
         android:id="@+id/editTextTextMultiLine_rules"
         android:layout_width="330dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:ems="10"
         android:gravity="start|top"
         android:hint="Rule changes..."
         android:inputType="textMultiLine"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Additional Notes"
+        android:textSize="12dp"
+        android:layout_marginTop="12dp"/>
     <EditText
         android:id="@+id/editTextTextMultiLine_notes"
         android:layout_width="330dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
         android:ems="10"
         android:gravity="start|top"
         android:hint="Notes..."
