@@ -531,11 +531,13 @@ public class CreateEventActivity extends BaseActivity {
                 .addOnSuccessListener(documentReference -> {
                     eventItem.id = documentReference.getId();
                     Log.d(TAG, "Saved Event: " + eventItem.id);
+                    Toast.makeText(this, "Event uploaded successfully.", Toast.LENGTH_SHORT).show();
                     uploadFriendInvites();
                     uploadMatches();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to save event: " + e.getMessage());
+                    Toast.makeText(this, "Failed to save event.", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -548,6 +550,7 @@ public class CreateEventActivity extends BaseActivity {
 
         if (matchFormContainerHandle.getChildCount() < 1) {
             Log.d(TAG, "No matches to upload, skipping uploadMatches");
+            Toast.makeText(this, "No matches uploaded.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -587,6 +590,7 @@ public class CreateEventActivity extends BaseActivity {
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save match: " + e.getMessage());
+                        Toast.makeText(this, "Failed to upload a match.", Toast.LENGTH_SHORT).show();
                     });
 
             // TODO: Change database layout. (i.e. make the hosted/played collections different)
@@ -607,11 +611,18 @@ public class CreateEventActivity extends BaseActivity {
 
         HashMap<String, Object> gameHash = new HashMap<>();
         gameHash.put("id", gameSummary.id);
+        gameHash.put("title", gameSummary.title);
         gameHash.put("imageUrl", gameSummary.imageUrl);
         gameHash.put("maxPlayers", gameSummary.maxPlayers);
         gameHash.put("minPlayers", gameSummary.minPlayers);
         gameHash.put("playingTime", gameSummary.playingTime);
-        gamePlayed.set(gameHash);
+        gamePlayed.set(gameHash).addOnSuccessListener(v -> {
+            Log.d(TAG, "Successfully updated user's hosted game database element: " + gameSummary.id);
+        })
+        .addOnFailureListener(e -> {
+            Log.d(TAG, "Failed to update user's hosted game database element " + gameSummary.id + ": " + e.getMessage());
+        });
+
     }
 
     private void uploadUserGamesPlayed(String uid, GameSummary gameSummary) {
@@ -624,11 +635,17 @@ public class CreateEventActivity extends BaseActivity {
 
         HashMap<String, Object> gameHash = new HashMap<>();
         gameHash.put("id", gameSummary.id);
+        gameHash.put("title", gameSummary.title);
         gameHash.put("imageUrl", gameSummary.imageUrl);
         gameHash.put("maxPlayers", gameSummary.maxPlayers);
         gameHash.put("minPlayers", gameSummary.minPlayers);
         gameHash.put("playingTime", gameSummary.playingTime);
-        gamePlayed.set(gameHash);
+        gamePlayed.set(gameHash).addOnSuccessListener(v -> {
+            Log.d(TAG, "Successfully updated user's played game database element: " + gameSummary.id);
+        })
+        .addOnFailureListener(e -> {
+            Log.d(TAG, "Failed to update user's played game database element " + gameSummary.id + ": " + e.getMessage());
+        });;
     }
 
     // Uploads the invited friends to the database.
@@ -659,7 +676,12 @@ public class CreateEventActivity extends BaseActivity {
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
 
-            inviteRef.set(invite);
+            inviteRef.set(invite).addOnSuccessListener(v -> {
+                Log.d(TAG, "Successfully uploaded friend invites");
+            })
+            .addOnFailureListener(e -> {
+                Log.d(TAG, "Failed to upload friend invite: " + e.getMessage());
+            });
         }
 
     }
