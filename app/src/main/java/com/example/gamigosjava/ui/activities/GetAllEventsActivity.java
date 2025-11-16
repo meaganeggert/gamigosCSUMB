@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -84,6 +86,28 @@ public class GetAllEventsActivity extends BaseActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         eventAdapter = new EventAdapter();
         recyclerView.setAdapter(eventAdapter);
+
+        recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(@NonNull View view) {
+                view.setOnClickListener(v -> {
+                    int index = recyclerView.getChildLayoutPosition(view);
+                    String selectedEventId = eventAdapter.getItemAt(index).id;
+
+                    Toast.makeText(GetAllEventsActivity.this, "Selected Event: " + eventAdapter.getItemAt(index).title, Toast.LENGTH_SHORT).show();
+
+//                    Intent intent = new Intent(GetAllEventsActivity.this, UpdateEventActivity.class);
+//                    intent.putExtra("selectedEventId", selectedEventId);
+
+//                    startActivity(intent);
+                });
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(@NonNull View view) {
+
+            }
+        });
 
         // Find back button
         View backButton = findViewById(R.id.button_back);
