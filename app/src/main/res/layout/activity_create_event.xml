@@ -80,6 +80,8 @@
         </LinearLayout>
 
 
+
+
         <Button
             android:id="@+id/button_createEvent"
             android:layout_width="wrap_content"
@@ -87,7 +89,12 @@
             android:text="Create Event"
             android:layout_gravity="center_horizontal"/>
 
-
+        <Button
+            android:id="@+id/button_cancelCreateEvent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:layout_gravity="center_horizontal"/>
 
     </LinearLayout>
 </ScrollView>
