@@ -96,40 +96,38 @@ public class AchievementsActivity extends BaseActivity {
                         String title = achievement.getString("name");
                         String description = achievement.getString("description");
                         Long goal = achievement.getLong("goal");
+                        String group = achievement.getString("group");
                         int goalInt = goal != null ? goal.intValue() : 1;
 
                         // Get current progress
-                        // These are just hard-coded for our two example achievements
                         // TODO: alter this later to work with all achievement types, ex: counts, streaks, etc.
                         int current = 0;
-                        if ("FIRST_TIME".equals(type) || "COUNT".equals(type)) {
-                            DocumentSnapshot loginCountSnap = userMetricsMap.get("login_count");
-                            if (loginCountSnap != null) {
-                                Long c = loginCountSnap.getLong("count");
-                                Log.i(TAG, "CountValue: " + c);
-                                current = (c != null) ? c.intValue() : 0;
+                        if ("LOGIN".equals(group)) {
+                            if ("FIRST_TIME".equals(type) || "COUNT".equals(type)) {
+                                DocumentSnapshot loginCountSnap = userMetricsMap.get("login_count");
+                                if (loginCountSnap != null) {
+                                    Long c = loginCountSnap.getLong("count");
+                                    Log.i(TAG, "LoginCountValue: " + c);
+                                    current = (c != null) ? c.intValue() : 0;
+                                }
+                            } else if ("STREAK".equals(type)) {
+                                DocumentSnapshot loginStreakSnap = userMetricsMap.get("login_streak");
+                                if (loginStreakSnap != null) {
+                                    Long c = loginStreakSnap.getLong("current");
+                                    Log.i(TAG, "LoginStreakValue: " + c);
+                                    current = (c != null) ? c.intValue() : 0;
+                                }
                             }
-                        } else if ("STREAK".equals(type)) {
-                            DocumentSnapshot loginStreakSnap = userMetricsMap.get("login_streak");
-                            if (loginStreakSnap != null) {
-                                Long c = loginStreakSnap.getLong("current");
-                                Log.i(TAG, "StreakValue: " + c);
-                                current = (c != null) ? c.intValue() : 0;
+                        } else if ("GAMES".equals(group)) {
+                            if ("FIRST_TIME".equals(type) || "COUNT".equals(type)) {
+                                DocumentSnapshot gameCountSnap = userMetricsMap.get("game_count");
+                                if (gameCountSnap != null) {
+                                    Long c = gameCountSnap.getLong("count");
+                                    Log.i(TAG, "GameCountValue: " + c);
+                                    current = (c != null) ? c.intValue() : 0;
+                                }
                             }
                         }
-//                        if ("first_login".equals(id)) {
-//                            DocumentSnapshot loginCountSnap = userMetricsMap.get("login_count");
-//                            if (loginCountSnap != null) {
-//                                Long c = loginCountSnap.getLong("count");
-//                                current = (c != null) ? c.intValue() : 0;
-//                            }
-//                        } else if ("streak_3".equals(id)) {
-//                            DocumentSnapshot loginStreakSnap = userMetricsMap.get("login_streak");
-//                            if (loginStreakSnap != null) {
-//                                Long c = loginStreakSnap.getLong("current");
-//                                current = (c != null) ? c.intValue() : 0;
-//                            }
-//                        }
 
                         // To get "achieved" boolean
                         DocumentSnapshot achievedSnap = userEarnedMap.get(id);

@@ -39,11 +39,21 @@ public final class AchievementAwarder {
         DocumentReference loginStreak_Met = db.collection("users")
                 .document(userId)
                 .collection("metrics").document("login_streak");
+        // Reference to gamesPlayed
+        DocumentReference gamesPlayed_met = db.collection("users")
+                .document(userId)
+                .collection("metrics").document("game_count");
 
         // Achievement References
         // Get all achievements of group type "LOGIN"
         Task<QuerySnapshot> allLoginAchievements_task = db.collection("achievements")
                 .whereEqualTo("group", "LOGIN")
+                .whereEqualTo("isActive", true)
+                .get();
+
+        // Get all achievements of group type "GAMES"
+        Task<QuerySnapshot> allGameAchievements_task = db.collection("achievements")
+                .whereEqualTo("group", "GAMES")
                 .whereEqualTo("isActive", true)
                 .get();
 
@@ -54,24 +64,28 @@ public final class AchievementAwarder {
 
         Task<DocumentSnapshot> loginCount_task = loginCount_Met.get();
         Task<DocumentSnapshot> loginStreak_task = loginStreak_Met.get();
+        Task<DocumentSnapshot> gamesPlayed_task = gamesPlayed_met.get();
 
         // Read all the info from the references
         //* All reads before all writes
         return Tasks.whenAllSuccess(
                 loginCount_task,
                 loginStreak_task,
+                gamesPlayed_task,
                 allLoginAchievements_task,
                 userEarnedAchievements_task
         ).continueWithTask(t-> {
             // Keep track of snapshots
             DocumentSnapshot loginCount_snap = loginCount_task.getResult();
             DocumentSnapshot loginStreak_snap = loginStreak_task.getResult();
+            DocumentSnapshot gamesPlayed_snap = gamesPlayed_task.getResult();
 
             // Make sure the metrics exist. Otherwise, send 0.
-            long count = (loginCount_snap.exists() && loginCount_snap.contains("count")) ? loginCount_snap.getLong("count") : 0L;
+            long loginCount = (loginCount_snap.exists() && loginCount_snap.contains("count")) ? loginCount_snap.getLong("count") : 0L;
             Log.d(TAG, "Count: " + loginCount_snap.getLong("count"));
-            long current = (loginStreak_snap.exists() && loginStreak_snap.contains("current")) ? loginStreak_snap.getLong("current") : 0L;
+            long loginCurrent = (loginStreak_snap.exists() && loginStreak_snap.contains("current")) ? loginStreak_snap.getLong("current") : 0L;
             Log.d(TAG, "Current: " + loginStreak_snap.getLong("current"));
+            long gameCount = (gamesPlayed_snap.exists() && gamesPlayed_snap.contains("count")) ? gamesPlayed_snap.getLong("count") : 0L;
 
             QuerySnapshot allLoginAchievements_snap = allLoginAchievements_task.getResult();
             QuerySnapshot userEarnedAchievements_snap = userEarnedAchievements_task.getResult();
@@ -109,9 +123,11 @@ public final class AchievementAwarder {
 
                 // Determine appropriate metricValue
                 if ("login_streak".equals(metric)) {
-                    metricValue = current;
+                    metricValue = loginCurrent;
                 } else if ("login_count".equals(metric)) {
-                    metricValue = count;
+                    metricValue = loginCount;
+                } else if ("game_count".equals(metric)) {
+                    metricValue = gameCount;
                 }
 
                 if ("FIRST_TIME".equals(type)) {
