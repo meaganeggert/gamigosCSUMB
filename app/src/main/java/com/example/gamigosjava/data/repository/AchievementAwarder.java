@@ -28,8 +28,8 @@ public final class AchievementAwarder {
         this.db = db;
     }
 
-    // Task to award login-related achievements
-    public Task<List<String>> awardLoginAchievements(String userId) {
+    // Task to award achievements
+    public Task<List<String>> awardAchievements(String userId) {
         // References
         // Reference to loginCount
         DocumentReference loginCount_Met = db.collection("users")
@@ -40,9 +40,13 @@ public final class AchievementAwarder {
                 .document(userId)
                 .collection("metrics").document("login_streak");
         // Reference to gamesPlayed
-        DocumentReference gamesPlayed_met = db.collection("users")
+        DocumentReference gamesPlayed_Met = db.collection("users")
                 .document(userId)
                 .collection("metrics").document("game_count");
+        // Reference to friendsAdded
+        DocumentReference friendsAdded_Met = db.collection("users")
+                .document(userId)
+                .collection("metrics").document("friend_count");
 
         // Achievement References
         // Get all achievements of group type "LOGIN"
@@ -57,6 +61,12 @@ public final class AchievementAwarder {
                 .whereEqualTo("isActive", true)
                 .get();
 
+        // Get all achievements of group type "FRIENDS"
+        Task<QuerySnapshot> allFriendAchievements_task = db.collection("achievements")
+                .whereEqualTo("group", "FRIENDS")
+                .whereEqualTo("isActive", true)
+                .get();
+
         // Check to see if achievements have already been earned
         Task<QuerySnapshot> userEarnedAchievements_task = db.collection("users").document(userId)
                 .collection("achievements")
@@ -64,7 +74,8 @@ public final class AchievementAwarder {
 
         Task<DocumentSnapshot> loginCount_task = loginCount_Met.get();
         Task<DocumentSnapshot> loginStreak_task = loginStreak_Met.get();
-        Task<DocumentSnapshot> gamesPlayed_task = gamesPlayed_met.get();
+        Task<DocumentSnapshot> gamesPlayed_task = gamesPlayed_Met.get();
+        Task<DocumentSnapshot> friendsAdded_task = friendsAdded_Met.get();
 
         // Read all the info from the references
         //* All reads before all writes
@@ -72,13 +83,17 @@ public final class AchievementAwarder {
                 loginCount_task,
                 loginStreak_task,
                 gamesPlayed_task,
+                friendsAdded_task,
                 allLoginAchievements_task,
+                allGameAchievements_task,
+                allFriendAchievements_task,
                 userEarnedAchievements_task
         ).continueWithTask(t-> {
             // Keep track of snapshots
             DocumentSnapshot loginCount_snap = loginCount_task.getResult();
             DocumentSnapshot loginStreak_snap = loginStreak_task.getResult();
             DocumentSnapshot gamesPlayed_snap = gamesPlayed_task.getResult();
+            DocumentSnapshot friendsAdded_snap = friendsAdded_task.getResult();
 
             // Make sure the metrics exist. Otherwise, send 0.
             long loginCount = (loginCount_snap.exists() && loginCount_snap.contains("count")) ? loginCount_snap.getLong("count") : 0L;
@@ -86,8 +101,11 @@ public final class AchievementAwarder {
             long loginCurrent = (loginStreak_snap.exists() && loginStreak_snap.contains("current")) ? loginStreak_snap.getLong("current") : 0L;
             Log.d(TAG, "Current: " + loginStreak_snap.getLong("current"));
             long gameCount = (gamesPlayed_snap.exists() && gamesPlayed_snap.contains("count")) ? gamesPlayed_snap.getLong("count") : 0L;
+            long friendCount = (friendsAdded_snap.exists() && friendsAdded_snap.contains("count")) ? friendsAdded_snap.getLong("count") : 0L;
 
             QuerySnapshot allLoginAchievements_snap = allLoginAchievements_task.getResult();
+            QuerySnapshot allGameAchievements_snap = allGameAchievements_task.getResult();
+            QuerySnapshot allFriendAchievements_snap = allFriendAchievements_task.getResult();
             QuerySnapshot userEarnedAchievements_snap = userEarnedAchievements_task.getResult();
 
             // Create a list to keep track of earned achievements
@@ -107,6 +125,7 @@ public final class AchievementAwarder {
             // List for newly earned achievements
             List<String> newlyEarned = new ArrayList<>();
 
+            // Iterate over login-type achievements
             for (DocumentSnapshot docSnap : allLoginAchievements_snap.getDocuments()) {
                 String achievementID = docSnap.getId();
 
@@ -126,8 +145,98 @@ public final class AchievementAwarder {
                     metricValue = loginCurrent;
                 } else if ("login_count".equals(metric)) {
                     metricValue = loginCount;
-                } else if ("game_count".equals(metric)) {
+                }
+
+                if ("FIRST_TIME".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                } else if ("COUNT".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                } else if ("STREAK".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                }
+
+                if (shouldAward) {
+                    DocumentReference userAchievement_ref = db.collection("users")
+                            .document(userId)
+                            .collection("achievements")
+                            .document(achievementID);
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("earned", true);
+                    updates.put("earnedAt", FieldValue.serverTimestamp());
+
+                    batch.set(userAchievement_ref, updates, SetOptions.merge());
+
+                    newlyEarned.add(
+                            name != null ? name : achievementID
+                    );
+                }
+            }
+
+            // Iterate over game-type achievements
+            for (DocumentSnapshot docSnap : allGameAchievements_snap.getDocuments()) {
+                String achievementID = docSnap.getId();
+
+                // If already earned, don't add
+                if (alreadyEarned.contains(achievementID)) continue;
+
+                String type = docSnap.getString("type");
+                String metric = docSnap.getString("metric");
+                long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
+                String name = docSnap.getString("name");
+
+                boolean shouldAward = false;
+                long metricValue = 0L;
+
+                // Determine appropriate metricValue
+                if ("game_count".equals(metric)) {
                     metricValue = gameCount;
+                }
+
+                if ("FIRST_TIME".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                } else if ("COUNT".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                } else if ("STREAK".equals(type)) {
+                    shouldAward = metricValue >= goal;
+                }
+
+                if (shouldAward) {
+                    DocumentReference userAchievement_ref = db.collection("users")
+                            .document(userId)
+                            .collection("achievements")
+                            .document(achievementID);
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("earned", true);
+                    updates.put("earnedAt", FieldValue.serverTimestamp());
+
+                    batch.set(userAchievement_ref, updates, SetOptions.merge());
+
+                    newlyEarned.add(
+                            name != null ? name : achievementID
+                    );
+                }
+            }
+
+            // Iterate over friend-type achievements
+            for (DocumentSnapshot docSnap : allFriendAchievements_snap.getDocuments()) {
+                String achievementID = docSnap.getId();
+
+                // If already earned, don't add
+                if (alreadyEarned.contains(achievementID)) continue;
+
+                String type = docSnap.getString("type");
+                String metric = docSnap.getString("metric");
+                long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
+                String name = docSnap.getString("name");
+
+                boolean shouldAward = false;
+                long metricValue = 0L;
+
+                // Determine appropriate metricValue
+                if ("friend_count".equals(metric)) {
+                    metricValue = friendCount;
                 }
 
                 if ("FIRST_TIME".equals(type)) {
