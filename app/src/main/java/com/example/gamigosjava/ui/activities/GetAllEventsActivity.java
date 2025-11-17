@@ -94,12 +94,9 @@ public class GetAllEventsActivity extends BaseActivity {
                     int index = recyclerView.getChildLayoutPosition(view);
                     String selectedEventId = eventAdapter.getItemAt(index).id;
 
-                    Toast.makeText(GetAllEventsActivity.this, "Selected Event: " + eventAdapter.getItemAt(index).title, Toast.LENGTH_SHORT).show();
-
-//                    Intent intent = new Intent(GetAllEventsActivity.this, UpdateEventActivity.class);
-//                    intent.putExtra("selectedEventId", selectedEventId);
-
-//                    startActivity(intent);
+                    Intent intent = new Intent(GetAllEventsActivity.this, UpdateEventActivity.class);
+                    intent.putExtra("selectedEventId", selectedEventId);
+                    startActivity(intent);
                 });
             }
 
