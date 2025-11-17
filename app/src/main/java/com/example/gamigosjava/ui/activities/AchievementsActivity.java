@@ -92,6 +92,7 @@ public class AchievementsActivity extends BaseActivity {
                     // Summarize achievement results data
                     for (DocumentSnapshot achievement : allAchieveSnap) {
                         String id = achievement.getId();
+                        String type = achievement.getString("type");
                         String title = achievement.getString("name");
                         String description = achievement.getString("description");
                         Long goal = achievement.getLong("goal");
@@ -101,19 +102,34 @@ public class AchievementsActivity extends BaseActivity {
                         // These are just hard-coded for our two example achievements
                         // TODO: alter this later to work with all achievement types, ex: counts, streaks, etc.
                         int current = 0;
-                        if ("first_login".equals(id)) {
+                        if ("FIRST_TIME".equals(type) || "COUNT".equals(type)) {
                             DocumentSnapshot loginCountSnap = userMetricsMap.get("login_count");
                             if (loginCountSnap != null) {
                                 Long c = loginCountSnap.getLong("count");
+                                Log.i(TAG, "CountValue: " + c);
                                 current = (c != null) ? c.intValue() : 0;
                             }
-                        } else if ("streak_3".equals(id)) {
+                        } else if ("STREAK".equals(type)) {
                             DocumentSnapshot loginStreakSnap = userMetricsMap.get("login_streak");
                             if (loginStreakSnap != null) {
                                 Long c = loginStreakSnap.getLong("current");
+                                Log.i(TAG, "StreakValue: " + c);
                                 current = (c != null) ? c.intValue() : 0;
                             }
                         }
+//                        if ("first_login".equals(id)) {
+//                            DocumentSnapshot loginCountSnap = userMetricsMap.get("login_count");
+//                            if (loginCountSnap != null) {
+//                                Long c = loginCountSnap.getLong("count");
+//                                current = (c != null) ? c.intValue() : 0;
+//                            }
+//                        } else if ("streak_3".equals(id)) {
+//                            DocumentSnapshot loginStreakSnap = userMetricsMap.get("login_streak");
+//                            if (loginStreakSnap != null) {
+//                                Long c = loginStreakSnap.getLong("current");
+//                                current = (c != null) ? c.intValue() : 0;
+//                            }
+//                        }
 
                         // To get "achieved" boolean
                         DocumentSnapshot achievedSnap = userEarnedMap.get(id);
