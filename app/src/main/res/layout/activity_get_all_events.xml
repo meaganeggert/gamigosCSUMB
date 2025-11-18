@@ -24,10 +24,10 @@
     <!--    Back Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_back"
-        android:layout_width="165dp"
+        android:layout_width="200dp"
         android:layout_height="50dp"
         android:backgroundTint="@color/yellow"
-        android:fontFamily="serif-monospace"
+        android:fontFamily="sans-serif-light"
         android:maxLines="1"
         android:text="Return to Event Home"
         android:textColor="@color/darkblue"

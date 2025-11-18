@@ -91,6 +91,16 @@ public class ProfileActivity extends BaseActivity {
                 logOut();
             });
         }
+
+        Button btnBGG = findViewById(R.id.button_test);
+        if (btnBGG != null) {
+            btnBGG.setOnClickListener(v -> {
+                Intent intent = new Intent(this, BGGTestActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Toast.makeText(this, "BGG test button not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void uploadPhotoToStorage(Uri imageUri) {
