@@ -127,6 +127,15 @@ public class AchievementsActivity extends BaseActivity {
                                     current = (c != null) ? c.intValue() : 0;
                                 }
                             }
+                        } else if ("FRIENDS".equals(group)) {
+                            if ("FIRST_TIME".equals(type) || "COUNT".equals(type)) {
+                                DocumentSnapshot friendCountSnap = userMetricsMap.get("friend_count");
+                                if (friendCountSnap != null) {
+                                    Long c = friendCountSnap.getLong("count");
+                                    Log.i(TAG, "FriendCountValue: " + c);
+                                    current = (c != null) ? c.intValue() : 0;
+                                }
+                            }
                         }
 
                         // To get "achieved" boolean

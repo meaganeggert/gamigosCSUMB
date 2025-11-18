@@ -85,7 +85,35 @@ public class AchievementsRepo {
                 return batch.commit();
             }
 
-        });
+        })
+                // after initializing metrics, make sure the friend count is accurate
+                .continueWithTask(t-> friendTracker(userId));
+    }
+
+    public Task<Void> friendTracker(String userId) {
+        // Reference to user's friend list
+        return db.collection("users")
+                .document(userId)
+                .collection("friends")
+                .get()
+                .continueWithTask(t -> {
+                    if (!t.isSuccessful()) {
+                        throw t.getException();
+                    }
+
+                    int friendCount = t.getResult().size();
+
+                    // Reference to friendCount metric
+                    DocumentReference friendCount_Ref = db.collection("users")
+                            .document(userId)
+                            .collection("metrics")
+                            .document("friend_count");
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("count", (long) friendCount);
+
+                    return friendCount_Ref.set(updates, SetOptions.merge());
+                });
     }
 
     public Task<Void> loginTracker(String userId) {
