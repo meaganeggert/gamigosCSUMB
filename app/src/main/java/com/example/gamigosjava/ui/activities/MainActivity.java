@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "SignIn";
 
-    private static final boolean debugging = true;
+
 
     private FirebaseAuth mAuth;
     private CredentialManager credentialManager;
@@ -61,9 +61,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Force sign-out so user must log in every time while debugging
-//        if (debugging) {
-//            FirebaseAuth.getInstance().signOut();
-//        }
+        boolean debugging = true; // true to force sign-out, false to stay logged-in
+        if (debugging) {
+            FirebaseAuth.getInstance().signOut();
+        }
 
         // Initiate Firebase
         mAuth = FirebaseAuth.getInstance();
