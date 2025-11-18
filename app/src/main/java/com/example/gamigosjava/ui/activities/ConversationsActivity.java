@@ -1,20 +1,20 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import android.content.Intent;
-
 import com.example.gamigosjava.R;
-import com.example.gamigosjava.ui.viewholder.ConversationsModel;
 import com.example.gamigosjava.ui.adapter.ConversationsAdapter;
+import com.example.gamigosjava.ui.viewholder.ConversationsModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
@@ -24,6 +24,9 @@ public class ConversationsActivity extends BaseActivity {
     private ConversationsAdapter adapter;
     private FirebaseFirestore db;
     private String currentUid;
+
+    private ListenerRegistration conversationsListener;
+    private final List<ConversationsModel> conversations = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +50,8 @@ public class ConversationsActivity extends BaseActivity {
                             this,
                             conversation.getId(),
                             title,
-                            otherUid
+                            otherUid,
+                            conversation.isGroup()
                     )
             );
         });
@@ -55,28 +59,48 @@ public class ConversationsActivity extends BaseActivity {
         rvConversations.setAdapter(adapter);
 
         FloatingActionButton newConversationFab = findViewById(R.id.fabNewConversation);
-        newConversationFab.setOnClickListener(v -> startActivity(new Intent(this, NewConversationActivity.class)));
+        newConversationFab.setOnClickListener(
+                v -> startActivity(new Intent(this, NewConversationActivity.class))
+        );
 
-        loadConversations();
+        startConversationsListener();
     }
 
-    private void loadConversations() {
+    private void startConversationsListener() {
         if (currentUid == null) return;
 
-        db.collection("conversations")
+        // Remove old listener if any (defensive)
+        if (conversationsListener != null) {
+            conversationsListener.remove();
+            conversationsListener = null;
+        }
+
+        conversationsListener = db.collection("conversations")
                 .whereArrayContains("participants", currentUid)
                 .orderBy("lastMessageAt", Query.Direction.DESCENDING)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    android.util.Log.d("Convos", "Got " + querySnapshot.size() + " conversations");
-                    List<ConversationsModel> list = new ArrayList<>();
+                .addSnapshotListener((querySnapshot, error) -> {
+                    if (error != null) {
+                        android.util.Log.e("Convos", "Listen failed: ", error);
+                        return;
+                    }
+                    if (querySnapshot == null) return;
+
+                    android.util.Log.d("Convos", "Realtime got " + querySnapshot.size() + " conversations");
+
+                    conversations.clear();
 
                     for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
                         ConversationsModel c = doc.toObject(ConversationsModel.class);
                         if (c == null) continue;
                         c.setId(doc.getId());
 
-                        // find otherUid for 1–1 chats
+                        android.util.Log.d(
+                                "Convos",
+                                "doc " + doc.getId() + " isGroup=" + c.isGroup()
+                                        + " titleOverride=" + c.getTitleOverride()
+                        );
+
+                        // compute otherUid for 1–1 chats
                         if (!c.isGroup() && c.getParticipants() != null) {
                             for (String uid : c.getParticipants()) {
                                 if (!uid.equals(currentUid)) {
@@ -85,12 +109,12 @@ public class ConversationsActivity extends BaseActivity {
                                 }
                             }
                         }
-                        list.add(c);
+                        conversations.add(c);
                     }
-                    adapter.setConversations(list);
-                    fetchUserInfoForDMs(list);
-                })
-                .addOnFailureListener(error -> android.util.Log.d("Convos", "Failed to load conversations: ", error));
+
+                    adapter.setConversations(new ArrayList<>(conversations));
+                    fetchUserInfoForDMs(conversations); // to fill in names/photos
+                });
     }
 
     private void fetchUserInfoForDMs(List<ConversationsModel> conversations) {
@@ -105,14 +129,13 @@ public class ConversationsActivity extends BaseActivity {
                     .addOnSuccessListener(userDoc -> {
                         c.setOtherName(userDoc.getString("displayName"));
                         c.setOtherPhotoUrl(userDoc.getString("photoUrl"));
-                        adapter.notifyDataSetChanged(); // simple & fine for small lists
+                        adapter.notifyDataSetChanged(); // fine for small list
                     });
         }
     }
 
     private String resolveTitleForConversation(ConversationsModel c) {
         if (c.isGroup()) {
-            // if you eventually add a title field:
             if (c.getTitleOverride() != null && !c.getTitleOverride().isEmpty()) {
                 return c.getTitleOverride();
             }
@@ -122,6 +145,15 @@ public class ConversationsActivity extends BaseActivity {
                 return c.getOtherName();
             }
             return "Direct message";
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (conversationsListener != null) {
+            conversationsListener.remove();
+            conversationsListener = null;
         }
     }
 }

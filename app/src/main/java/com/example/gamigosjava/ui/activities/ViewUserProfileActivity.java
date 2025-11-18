@@ -443,8 +443,14 @@ public class ViewUserProfileActivity extends BaseActivity {
     }
 
     private void launchMessages(String conversationId, String title, String otherUid) {
-            Intent intent = MessagesActivity.newIntent(this, conversationId, title, otherUid);
-            startActivity(intent);
+        Intent intent = MessagesActivity.newIntent(
+                this,
+                conversationId,
+                title,
+                otherUid,
+                false      // DM, not group
+        );
+        startActivity(intent);
     }
 
     @Override

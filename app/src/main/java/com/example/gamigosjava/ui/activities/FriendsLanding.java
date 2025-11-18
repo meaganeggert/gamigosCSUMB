@@ -125,8 +125,16 @@ public class FriendsLanding extends BaseActivity {
 
         convoRef.get().addOnSuccessListener(snap -> {
             if (snap.exists()) {
-                // open
-                startActivity(MessagesActivity.newIntent(this, convoId, title, otherUid));
+                // open existing DM
+                startActivity(
+                        MessagesActivity.newIntent(
+                                this,
+                                convoId,
+                                title,
+                                otherUid,
+                                false          // <-- DM, not group
+                        )
+                );
             } else {
                 // create then open (hybrid model)
                 Map<String, Object> data = new HashMap<>();
@@ -139,11 +147,20 @@ public class FriendsLanding extends BaseActivity {
                     // seed participantsData
                     createParticipantData(convoRef, myUid);
                     createParticipantData(convoRef, otherUid);
-                    startActivity(MessagesActivity.newIntent(this, convoId, title, otherUid));
+                    startActivity(
+                            MessagesActivity.newIntent(
+                                    this,
+                                    convoId,
+                                    title,
+                                    otherUid,
+                                    false      // <-- DM, not group
+                            )
+                    );
                 });
             }
         });
     }
+
 
     private void createParticipantData(DocumentReference convoRef, String uid) {
         Map<String, Object> pd = new HashMap<>();

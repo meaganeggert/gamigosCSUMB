@@ -31,10 +31,18 @@ public class ConversationViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(ConversationsModel c,
                      ConversationsAdapter.OnConversationClickListener listener) {
-
         // --- ICON / AVATAR ---
         if (c.isGroup()) {
-            imageIcon.setImageResource(R.drawable.ic_friends_24);
+            String groupPhotoUrl = c.getGroupPhotoUrl();
+            if (groupPhotoUrl != null && !groupPhotoUrl.isEmpty()) {
+                Glide.with(itemView.getContext())
+                        .load(groupPhotoUrl)
+                        .placeholder(R.drawable.ic_friends_24)
+                        .error(R.drawable.ic_friends_24)
+                        .into(imageIcon);
+            } else {
+                imageIcon.setImageResource(R.drawable.ic_friends_24);
+            }
         } else {
             String photoUrl = c.getOtherPhotoUrl();
             if (photoUrl != null && !photoUrl.isEmpty()) {
