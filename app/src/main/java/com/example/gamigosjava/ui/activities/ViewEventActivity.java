@@ -166,9 +166,10 @@ public class ViewEventActivity extends BaseActivity {
                     } else {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
+                        matchResult.gameId = matchSnap.getString("gameId");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
                         matches.add(matchResult);
-                        getGameDetails(matchResult.id, matchResult.gameRef);
+                        getGameDetails(matchResult);
                         Log.d(TAG, "Found match: " + matchResult.id);
                     }
 
@@ -181,10 +182,11 @@ public class ViewEventActivity extends BaseActivity {
         });
     }
 
-    private void getGameDetails(String matchId, DocumentReference doc) {
-        if (doc == null) return;
+    private void getGameDetails(Match match) {
+        DocumentReference gameDoc = match.gameRef;
+        if (gameDoc == null) return;
 
-        doc.get().addOnSuccessListener(snap -> {
+        match.gameRef.get().addOnSuccessListener(snap -> {
             if (snap == null) {
                 Log.d(TAG, "Couldn't find game details");
             }
@@ -194,7 +196,7 @@ public class ViewEventActivity extends BaseActivity {
             Integer minPlayers = snap.get("minPlayers", Integer.class);
             Integer playingTime = snap.get("playingTime", Integer.class);
 
-            MatchSummary matchSummary = new MatchSummary(matchId, title, imageUrl, minPlayers, maxPlayers, playingTime);
+            MatchSummary matchSummary = new MatchSummary(match.id, title, imageUrl, minPlayers, maxPlayers, playingTime);
             matchSummaryList.add(matchSummary);
             matchAdapter.setItems(matchSummaryList);
             Log.d(TAG, "Found game: " + matchSummary.id);
