@@ -41,55 +41,55 @@
     </LinearLayout>
 
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Date and Time"
-        android:textSize="12dp"
-        android:layout_marginTop="12dp"/>
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center">
+<!--    <TextView-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Date and Time"-->
+<!--        android:textSize="12dp"-->
+<!--        android:layout_marginTop="12dp"/>-->
+<!--    <LinearLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:layout_gravity="center">-->
 
-        <TextView
-            android:id="@+id/textView_matchStart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="15"
-            android:hint="Match Start"
-            android:padding="3dp"
-            android:textSize="12dp"/>
+<!--        <TextView-->
+<!--            android:id="@+id/textView_matchStart"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:ems="15"-->
+<!--            android:hint="Match Start"-->
+<!--            android:padding="3dp"-->
+<!--            android:textSize="12dp"/>-->
 
-        <Button
-            android:id="@+id/button_selectTimeStart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="set"/>
-    </LinearLayout>
+<!--        <Button-->
+<!--            android:id="@+id/button_selectTimeStart"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="set"/>-->
+<!--    </LinearLayout>-->
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center">
+<!--    <LinearLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:layout_gravity="center">-->
 
-        <TextView
-            android:id="@+id/textView_matchEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="15"
-            android:hint="Match End"
-            android:padding="3dp"
-            android:textSize="12dp"/>
+<!--        <TextView-->
+<!--            android:id="@+id/textView_matchEnd"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:ems="15"-->
+<!--            android:hint="Match End"-->
+<!--            android:padding="3dp"-->
+<!--            android:textSize="12dp"/>-->
 
-        <Button
-            android:id="@+id/button_selectTimeEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="set"/>
-    </LinearLayout>
+<!--        <Button-->
+<!--            android:id="@+id/button_selectTimeEnd"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="set"/>-->
+<!--    </LinearLayout>-->
 
     <TextView
         android:layout_width="wrap_content"

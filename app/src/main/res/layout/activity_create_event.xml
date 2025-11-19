@@ -33,51 +33,51 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"/>
 
-        <View
-            android:id="@+id/divider"
-            android:layout_width="330dp"
-            android:layout_height="1dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:background="?android:attr/listDivider"/>
+<!--        <View-->
+<!--            android:id="@+id/divider"-->
+<!--            android:layout_width="330dp"-->
+<!--            android:layout_height="1dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_marginBottom="16dp"-->
+<!--            android:background="?android:attr/listDivider"/>-->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Matches"
-            android:textSize="24dp"
-            android:layout_gravity="center_horizontal"/>
-        <LinearLayout
-            android:id="@+id/matchFormContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_gravity="center_horizontal">
-        </LinearLayout>
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Matches"-->
+<!--            android:textSize="24dp"-->
+<!--            android:layout_gravity="center_horizontal"/>-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/matchFormContainer"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="vertical"-->
+<!--            android:layout_gravity="center_horizontal">-->
+<!--        </LinearLayout>-->
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end">
+<!--        <LinearLayout-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="end">-->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Add Match"
-                android:textSize="12dp"
-                android:layout_margin="12dp"
-                android:layout_gravity="center_vertical"/>
-            <Button
-                android:id="@+id/button_removeMatch"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:text="-"/>
-            <Button
-                android:id="@+id/button_addMatch"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:text="+"/>
-        </LinearLayout>
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Add Match"-->
+<!--                android:textSize="12dp"-->
+<!--                android:layout_margin="12dp"-->
+<!--                android:layout_gravity="center_vertical"/>-->
+<!--            <Button-->
+<!--                android:id="@+id/button_removeMatch"-->
+<!--                android:layout_width="60dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="-"/>-->
+<!--            <Button-->
+<!--                android:id="@+id/button_addMatch"-->
+<!--                android:layout_width="60dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="+"/>-->
+<!--        </LinearLayout>-->
 
 
 
