@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:layout_gravity="center_horizontal"
+    tools:context=".ui.activities.ViewEventActivity">
+
+    <LinearLayout
+        android:id="@+id/viewEventRoot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal">
+
+        <FrameLayout
+            android:id="@+id/eventFormContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/cardview_light_background"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Games"
+            android:textSize="24dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewGames"
+            android:background="#EEEEEE"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:padding="8dp"
+            tools:listitem="@layout/game_row"/>
+    </LinearLayout>
+
+
+</ScrollView>

@@ -15,6 +15,9 @@
         android:theme="@style/Theme.GamigosJava"
         tools:targetApi="31">
         <activity
+            android:name=".ui.activities.ViewEventActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.MessagesActivity"
             android:exported="false" />
         <activity
