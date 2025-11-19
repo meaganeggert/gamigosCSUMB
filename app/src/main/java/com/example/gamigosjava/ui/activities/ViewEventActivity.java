@@ -72,7 +72,7 @@ public class ViewEventActivity extends BaseActivity {
     ViewGroup eventContainer;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        api = BGGService.getInstance();
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
@@ -80,8 +80,9 @@ public class ViewEventActivity extends BaseActivity {
 
 
         super.onCreate(savedInstanceState);
+        setChildLayout(R.layout.activity_view_event);
         setTopTitle("Event");
-        setContentView(R.layout.activity_view_event);
+
 
 
         eventId = getIntent().getStringExtra("selectedEventId");
@@ -126,6 +127,7 @@ public class ViewEventActivity extends BaseActivity {
             addGameButton.setOnClickListener(v -> {
                 String selectedMatchId = "";
                 Intent intent = new Intent(ViewEventActivity.this, ViewMatchActivity.class);
+                intent.putExtra("selectedEventId", eventId);
                 intent.putExtra("selectedMatchId", selectedMatchId);
                 startActivity(intent);
             });

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
@@ -21,18 +22,23 @@ import com.example.gamigosjava.data.api.BGGMappers;
 import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
+import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
+import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,20 +50,48 @@ public class ViewMatchActivity extends BaseActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+
     LinearLayout matchFormContainerHandle;
     private ArrayAdapter<GameSummary> userGameAdapter;
     private ArrayAdapter<GameSummary> apiGameAdapter;
     private List<GameSummary> userGameList;
     private List<GameSummary> apiGameList;
+    private Match matchItem;
 
+    // to be used if we are not updated a match and instead are creating a new one.
+    private String eventId;
+    private String matchId;
+
+    // TODO: get match info.
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_match);
-        setTopTitle("Match");
+        setChildLayout(R.layout.activity_view_match);
+        setTopTitle("Game");
 
+        eventId = getIntent().getStringExtra("selectedEventId");
+        matchId = getIntent().getStringExtra("selectedMatchId");
         addMatchForm();
+        getMatchDetails(matchId);
 
+        Button saveButton = findViewById(R.id.button_saveMatch);
+        if (saveButton != null) {
+            saveButton.setOnClickListener(v -> {
+                Toast.makeText(this, "Pressed save button.", Toast.LENGTH_SHORT).show();
+                uploadGameInfo();
+            });
+        } else {
+            Log.e(TAG, "Failed to find save match button.");
+        }
+
+        Button cancelButton = findViewById(R.id.button_cancelMatch);
+        if (cancelButton != null) {
+            cancelButton.setOnClickListener(v -> {
+                finish();
+            });
+        } else {
+            Log.e(TAG, "Failed to find cancel match button.");
+        }
 
     }
 
@@ -124,9 +158,12 @@ public class ViewMatchActivity extends BaseActivity {
                 return true;
             }
         });
+
+        matchItem = new Match();
+
     }
 
-        private void getGames() {
+    private void getGames() {
         if (currentUser == null) {
             Toast.makeText(this, "User is not logged in.", Toast.LENGTH_SHORT).show();
             return;
@@ -134,8 +171,10 @@ public class ViewMatchActivity extends BaseActivity {
 
         String uid = currentUser.getUid();
 
-        userGameList.clear();
-        // Get games the user previously played
+//        userGameList.clear();
+        userGameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
+
+            // Get games the user previously played
         CollectionReference gamesRef = db
                 .collection("users")
                 .document(uid)
@@ -177,7 +216,6 @@ public class ViewMatchActivity extends BaseActivity {
                     Log.d(TAG, "Failed to user BGG collection.");
                 });
 
-        userGameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
         userGameAdapter.notifyDataSetChanged();
     }
 
@@ -264,5 +302,207 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
+
+    // Uploads the match to firebase.
+    // eventId, notes, rules variant, imageUrl, startedAt, endedAt, and a reference to the game played.
+    private void uploadMatch() {
+        if (currentUser == null) {
+            Log.e(TAG, "Must be logged in.");
+            return;
+        }
+
+        if (matchFormContainerHandle.getChildCount() < 1) {
+            Log.d(TAG, "No matches to upload, skipping uploadMatches");
+            Toast.makeText(this, "No matches uploaded.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String uid = currentUser.getUid();
+
+        View matchForm = matchFormContainerHandle.getChildAt(0);
+
+        // Get text values from the UI
+        EditText ruleChangeValue = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
+        EditText notesValue = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
+        Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
+        GameSummary game = (GameSummary) gameName.getSelectedItem();
+
+        // Connect values to the match object.
+        matchItem.eventId = eventId;
+        matchItem.notes = notesValue.getText().toString();
+        matchItem.rulesVariant = ruleChangeValue.getText().toString();
+        matchItem.gameId = game.id;
+        matchItem.imageUrl = game.imageUrl;
+        // Timestamps will have been set by the showDateTime interface.
+
+        // Connect values from the match object to the hashmap to be uploaded.
+        HashMap<String, Object> match = new HashMap<>();
+        match.put("eventId", matchItem.eventId);
+        match.put("notes", matchItem.notes);
+        match.put("rules_variant", matchItem.rulesVariant);
+        match.put("startedAt", matchItem.startedAt);
+        match.put("endedAt", matchItem.endedAt);
+        match.put("imageUrl", matchItem.imageUrl);
+
+        if (game.id != null) {
+            match.put("gameRef", db.collection("games").document(game.id));
+        } else {
+            match.put("gameRef", game.id);
+        }
+
+
+        // Update the match
+        if (!matchId.isEmpty()) {
+            db.collection("matches").document(matchItem.id).set(match)
+                    .addOnSuccessListener(v -> {
+                        Log.d(TAG, "Successfully updated match database element " + matchItem.id + ".");
+                        Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
+                    });
+        } else {
+            // Upload the new match and add a reference to it in the event subcollection "matches"
+            db.collection("matches").add(match)
+                    .addOnSuccessListener(documentReference -> {
+                        matchItem.id = documentReference.getId();
+                        Log.d(TAG, "Saved Match: " + matchItem.id);
+                        Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
+
+                        uploadUserGamesHosted(uid, game);
+                        uploadUserGamesPlayed(uid, game);
+
+                        HashMap<String, Object> eventMatchHash = new HashMap<>();
+                        eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));
+                        db.collection("events")
+                                .document(eventId)
+                                .collection("matches")
+                                .document(matchItem.id)
+                                .set(eventMatchHash).addOnSuccessListener(v -> {
+                                    Log.d(TAG, "Successfully connected match " + matchItem.id + " to event " + matchItem.eventId + ".");
+                                }).addOnFailureListener(e -> {
+                                    Log.e(TAG, "Failed to connect match " + matchItem.id + " to event " + matchItem.eventId + ": " + e.getMessage());
+                                });
+
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to save match: " + e.getMessage());
+                        Toast.makeText(this, "Failed to save game.", Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+    private void uploadUserGamesHosted(String uid, GameSummary gameSummary) {
+        if (gameSummary.id == null) return;
+
+        DocumentReference gamePlayed = db.collection("users")
+                .document(uid)
+                .collection("gamesHosted")
+                .document(gameSummary.id);
+
+        HashMap<String, Object> gameHash = new HashMap<>();
+        gameHash.put("gameRef", db.collection("games").document(gameSummary.id));
+        gamePlayed.set(gameHash).addOnSuccessListener(v -> {
+            Log.d(TAG, "Successfully updated user's hosted game database element: " + gameSummary.id);
+        })
+        .addOnFailureListener(e -> {
+            Log.d(TAG, "Failed to update user's hosted game database element " + gameSummary.id + ": " + e.getMessage());
+        });
+
+    }
+
+    private void uploadUserGamesPlayed(String uid, GameSummary gameSummary) {
+        if (gameSummary.id == null) return;
+
+        DocumentReference gamePlayedRef = db.collection("users")
+                .document(uid)
+                .collection("gamesPlayed")
+                .document(gameSummary.id);
+
+        HashMap<String, Object> gameHash = new HashMap<>();
+        gameHash.put("gameRef", db.collection("games").document(gameSummary.id));
+
+        gamePlayedRef.get().addOnSuccessListener(snap -> {
+
+            if (snap == null) {
+                gameHash.put("timesPlayed", 0);
+            } else {
+                Integer timesPlayed;
+                if (snap.get("timesPlayed", Integer.class) == null) {
+                    timesPlayed = 0;
+                } else {
+                    timesPlayed = snap.get("timesPlayed", Integer.class);
+                }
+                int incrementedTimesPlayed = timesPlayed;
+                incrementedTimesPlayed++;
+                gameHash.put("timesPlayed", incrementedTimesPlayed);
+            }
+            gamePlayedRef.set(gameHash).addOnSuccessListener(v -> {
+                Log.d(TAG, "Successfully updated user's played game database element: " + gameSummary.id);
+            }).addOnFailureListener(e -> {
+                Log.d(TAG, "Failed to update user's played game database element " + gameSummary.id + ": " + e.getMessage());
+            });
+
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get userGamePlayed info: " + e.getMessage());
+        });
+
+    }
+
+    private void getMatchDetails(String matchId) {
+        if (matchId.isEmpty()) {
+            Log.d(TAG, "No match id was passed in.");
+            return;
+        }
+
+        DocumentReference matchRef = db.collection("matches")
+                .document(matchId);
+
+        matchRef.get().addOnSuccessListener(snap -> {
+            if (snap == null) {
+                Log.d(TAG, "Match " + matchId + " was not found.");
+                return;
+            }
+
+            matchItem.id = snap.getId();
+            matchItem.endedAt = snap.getTimestamp("endedAt");
+            matchItem.gameId = snap.getId();
+            matchItem.gameRef = snap.getDocumentReference("gameRef");
+            matchItem.startedAt = snap.getTimestamp("startedAt");
+            matchItem.notes = snap.getString("notes");
+            matchItem.eventId = snap.getString("eventId");
+            matchItem.rulesVariant = snap.getString("rules_variant");
+
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get match " + matchId + " details: " + e.getMessage());
+        });
+    }
+
+    private void uploadGameInfo() {
+        View matchForm = matchFormContainerHandle.getChildAt(0);
+        Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
+        GameSummary gameSummary = (GameSummary) gameName.getSelectedItem();
+
+        if (gameSummary.id == null) return;
+
+        DocumentReference gameRef = db.collection("games")
+                .document(gameSummary.id);
+
+        HashMap<String, Object> gameHash = new HashMap<>();
+        gameHash.put("id", gameSummary.id);
+        gameHash.put("title", gameSummary.title);
+        gameHash.put("imageUrl", gameSummary.imageUrl);
+        gameHash.put("maxPlayers", gameSummary.maxPlayers);
+        gameHash.put("minPlayers", gameSummary.minPlayers);
+        gameHash.put("playingTime", gameSummary.playingTime);
+        gameRef.set(gameHash).addOnSuccessListener(v -> {
+                    Log.d(TAG, "Successfully updated board game database element: " + gameSummary.id);
+                    uploadMatch();
+                })
+                .addOnFailureListener(e -> {
+                    Log.d(TAG, "Failed to update board game database element " + gameSummary.id + ": " + e.getMessage());
+                });
+    }
 }
 
