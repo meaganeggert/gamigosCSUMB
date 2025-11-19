@@ -71,13 +71,14 @@ public class ViewMatchActivity extends BaseActivity {
 
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
+
+        Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm();
         getMatchDetails(matchId);
 
         Button saveButton = findViewById(R.id.button_saveMatch);
         if (saveButton != null) {
             saveButton.setOnClickListener(v -> {
-                Toast.makeText(this, "Pressed save button.", Toast.LENGTH_SHORT).show();
                 uploadGameInfo();
             });
         } else {
@@ -235,10 +236,17 @@ public class ViewMatchActivity extends BaseActivity {
             GameSummary game = new GameSummary(id, title, imageUrl,
                     minPlayers, maxPlayers, playTime);
 
-            if (!userGameList.contains(game)) {
-                userGameList.add(new GameSummary(id, title, imageUrl,
-                        minPlayers, maxPlayers, playTime));
+            boolean inGameList = false;
+            for (int i = 0; i < userGameList.size(); i++) {
+                if (userGameList.get(i).id != null) {
+                    if (userGameList.get(i).id.equals(game.id)) {
+                        inGameList = true;
+                        break;
+                    }
+                }
             }
+
+            if (!inGameList) userGameList.add(game);
 
         }
     }
@@ -474,8 +482,57 @@ public class ViewMatchActivity extends BaseActivity {
             matchItem.eventId = snap.getString("eventId");
             matchItem.rulesVariant = snap.getString("rules_variant");
 
+            setMatchDetails(matchItem);
+
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Failed to get match " + matchId + " details: " + e.getMessage());
+        });
+    }
+
+    private void setMatchDetails(Match match) {
+        View matchForm = matchFormContainerHandle.getChildAt(0);
+        TextView ruleChanges = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
+        TextView notes = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
+
+        ruleChanges.setText(match.rulesVariant);
+        notes.setText(match.notes);
+
+        match.gameRef.get().addOnSuccessListener(snap -> {
+            if (snap == null) {
+                return;
+            }
+
+            String id = snap.getId();
+            String title = snap.getString("title");
+            String imageUrl = snap.getString("imageUrl");
+            Integer minPlayers = snap.get("minPlayers", Integer.class);
+            Integer maxPlayers = snap.get("maxPlayers", Integer.class);
+            Integer playTime = snap.get("time", Integer.class);
+
+            GameSummary game = new GameSummary(id, title, imageUrl,
+                    minPlayers, maxPlayers, playTime);
+
+            Spinner gameDropdown = matchForm.findViewById(R.id.dropdown_gameName);
+
+            boolean inGameList = false;
+            for (int i = 0; i < userGameList.size(); i++) {
+                if (userGameList.get(i).id != null) {
+                    if (userGameList.get(i).id.equals(game.id)) {
+                        gameDropdown.setSelection(i);
+                        inGameList = true;
+                        break;
+                    }
+                }
+
+            }
+
+            if (!inGameList)  {
+                userGameList.add(game);
+                userGameAdapter.notifyDataSetChanged();
+                gameDropdown.setSelection(userGameList.indexOf(game));
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get selected game info: " + e.getMessage());
         });
     }
 
@@ -484,7 +541,10 @@ public class ViewMatchActivity extends BaseActivity {
         Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
         GameSummary gameSummary = (GameSummary) gameName.getSelectedItem();
 
-        if (gameSummary.id == null) return;
+        if (gameSummary.id == null) {
+            Toast.makeText(this, "Must select game.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         DocumentReference gameRef = db.collection("games")
                 .document(gameSummary.id);

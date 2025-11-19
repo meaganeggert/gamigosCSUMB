@@ -34,8 +34,11 @@ import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.EventSummary;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
+import com.example.gamigosjava.data.model.Match;
+import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.ui.adapter.GameAdapter;
+import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -56,10 +59,8 @@ public class ViewEventActivity extends BaseActivity {
     private FirebaseUser currentUser;
 
     private RecyclerView recyclerView;
-    private GameAdapter gameAdapter;
     private ArrayAdapter<Friend> friendAdapter;
     private String eventId;
-    private List<GameSummary> gameSummaryList;
     private List<Friend> friendList;
     private List<String> visibilityList;
 
@@ -70,6 +71,10 @@ public class ViewEventActivity extends BaseActivity {
     private Event eventItem;
 
     ViewGroup eventContainer;
+
+    List<Match> matches;
+    List<MatchSummary> matchSummaryList;
+    private MatchAdapter matchAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -83,15 +88,17 @@ public class ViewEventActivity extends BaseActivity {
         setChildLayout(R.layout.activity_view_event);
         setTopTitle("Event");
 
-
+        matches = new ArrayList<>();
+        matchSummaryList = new ArrayList<>();
 
         eventId = getIntent().getStringExtra("selectedEventId");
 
-        gameSummaryList = new ArrayList<>();
-        recyclerView = findViewById(R.id.recyclerViewGames);
+        getMatches(eventId);
+
+        recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        gameAdapter = new GameAdapter();
-        recyclerView.setAdapter(gameAdapter);
+        matchAdapter = new MatchAdapter();
+        recyclerView.setAdapter(matchAdapter);
 
         eventContainer = findViewById(R.id.eventFormContainer);
         initEventForm(R.layout.fragment_event_form, eventContainer.getId());
@@ -104,14 +111,15 @@ public class ViewEventActivity extends BaseActivity {
             public void onChildViewAttachedToWindow(@NonNull View view) {
                 view.setOnClickListener(v -> {
                     int index = recyclerView.getChildLayoutPosition(view);
-                    GameSummary selectedGame = gameAdapter.getItemAt(index);
+                    MatchSummary selectedMatch = matchAdapter.getItemAt(index);
                     String selectedMatchId = "";
-                    if (selectedGame != null) {
-                        selectedMatchId = selectedGame.id;
+                    if (selectedMatch != null) {
+                        selectedMatchId = selectedMatch.id;
                     }
 
                     Intent intent = new Intent(ViewEventActivity.this, ViewMatchActivity.class);
                     intent.putExtra("selectedMatchId", selectedMatchId);
+                    intent.putExtra("selectedEventId", eventId);
                     startActivity(intent);
                 });
             }
@@ -132,6 +140,67 @@ public class ViewEventActivity extends BaseActivity {
                 startActivity(intent);
             });
         }
+
+    }
+
+    private void getMatches(String eventId) {
+        if (currentUser == null) {
+            Log.e(TAG, "Failed to get event details: User is not logged in.");
+            return;
+        }
+
+        CollectionReference matchesRef = db.collection("events")
+                .document(eventId)
+                .collection("matches");
+
+        matchesRef.get().addOnSuccessListener(snaps -> {
+            if (snaps.isEmpty()) {
+                Log.d(TAG, "No matches found.");
+                return;
+            }
+
+            for (DocumentSnapshot snap: snaps) {
+                snap.getDocumentReference("matchRef").get().addOnSuccessListener(matchSnap -> {
+                    if (matchSnap == null) {
+                       Log.d(TAG, "Match doesn't have a reference.");
+                    } else {
+                        Match matchResult = new Match();
+                        matchResult.id = matchSnap.getId();
+                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+                        matches.add(matchResult);
+                        getGameDetails(matchResult.id, matchResult.gameRef);
+                        Log.d(TAG, "Found match: " + matchResult.id);
+                    }
+
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to get match info: " + e.getMessage());
+                });
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get match references: " + e.getMessage());
+        });
+    }
+
+    private void getGameDetails(String matchId, DocumentReference doc) {
+        if (doc == null) return;
+
+        doc.get().addOnSuccessListener(snap -> {
+            if (snap == null) {
+                Log.d(TAG, "Couldn't find game details");
+            }
+            String title = snap.getString("title");
+            String imageUrl = snap.getString("imageUrl");
+            Integer maxPlayers = snap.get("maxPlayers", Integer.class);
+            Integer minPlayers = snap.get("minPlayers", Integer.class);
+            Integer playingTime = snap.get("playingTime", Integer.class);
+
+            MatchSummary matchSummary = new MatchSummary(matchId, title, imageUrl, minPlayers, maxPlayers, playingTime);
+            matchSummaryList.add(matchSummary);
+            matchAdapter.setItems(matchSummaryList);
+            Log.d(TAG, "Found game: " + matchSummary.id);
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get game details: " + e.getMessage());
+        });
 
     }
 
