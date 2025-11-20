@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_add_participants"
+        android:title="@string/add_people_to_conversation" />
+    <item
+        android:id="@+id/action_delete_conversation"
+        android:title="@string/delete_conversation" />
+</menu>

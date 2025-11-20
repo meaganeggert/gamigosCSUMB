@@ -3,20 +3,18 @@ package com.example.gamigosjava.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.ui.viewholder.FriendRequestViewHolder;
 
 import java.util.List;
 import java.util.Map;
 
-public class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsAdapter.RequestViewHolder> {
+public class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestViewHolder> {
 
     public interface OnRequestActionListener {
         void onAccept(Map<String, Object> request);
@@ -35,14 +33,14 @@ public class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsAd
 
     @NonNull
     @Override
-    public RequestViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public FriendRequestViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_friend_request, parent, false);
-        return new RequestViewHolder(v);
+        return new FriendRequestViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RequestViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull FriendRequestViewHolder holder, int position) {
         Map<String, Object> req = requests.get(position);
         String fromName = (String) req.get("fromDisplayName");
         String photoUrl = (String) req.get("fromPhotoUrl");
@@ -69,19 +67,5 @@ public class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsAd
     @Override
     public int getItemCount() {
         return requests.size();
-    }
-
-    static class RequestViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivAvatar;
-        TextView tvName;
-        Button btnAccept, btnDecline;
-
-        public RequestViewHolder(@NonNull View itemView) {
-            super(itemView);
-            ivAvatar = itemView.findViewById(R.id.ivAvatar);
-            tvName = itemView.findViewById(R.id.tvName);
-            btnAccept = itemView.findViewById(R.id.btnAccept);
-            btnDecline = itemView.findViewById(R.id.btnDecline);
-        }
     }
 }

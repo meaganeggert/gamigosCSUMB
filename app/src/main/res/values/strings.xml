@@ -30,4 +30,25 @@
     <string name="message">Message</string>
     <string name="send">Send</string>
     <string name="message_ellipses">Message...</string>
+    <string name="messages">Messages</string>
+    <string name="conversation_avatar">Conversation Avatar</string>
+    <string name="start_new_conversation">Start new conversation</string>
+    <string name="friend_avatar">Friend Avatar</string>
+    <string name="group_photo_preview">Group Photo Preview</string>
+    <string name="clear_group_photo">Clear Group Photo</string>
+    <string name="message_menu">Message Menu</string>
+    <string name="change_title">Change title</string>
+    <string name="change_conversation_picture">Change conversation picture</string>
+    <string name="add_remove_participants">Add/remove participants</string>
+    <string name="delete_conversation">Delete conversation</string>
+    <string name="add_people_to_conversation">Add people to conversation</string>
+    <string name="selected_participants">Selected Participants</string>
+    <string name="group_title">Group title</string>
+    <string name="choose_group_photo_optional">Choose group photo (optional)</string>
+    <string name="initial_message">Initial message</string>
+    <string name="start_conversation">Start Conversation</string>
+    <string name="save_changes">Save changes</string>
+    <string name="group_photo_selected">Group photo selected</string>
+    <string name="start_direct_message">Start direct message</string>
+    <string name="start_group_chat">Start group chat</string>
 </resources>

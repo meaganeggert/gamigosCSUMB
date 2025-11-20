@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <!-- Selected participants -->
+    <TextView
+        android:id="@+id/tvSelectedLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/selected_participants"
+        android:visibility="gone"
+        android:textStyle="bold"
+        android:paddingBottom="4dp" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/cgSelectedFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="false"
+        android:paddingBottom="8dp" />
+
+    <!-- Search bar -->
+    <EditText
+        android:id="@+id/etSearchFriend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints="name"
+        android:hint="@string/search_friends"
+        android:imeOptions="actionDone"
+        android:inputType="textPersonName" />
+
+    <!-- Search results -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFriendResults"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingTop="8dp" />
+
+    <!-- Group title (only shown when 2+ selected) -->
+    <EditText
+        android:id="@+id/etGroupTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints="name"
+        android:hint="@string/group_title"
+        android:inputType="text"
+        android:visibility="gone"
+        android:layout_marginTop="4dp" />
+
+    <FrameLayout
+        android:id="@+id/groupPhotoContainer"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imageGroupPhotoPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_friends_24"
+            android:contentDescription="@string/group_photo_preview" />
+
+        <ImageButton
+            android:id="@+id/btnClearGroupPhoto"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="top|end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="2dp"
+            android:src="@drawable/outline_close_24"
+            android:contentDescription="@string/clear_group_photo" />
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/btnGroupPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/choose_group_photo_optional"
+        android:visibility="gone"
+        android:layout_marginTop="4dp"/>
+
+    <!-- Initial message -->
+    <EditText
+        android:id="@+id/etInitialMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/initial_message"
+        android:layout_marginTop="8dp"
+        android:inputType="textMultiLine"
+        android:minLines="1"
+        android:maxLines="4" />
+
+    <Button
+        android:id="@+id/btnStartConversation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_conversation"
+        android:enabled="false"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>
