@@ -3,6 +3,7 @@ package com.example.gamigosjava.ui.activities;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +30,7 @@ import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
+import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,11 +39,15 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ViewEventActivity extends BaseActivity {
     private String TAG = "View Event";
@@ -98,7 +104,55 @@ public class ViewEventActivity extends BaseActivity {
         initEventForm(R.layout.fragment_event_form, eventContainer.getId());
         getEventDetails(eventId);
 
+        Button startEvent = findViewById(R.id.button_startEvent);
+        if (startEvent != null) {
+            startEvent.setOnClickListener(v -> {
+                if (eventItem.id == null) {
+                    Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
+                eventItem.status = "active";
+                updateEvent();
+            });
+        }
+
+        Button saveChanges = findViewById(R.id.button_saveEvent);
+        if (saveChanges != null) {
+            saveChanges.setOnClickListener(v -> {
+                if (eventItem.id == null) {
+                    Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                getUserInput();
+                updateEvent();
+            });
+        }
+
+        Button cancelChanges = findViewById(R.id.button_cancelEventChanges);
+        if (cancelChanges != null) {
+            cancelChanges.setOnClickListener(v -> {
+                if (eventItem.id == null) {
+                    Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                finish();
+            });
+        }
+
+        Button deleteEvent = findViewById(R.id.button_deleteEvent);
+        if (deleteEvent != null) {
+            deleteEvent.setOnClickListener(v -> {
+                if (eventItem.id == null) {
+                    Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Toast.makeText(this, "Delete Function not implemented yet.", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
@@ -137,6 +191,91 @@ public class ViewEventActivity extends BaseActivity {
 
     }
 
+    private void getUserInput() {
+        EditText titleText = eventContainer.findViewById(R.id.editText_eventTitle);
+        EditText notesText = eventContainer.findViewById(R.id.editTextTextMultiLine_eventNotes);
+        Spinner visibilityDropdown = eventContainer.findViewById(R.id.dropdown_visibility);
+
+        eventItem.title = titleText.getText().toString();
+        eventItem.visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
+        eventItem.notes = notesText.getText().toString();
+    }
+
+    private void updateEvent() {
+        if (currentUser == null) {
+            Toast.makeText(this, "User must be signed in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (eventItem.id == null) {
+            Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        db.collection("events").document(eventItem.id).set(eventItem).addOnSuccessListener(v -> {
+            Toast.makeText(this, "Successfully updated the event.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Event Updated.");
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to update the event: " + e.getMessage());
+            Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
+        });
+
+        CollectionReference invitees = db.collection("events").document(eventItem.id).collection("invitees");
+        FirestoreUtils.deleteCollection(
+                db,
+                invitees,
+                10,
+                () -> {
+                    // onComplete
+                    uploadFriendInvites();
+                },
+                e -> {
+                    // onError
+                     Log.e("Firestore", "Failed to clear collection", e);
+                }
+        );
+
+
+    }
+
+
+    private void uploadFriendInvites() {
+        List<Friend> friendsInvited = new ArrayList<>();
+        LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
+
+        // Filters out repeated invites.
+        for (int i = 0; i < friendSection.getChildCount(); i++) {
+            Spinner friendSpinner = (Spinner) friendSection.getChildAt(i);
+            Friend friendItem = (Friend) friendSpinner.getSelectedItem();
+
+            if (!friendsInvited.contains(friendItem)) {
+                friendsInvited.add(friendItem);
+            }
+        }
+
+        // Uploads friend invites to the database one by one.
+        for (int i = 0; i < friendsInvited.size(); i++) {
+            Friend friendItem = friendsInvited.get(i);
+
+            DocumentReference inviteRef = db.collection("events")
+                    .document(eventItem.id)
+                    .collection("invitees")
+                    .document(friendItem.id);
+
+            Map<String, Object> invite = new HashMap<>();
+            invite.put("status", "invited");
+            invite.put("userRef", db.collection("users").document(friendItem.friendUId));
+
+            inviteRef.set(invite).addOnSuccessListener(v -> {
+                        Log.d(TAG, "Successfully uploaded friend invites");
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.d(TAG, "Failed to upload friend invite: " + e.getMessage());
+                    });
+        }
+
+    }
+
     private void getMatches(String eventId) {
         if (currentUser == null) {
             Log.e(TAG, "Failed to get event details: User is not logged in.");
@@ -153,46 +292,6 @@ public class ViewEventActivity extends BaseActivity {
             matchDocumentRefList.clear();
             for (DocumentSnapshot snap: snaps) {
                 matchDocumentRefList.add(snap.getDocumentReference("matchRef"));
-
-//                snap.getDocumentReference("matchRef").addSnapshotListener((matchSnap, matchError) -> {
-//                    if (matchError != null || matchSnap == null) {
-//                        Log.d(TAG, "Match doesn't have a reference.");
-//                    } else {
-//                        Match matchResult = new Match();
-//                        matchResult.id = matchSnap.getId();
-//                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-//
-//                        boolean isMatchInList = false;
-//                        for (int i = 0; i < matches.size(); i++) {
-//                            if (matches.get(i).id.equals(matchResult.id)) {
-//                                matches.set(i, matchResult);
-//                                isMatchInList = true;
-//                            }
-//                        }
-//                        if (!isMatchInList) {
-//                            matches.add(matchResult);
-//                        }
-//                        getGameDetails(matchResult);
-//                        Log.d(TAG, "Found match: " + matchResult.id);
-//                    }
-//                });
-
-//                snap.getDocumentReference("matchRef").get().addOnSuccessListener(matchSnap -> {
-//                    if (matchSnap == null) {
-//                        Log.d(TAG, "Match doesn't have a reference.");
-//                    } else {
-//                        Match matchResult = new Match();
-//                        matchResult.id = matchSnap.getId();
-//                        matchResult.gameId = matchSnap.getString("gameId");
-//                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-//                        matches.add(matchResult);
-//                        getGameDetails(matchResult);
-//                        Log.d(TAG, "Found match: " + matchResult.id);
-//                    }
-//
-//                }).addOnFailureListener(newError -> {
-//                    Log.e(TAG, "Failed to get match info: " + newError.getMessage());
-//                });
             }
 
             for (DocumentReference matchDoc: matchDocumentRefList) {
@@ -203,17 +302,6 @@ public class ViewEventActivity extends BaseActivity {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-
-//                        boolean isMatchInList = false;
-//                        for (int i = 0; i < matches.size(); i++) {
-//                            if (matches.get(i).id.equals(matchResult.id)) {
-//                                matches.set(i, matchResult);
-//                                isMatchInList = true;
-//                            }
-//                        }
-//                        if (!isMatchInList) {
-//                            matches.add(matchResult);
-//                        }
                         getGameDetails(matchResult);
                         Log.d(TAG, "Found match: " + matchResult.id);
                     }
@@ -258,37 +346,6 @@ public class ViewEventActivity extends BaseActivity {
                 Log.d(TAG, "Found game: " + matchSummary.id);
             }
         });
-
-//        match.gameRef.get().addOnSuccessListener(snap -> {
-//            if (snap == null) {
-//                Log.d(TAG, "Couldn't find game details");
-//            }
-//            String title = snap.getString("title");
-//            String imageUrl = snap.getString("imageUrl");
-//            Integer maxPlayers = snap.get("maxPlayers", Integer.class);
-//            Integer minPlayers = snap.get("minPlayers", Integer.class);
-//            Integer playingTime = snap.get("playingTime", Integer.class);
-//
-//            MatchSummary matchSummary = new MatchSummary(match.id, title, imageUrl, minPlayers, maxPlayers, playingTime);
-//
-//            boolean matchInList = false;
-//            for (int i = 0; i < matchSummaryList.size(); i++) {
-//                if (matchSummaryList.get(i).id.equals(matchSummary.id)) {
-//                    matchInList = true;
-//                    matchSummaryList.set(i, matchSummary);
-//                    break;
-//                }
-//            }
-//
-//            if (!matchInList) {
-//                matchSummaryList.add(matchSummary);
-//            matchAdapter.setItems(matchSummaryList);
-//            Log.d(TAG, "Found game: " + matchSummary.id);
-//            }
-//
-//        }).addOnFailureListener(e -> {
-//            Log.e(TAG, "Failed to get game details: " + e.getMessage());
-//        });
 
     }
 
