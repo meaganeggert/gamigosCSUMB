@@ -153,16 +153,13 @@ public class ViewEventActivity extends BaseActivity {
                 .document(eventId)
                 .collection("matches");
 
-        matchesRef.get().addOnSuccessListener(snaps -> {
-            if (snaps.isEmpty()) {
-                Log.d(TAG, "No matches found.");
-                return;
-            }
+        matchesRef.addSnapshotListener((snaps, e) -> {
+            if (e != null || snaps == null) return;
 
             for (DocumentSnapshot snap: snaps) {
                 snap.getDocumentReference("matchRef").get().addOnSuccessListener(matchSnap -> {
                     if (matchSnap == null) {
-                       Log.d(TAG, "Match doesn't have a reference.");
+                        Log.d(TAG, "Match doesn't have a reference.");
                     } else {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
@@ -173,12 +170,10 @@ public class ViewEventActivity extends BaseActivity {
                         Log.d(TAG, "Found match: " + matchResult.id);
                     }
 
-                }).addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to get match info: " + e.getMessage());
+                }).addOnFailureListener(newError -> {
+                    Log.e(TAG, "Failed to get match info: " + newError.getMessage());
                 });
             }
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Failed to get match references: " + e.getMessage());
         });
     }
 
