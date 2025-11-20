@@ -22,7 +22,6 @@ import com.example.gamigosjava.data.api.BGGMappers;
 import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
-import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.SearchResponse;
@@ -182,7 +181,7 @@ public class ViewMatchActivity extends BaseActivity {
                 .collection("gamesPlayed");
 
         gamesRef
-                .orderBy("title")
+//                .orderBy("title")
                 .get()
                 .addOnSuccessListener(this::applyKnownUserGames)
                 .addOnFailureListener(e -> {
@@ -196,7 +195,7 @@ public class ViewMatchActivity extends BaseActivity {
                 .collection("gamesHosted");
 
         gamesRef
-                .orderBy("title")
+//                .orderBy("title")
                 .get()
                 .addOnSuccessListener(this::applyKnownUserGames)
                 .addOnFailureListener(e -> {
@@ -210,7 +209,7 @@ public class ViewMatchActivity extends BaseActivity {
                 .collection("userBGGCollection");
 
         gamesRef
-                .orderBy("title")
+//                .orderBy("title")
                 .get()
                 .addOnSuccessListener(this::applyKnownUserGames)
                 .addOnFailureListener(e -> {
@@ -222,31 +221,42 @@ public class ViewMatchActivity extends BaseActivity {
 
     private void applyKnownUserGames(QuerySnapshot snap) {
         if (snap.isEmpty()) {
+            Log.d("TAG", "Game Snap list was null");
             return;
         }
 
         for (DocumentSnapshot d : snap.getDocuments()) {
-            String id = d.getId();
-            String title = d.getString("title");
-            String imageUrl = d.getString("imageUrl");
-            Integer minPlayers = d.get("minPlayers", Integer.class);
-            Integer maxPlayers = d.get("maxPlayers", Integer.class);
-            Integer playTime = d.get("time", Integer.class);
+            d.getDocumentReference("gameRef").get().addOnSuccessListener(s -> {
+                if (s == null) {
+                    Log.d(TAG, "Game Reference was null");
+                    return;
+                }
 
-            GameSummary game = new GameSummary(id, title, imageUrl,
-                    minPlayers, maxPlayers, playTime);
+                String id = s.getId();
+                String title = s.getString("title");
+                String imageUrl = s.getString("imageUrl");
+                Integer minPlayers = s.get("minPlayers", Integer.class);
+                Integer maxPlayers = s.get("maxPlayers", Integer.class);
+                Integer playTime = s.get("time", Integer.class);
 
-            boolean inGameList = false;
-            for (int i = 0; i < userGameList.size(); i++) {
-                if (userGameList.get(i).id != null) {
-                    if (userGameList.get(i).id.equals(game.id)) {
-                        inGameList = true;
-                        break;
+                GameSummary game = new GameSummary(id, title, imageUrl,
+                        minPlayers, maxPlayers, playTime);
+
+                boolean inGameList = false;
+                for (int i = 0; i < userGameList.size(); i++) {
+                    if (userGameList.get(i).id != null) {
+                        if (userGameList.get(i).id.equals(game.id)) {
+                            inGameList = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (!inGameList) userGameList.add(game);
+                if (!inGameList) userGameList.add(game);
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "ERROR: " + e.getMessage());
+            });
+
 
         }
     }
@@ -365,6 +375,8 @@ public class ViewMatchActivity extends BaseActivity {
                     .addOnSuccessListener(v -> {
                         Log.d(TAG, "Successfully updated match database element " + matchItem.id + ".");
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
+                        uploadUserGamesHosted(uid, game);
+                        uploadUserGamesPlayed(uid, game);
                         finish();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());

@@ -16,28 +16,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
-import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.model.Event;
-import com.example.gamigosjava.data.model.EventSummary;
 import com.example.gamigosjava.data.model.Friend;
-import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
-import com.example.gamigosjava.ui.adapter.GameAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,6 +65,9 @@ public class ViewEventActivity extends BaseActivity {
 
     List<Match> matches;
     List<MatchSummary> matchSummaryList;
+
+    CollectionReference matchCollectionRef;
+    List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
 
     @Override
@@ -149,29 +143,80 @@ public class ViewEventActivity extends BaseActivity {
             return;
         }
 
-        CollectionReference matchesRef = db.collection("events")
+        matchCollectionRef = db.collection("events")
                 .document(eventId)
                 .collection("matches");
 
-        matchesRef.addSnapshotListener((snaps, e) -> {
+        matchCollectionRef.addSnapshotListener((snaps, e) -> {
             if (e != null || snaps == null) return;
 
+            matchDocumentRefList.clear();
             for (DocumentSnapshot snap: snaps) {
-                snap.getDocumentReference("matchRef").get().addOnSuccessListener(matchSnap -> {
-                    if (matchSnap == null) {
+                matchDocumentRefList.add(snap.getDocumentReference("matchRef"));
+
+//                snap.getDocumentReference("matchRef").addSnapshotListener((matchSnap, matchError) -> {
+//                    if (matchError != null || matchSnap == null) {
+//                        Log.d(TAG, "Match doesn't have a reference.");
+//                    } else {
+//                        Match matchResult = new Match();
+//                        matchResult.id = matchSnap.getId();
+//                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+//
+//                        boolean isMatchInList = false;
+//                        for (int i = 0; i < matches.size(); i++) {
+//                            if (matches.get(i).id.equals(matchResult.id)) {
+//                                matches.set(i, matchResult);
+//                                isMatchInList = true;
+//                            }
+//                        }
+//                        if (!isMatchInList) {
+//                            matches.add(matchResult);
+//                        }
+//                        getGameDetails(matchResult);
+//                        Log.d(TAG, "Found match: " + matchResult.id);
+//                    }
+//                });
+
+//                snap.getDocumentReference("matchRef").get().addOnSuccessListener(matchSnap -> {
+//                    if (matchSnap == null) {
+//                        Log.d(TAG, "Match doesn't have a reference.");
+//                    } else {
+//                        Match matchResult = new Match();
+//                        matchResult.id = matchSnap.getId();
+//                        matchResult.gameId = matchSnap.getString("gameId");
+//                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+//                        matches.add(matchResult);
+//                        getGameDetails(matchResult);
+//                        Log.d(TAG, "Found match: " + matchResult.id);
+//                    }
+//
+//                }).addOnFailureListener(newError -> {
+//                    Log.e(TAG, "Failed to get match info: " + newError.getMessage());
+//                });
+            }
+
+            for (DocumentReference matchDoc: matchDocumentRefList) {
+                matchDoc.addSnapshotListener((matchSnap, matchError) -> {
+                    if (matchError != null || matchSnap == null) {
                         Log.d(TAG, "Match doesn't have a reference.");
                     } else {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
-                        matchResult.gameId = matchSnap.getString("gameId");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-                        matches.add(matchResult);
+
+//                        boolean isMatchInList = false;
+//                        for (int i = 0; i < matches.size(); i++) {
+//                            if (matches.get(i).id.equals(matchResult.id)) {
+//                                matches.set(i, matchResult);
+//                                isMatchInList = true;
+//                            }
+//                        }
+//                        if (!isMatchInList) {
+//                            matches.add(matchResult);
+//                        }
                         getGameDetails(matchResult);
                         Log.d(TAG, "Found match: " + matchResult.id);
                     }
-
-                }).addOnFailureListener(newError -> {
-                    Log.e(TAG, "Failed to get match info: " + newError.getMessage());
                 });
             }
         });
@@ -179,9 +224,12 @@ public class ViewEventActivity extends BaseActivity {
 
     private void getGameDetails(Match match) {
         DocumentReference gameDoc = match.gameRef;
-        if (gameDoc == null) return;
+        if (gameDoc == null) {
+            Log.d(TAG, "Game document was null.");
+            return;
+        }
 
-        match.gameRef.get().addOnSuccessListener(snap -> {
+        match.gameRef.addSnapshotListener((snap, gameError) -> {
             if (snap == null) {
                 Log.d(TAG, "Couldn't find game details");
             }
@@ -192,12 +240,55 @@ public class ViewEventActivity extends BaseActivity {
             Integer playingTime = snap.get("playingTime", Integer.class);
 
             MatchSummary matchSummary = new MatchSummary(match.id, title, imageUrl, minPlayers, maxPlayers, playingTime);
-            matchSummaryList.add(matchSummary);
-            matchAdapter.setItems(matchSummaryList);
-            Log.d(TAG, "Found game: " + matchSummary.id);
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Failed to get game details: " + e.getMessage());
+
+            boolean matchInList = false;
+            for (int i = 0; i < matchSummaryList.size(); i++) {
+                if (matchSummaryList.get(i).id.equals(matchSummary.id)) {
+                    Log.d(TAG, "MATCH WAS FOUND IN LIST FOR GAME DETAILS FUNCTION: " + matchSummary.title);
+                    matchInList = true;
+                    matchSummaryList.set(i, matchSummary);
+                    matchAdapter.setItems(matchSummaryList);
+                    break;
+                }
+            }
+
+            if (!matchInList) {
+                matchSummaryList.add(matchSummary);
+                matchAdapter.setItems(matchSummaryList);
+                Log.d(TAG, "Found game: " + matchSummary.id);
+            }
         });
+
+//        match.gameRef.get().addOnSuccessListener(snap -> {
+//            if (snap == null) {
+//                Log.d(TAG, "Couldn't find game details");
+//            }
+//            String title = snap.getString("title");
+//            String imageUrl = snap.getString("imageUrl");
+//            Integer maxPlayers = snap.get("maxPlayers", Integer.class);
+//            Integer minPlayers = snap.get("minPlayers", Integer.class);
+//            Integer playingTime = snap.get("playingTime", Integer.class);
+//
+//            MatchSummary matchSummary = new MatchSummary(match.id, title, imageUrl, minPlayers, maxPlayers, playingTime);
+//
+//            boolean matchInList = false;
+//            for (int i = 0; i < matchSummaryList.size(); i++) {
+//                if (matchSummaryList.get(i).id.equals(matchSummary.id)) {
+//                    matchInList = true;
+//                    matchSummaryList.set(i, matchSummary);
+//                    break;
+//                }
+//            }
+//
+//            if (!matchInList) {
+//                matchSummaryList.add(matchSummary);
+//            matchAdapter.setItems(matchSummaryList);
+//            Log.d(TAG, "Found game: " + matchSummary.id);
+//            }
+//
+//        }).addOnFailureListener(e -> {
+//            Log.e(TAG, "Failed to get game details: " + e.getMessage());
+//        });
 
     }
 
