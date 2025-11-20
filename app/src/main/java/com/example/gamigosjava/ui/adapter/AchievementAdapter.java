@@ -2,6 +2,7 @@ package com.example.gamigosjava.ui.adapter;
 
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.ViewHolder> {
+    private static final String TAG = "AchievementAdapter";
 
     private final List<AchievementSummary> achievements = new ArrayList<>();
 
@@ -52,7 +54,7 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AchievementSummary achievement = achievements.get(position);
-        android.util.Log.d("AchievementAdapter", "Binding: " + achievement.title);
+        Log.d(TAG,  "Binding: " + achievement.title + " CurrentProgress: " + achievement.current);
 
 //        Set values for title and description
         holder.title.setText(achievement.title != null ? achievement.title : "Unknown");
@@ -60,6 +62,7 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
 
 //        Set values for progress bar
         int current = Math.max(0, achievement.current);
+        Log.d(TAG, achievement.title + ", Current: " + current);
         int goal = achievement.goal > 0 ? achievement.goal : 1;
 
         holder.progressBar.setMax(goal);
@@ -77,10 +80,10 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         int currentDisplay = Math.min(current, goal);
         holder.progressBarText.setText(currentDisplay + "/" + goal);
 
-        if (achievement.achieved) {
+        if (achievement.achieved || current != 0) {
             holder.itemView.setAlpha(1.0f);
         } else {
-            holder.itemView.setAlpha(0.5f); // semi-transparent if achievement hasn't been earned
+            holder.itemView.setAlpha(0.5f); // semi-transparent if achievement hasn't been started
         }
 
         if (achievement.iconUrl != null && !achievement.iconUrl.isEmpty()) {
