@@ -49,8 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "SignIn";
 
-    private static final boolean debugging = true;
-
     private FirebaseAuth mAuth;
     private CredentialManager credentialManager;
     private GetCredentialRequest credentialRequest;
@@ -61,9 +59,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Force sign-out so user must log in every time while debugging
-//        if (debugging) {
-//            FirebaseAuth.getInstance().signOut();
-//        }
+        boolean debugging = true;
+        if (debugging) {
+            FirebaseAuth.getInstance().signOut();
+        }
 
         // Initiate Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -157,10 +156,17 @@ public class MainActivity extends AppCompatActivity {
                         if (user != null) {
                             Log.d(TAG, "User != null");
                             ensureUserDocExists(user);
+                            repo.ensureMetrics(user.getUid())
+                                    .addOnSuccessListener( earned -> {
+                                        Log.i(TAG, "EnsureMetricsSuccessful");
+                                    })
+                                    .addOnFailureListener(e-> {
+                                                Log.e(TAG, "EnsureMetricsFailed:", e);
+                                    });
                             repo.loginTracker(user.getUid())
                                     .continueWithTask(t->
                                             new AchievementAwarder(FirebaseFirestore.getInstance())
-                                    .awardLoginAchievements(user.getUid()) // check for any earned achievements
+                                    .awardAchievements(user.getUid()) // check for any earned achievements
                                     )
                                     .addOnSuccessListener( earned -> {
                                         if (earned != null && !earned.isEmpty()) {
