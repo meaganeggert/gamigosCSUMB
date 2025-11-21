@@ -4,15 +4,17 @@ import androidx.annotation.NonNull;
 
 public class MatchSummary {
     public final String id;
+    public final String eventId;
     public final String title;
     public final String imageUrl;
     public final Integer minPlayers;
     public final Integer maxPlayers;
     public final Integer playingTime;  // minutes
 
-    public MatchSummary(String id, String title, String imageUrl,
+    public MatchSummary(String id, String eventId, String title, String imageUrl,
                        Integer minPlayers, Integer maxPlayers, Integer playingTime) {
         this.id = id;
+        this.eventId = eventId;
         this.title = title;
         this.imageUrl = imageUrl;
         this.minPlayers = minPlayers;

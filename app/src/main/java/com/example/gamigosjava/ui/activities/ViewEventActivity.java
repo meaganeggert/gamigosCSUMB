@@ -1,7 +1,9 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.opengl.Visibility;
 import android.os.Bundle;
@@ -30,6 +32,7 @@ import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
+import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
@@ -54,6 +57,8 @@ public class ViewEventActivity extends BaseActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+
+    private EventsRepo eventRepo;
 
     private RecyclerView recyclerView;
     private ArrayAdapter<Friend> friendAdapter;
@@ -82,6 +87,7 @@ public class ViewEventActivity extends BaseActivity {
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        eventRepo = new EventsRepo(db);
 
 
         super.onCreate(savedInstanceState);
@@ -150,7 +156,24 @@ public class ViewEventActivity extends BaseActivity {
                     return;
                 }
 
-                Toast.makeText(this, "Delete Function not implemented yet.", Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(ViewEventActivity.this)
+                        .setTitle("Confirm Deletion")
+                        .setMessage("Are you sure you want to delete this event? This action cannot be undone.")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                eventRepo.deleteEvent(db.collection("events").document(eventItem.id));
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .show();
+
             });
         }
 
@@ -214,26 +237,17 @@ public class ViewEventActivity extends BaseActivity {
 
         db.collection("events").document(eventItem.id).set(eventItem).addOnSuccessListener(v -> {
             Toast.makeText(this, "Successfully updated the event.", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Event Updated.");
+            Log.d(TAG, "Event Updated.");
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Failed to update the event: " + e.getMessage());
             Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
         });
 
         CollectionReference invitees = db.collection("events").document(eventItem.id).collection("invitees");
-        FirestoreUtils.deleteCollection(
-                db,
-                invitees,
-                10,
-                () -> {
-                    // onComplete
-                    uploadFriendInvites();
-                },
-                e -> {
-                    // onError
-                     Log.e("Firestore", "Failed to clear collection", e);
-                }
-        );
+        FirestoreUtils.deleteCollection(db, invitees, 10).onSuccessTask(v -> {
+            uploadFriendInvites();
+            return null;
+        });
 
 
     }
@@ -327,7 +341,7 @@ public class ViewEventActivity extends BaseActivity {
             Integer minPlayers = snap.get("minPlayers", Integer.class);
             Integer playingTime = snap.get("playingTime", Integer.class);
 
-            MatchSummary matchSummary = new MatchSummary(match.id, title, imageUrl, minPlayers, maxPlayers, playingTime);
+            MatchSummary matchSummary = new MatchSummary(match.id, eventId, title, imageUrl, minPlayers, maxPlayers, playingTime);
 
             boolean matchInList = false;
             for (int i = 0; i < matchSummaryList.size(); i++) {

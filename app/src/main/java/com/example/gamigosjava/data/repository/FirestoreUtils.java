@@ -2,24 +2,30 @@ package com.example.gamigosjava.data.repository;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.firebase.firestore.*;
 
 public class FirestoreUtils {
-    private static final int DEFAULT_BATCH_SIZE = 100;
+    private static final int DEFAULT_BATCH_SIZE = 10;
 
     /** Deletes all documents in a collection in batches. Subcollections are NOT deleted. */
-    public static void deleteCollection(FirebaseFirestore db,
-                                        CollectionReference collectionRef,
-                                        int batchSize,
-                                        Runnable onComplete,
-                                        OnFailureListener onError) {
+
+    public static Task<Void> deleteCollection(FirebaseFirestore db, CollectionReference collectionRef, int batchSize) {
+        TaskCompletionSource<Void> tcs = new TaskCompletionSource<>();
+        deleteCollectionPage(db, collectionRef, batchSize, tcs);
+        return tcs.getTask();
+    }
+    private static void deleteCollectionPage(FirebaseFirestore db,
+                                              CollectionReference collectionRef,
+                                              int batchSize,
+                                              TaskCompletionSource<Void> tcs) {
 
         Query query = collectionRef.limit(batchSize);
 
         query.get().addOnSuccessListener(querySnapshot -> {
-            int size = querySnapshot.size();
-            if (size == 0) {
-                if (onComplete != null) onComplete.run();
+            if (querySnapshot.isEmpty()) {
+                tcs.trySetResult(null);
                 return;
             }
 
@@ -30,17 +36,16 @@ public class FirestoreUtils {
 
             batch.commit()
                     .addOnSuccessListener(aVoid ->
-                            deleteCollection(db, collectionRef, batchSize, onComplete, onError))
-                    .addOnFailureListener(onError);
+                            deleteCollectionPage(db, collectionRef, batchSize, tcs))
+                    .addOnFailureListener(tcs::trySetException);
 
-        }).addOnFailureListener(onError);
+        }).addOnFailureListener(tcs::trySetException);
     }
 
     /** Convenience overload with a default batch size. */
-    public static void deleteCollection(FirebaseFirestore db,
+    private static void deleteCollectionPage(FirebaseFirestore db,
                                         String collectionPath,
-                                        Runnable onComplete,
-                                        OnFailureListener onError) {
-        deleteCollection(db, db.collection(collectionPath), DEFAULT_BATCH_SIZE, onComplete, onError);
+                                        TaskCompletionSource<Void> tcs) {
+        deleteCollectionPage(db, db.collection(collectionPath), DEFAULT_BATCH_SIZE, tcs);
     }
 }

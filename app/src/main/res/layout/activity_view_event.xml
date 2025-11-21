@@ -106,8 +106,8 @@
             android:layout_height="wrap_content"
             android:text="Delete Event"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="20dp"/>
-
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="@color/biometric_error_color"/>
 
     </LinearLayout>
 
