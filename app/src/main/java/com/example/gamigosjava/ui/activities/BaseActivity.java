@@ -44,9 +44,10 @@ public abstract class BaseActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             userDocRef = db.collection("users").document(currentUser.getUid());
+            loadAvatar();
+        } else {
+            avatarView.setImageResource(android.R.drawable.ic_menu_camera);
         }
-
-        loadAvatar();
 
         setSupportActionBar(toolbar);
 
@@ -134,6 +135,11 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 
     private void loadAvatar() {
+        if (userDocRef == null || avatarView == null) {
+            if (avatarView != null) {
+                avatarView.setImageResource(android.R.drawable.ic_menu_camera);
+            }
+        }
 
         userDocRef.get().addOnSuccessListener(doc -> {
             if (doc.exists()) {
@@ -144,9 +150,16 @@ public abstract class BaseActivity extends AppCompatActivity {
                             .load(photoUrl)
                             .placeholder(android.R.drawable.ic_menu_camera)
                             .into(avatarView);
+                } else {
+                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
                 }
+            } else {
+                avatarView.setImageResource(android.R.drawable.ic_menu_camera);
             }
-        });
+                })
+                .addOnFailureListener(e -> {
+                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
+                });
     }
 
 }
