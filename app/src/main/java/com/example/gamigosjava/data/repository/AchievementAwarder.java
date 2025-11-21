@@ -192,6 +192,7 @@ public final class AchievementAwarder {
                 String metric = docSnap.getString("metric");
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
                 String achievementName = docSnap.getString("name");
+                String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -220,6 +221,7 @@ public final class AchievementAwarder {
                     updates.put("earnedAt", FieldValue.serverTimestamp());
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
 
                     newlyEarned.add(
                             achievementName != null ? achievementName : achievementID
@@ -238,6 +240,7 @@ public final class AchievementAwarder {
                 String metric = docSnap.getString("metric");
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
                 String achievementName = docSnap.getString("name");
+                String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -266,6 +269,7 @@ public final class AchievementAwarder {
                     updates.put("earnedAt", FieldValue.serverTimestamp());
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
 
                     newlyEarned.add(
                             achievementName != null ? achievementName : achievementID
