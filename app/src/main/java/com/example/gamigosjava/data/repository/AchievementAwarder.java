@@ -12,13 +12,11 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
-import org.w3c.dom.Document;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class AchievementAwarder {
     private final FirebaseFirestore db;
@@ -47,6 +45,8 @@ public final class AchievementAwarder {
         DocumentReference friendsAdded_Met = db.collection("users")
                 .document(userId)
                 .collection("metrics").document("friend_count");
+        // Reference to userInfo
+        DocumentReference userInfo_ref = db.collection("users").document(userId);
 
         // Achievement References
         // Get all achievements of group type "LOGIN"
@@ -72,6 +72,9 @@ public final class AchievementAwarder {
                 .collection("achievements")
                 .get();
 
+        // Get user info
+        Task<DocumentSnapshot> userInfo_task = userInfo_ref.get();
+
         Task<DocumentSnapshot> loginCount_task = loginCount_Met.get();
         Task<DocumentSnapshot> loginStreak_task = loginStreak_Met.get();
         Task<DocumentSnapshot> gamesPlayed_task = gamesPlayed_Met.get();
@@ -87,13 +90,15 @@ public final class AchievementAwarder {
                 allLoginAchievements_task,
                 allGameAchievements_task,
                 allFriendAchievements_task,
-                userEarnedAchievements_task
+                userEarnedAchievements_task,
+                userInfo_task
         ).continueWithTask(t-> {
             // Keep track of snapshots
             DocumentSnapshot loginCount_snap = loginCount_task.getResult();
             DocumentSnapshot loginStreak_snap = loginStreak_task.getResult();
             DocumentSnapshot gamesPlayed_snap = gamesPlayed_task.getResult();
             DocumentSnapshot friendsAdded_snap = friendsAdded_task.getResult();
+            DocumentSnapshot userInfo_snap = userInfo_task.getResult();
 
             // Make sure the metrics exist. Otherwise, send 0.
             long loginCount = (loginCount_snap.exists() && loginCount_snap.contains("count")) ? loginCount_snap.getLong("count") : 0L;
@@ -135,7 +140,8 @@ public final class AchievementAwarder {
                 String type = docSnap.getString("type");
                 String metric = docSnap.getString("metric");
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
-                String name = docSnap.getString("name");
+                String achievementName = docSnap.getString("name");
+                String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -167,8 +173,10 @@ public final class AchievementAwarder {
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
 
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
+
                     newlyEarned.add(
-                            name != null ? name : achievementID
+                            achievementName != null ? achievementName : achievementID
                     );
                 }
             }
@@ -183,7 +191,7 @@ public final class AchievementAwarder {
                 String type = docSnap.getString("type");
                 String metric = docSnap.getString("metric");
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
-                String name = docSnap.getString("name");
+                String achievementName = docSnap.getString("name");
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -214,7 +222,7 @@ public final class AchievementAwarder {
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
 
                     newlyEarned.add(
-                            name != null ? name : achievementID
+                            achievementName != null ? achievementName : achievementID
                     );
                 }
             }
@@ -229,7 +237,7 @@ public final class AchievementAwarder {
                 String type = docSnap.getString("type");
                 String metric = docSnap.getString("metric");
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
-                String name = docSnap.getString("name");
+                String achievementName = docSnap.getString("name");
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -260,7 +268,7 @@ public final class AchievementAwarder {
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
 
                     newlyEarned.add(
-                            name != null ? name : achievementID
+                            achievementName != null ? achievementName : achievementID
                     );
                 }
             }
@@ -273,5 +281,23 @@ public final class AchievementAwarder {
         });
     }
 
+    private void addAchievementAsFeedActivity(WriteBatch batch, String userId, String achievementId, String achievementName, String userName) {
+        // Find the right activity doc
+        DocumentReference activity_ref = db.collection("activities")
+                .document();
+
+        // Store necessary data
+        Map<String, Object> newActivity = new HashMap<>();
+        newActivity.put("type", "ACHIEVEMENT_EARNED");
+        newActivity.put("targetId", achievementId);
+        newActivity.put("targetName", achievementName);
+        newActivity.put("actorId", userId);
+        newActivity.put("actorName", userName);
+        newActivity.put("visibility", "friends");
+        newActivity.put("message", userName.split(" ")[0] + " earned " + achievementName);
+        newActivity.put("createdAt", FieldValue.serverTimestamp());
+
+        batch.set(activity_ref, newActivity);
+    }
 
 }
