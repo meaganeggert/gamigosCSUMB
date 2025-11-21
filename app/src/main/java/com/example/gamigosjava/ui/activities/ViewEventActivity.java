@@ -303,6 +303,7 @@ public class ViewEventActivity extends BaseActivity {
         matchCollectionRef.addSnapshotListener((snaps, e) -> {
             if (e != null || snaps == null) return;
 
+            matchSummaryList.clear();
             matchDocumentRefList.clear();
             for (DocumentSnapshot snap: snaps) {
                 matchDocumentRefList.add(snap.getDocumentReference("matchRef"));

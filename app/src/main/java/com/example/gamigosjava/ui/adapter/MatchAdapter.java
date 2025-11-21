@@ -93,8 +93,8 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
                             matchRefDoc.delete().onSuccessTask(refVoid -> {
                                 matchDoc.delete().onSuccessTask(matchVoid -> {
                                     Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
-                                    matches.remove(position);
-                                    notifyDataSetChanged();
+//                                    matches.remove(position);
+//                                    notifyDataSetChanged();
                                     return null;
                                 });
                                 return null;
