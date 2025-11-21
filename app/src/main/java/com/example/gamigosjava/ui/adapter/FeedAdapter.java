@@ -15,6 +15,10 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldValue;
 
 import java.text.DateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -50,7 +54,13 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
         // Temporary Timestamp
         // TODO: FIX THIS
-        holder.textTimestamp.setText("Tea time.");
+        Timestamp whenAchieved = item.getCreatedAt();
+        LocalDateTime achievementTimeDate = whenAchieved.toDate()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+        holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
 
         // Trophy image
         holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
