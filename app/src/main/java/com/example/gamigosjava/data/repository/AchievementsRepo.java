@@ -35,7 +35,7 @@ public class AchievementsRepo {
         this.db = db;
     }
 
-//    Make sure user has the minimal metrics needed for achievement tracking
+    //    Make sure user has the minimal metrics needed for achievement tracking
 //    Call after sign-in to ensure the document exists and increment by 1 (if appropriate)
     public Task<Void> ensureMetrics(String userId) {
         Map<String, Map<String, Object>> requiredMetrics = new HashMap<>();
@@ -63,29 +63,29 @@ public class AchievementsRepo {
 
         // Write missing metrics
         return Tasks.whenAllSuccess(reads).continueWithTask(t-> {
-            WriteBatch batch = db.batch();
-            List<Object> resultsObj = t.getResult();
-            List<DocumentSnapshot> userMetrics_snap = new ArrayList<>();
-            for (Object o : resultsObj) {
-                userMetrics_snap.add((DocumentSnapshot) o);
-            }
-            int index = 0;
+                    WriteBatch batch = db.batch();
+                    List<Object> resultsObj = t.getResult();
+                    List<DocumentSnapshot> userMetrics_snap = new ArrayList<>();
+                    for (Object o : resultsObj) {
+                        userMetrics_snap.add((DocumentSnapshot) o);
+                    }
+                    int index = 0;
 
-            for (String key : requiredMetrics.keySet()) {
-                DocumentSnapshot newMetric_snap = userMetrics_snap.get(index++);
-                if (!newMetric_snap.exists()) {
-                    DocumentReference ref = newMetric_snap.getReference();
-                    batch.set(ref, requiredMetrics.get(key));
-                }
-            }
+                    for (String key : requiredMetrics.keySet()) {
+                        DocumentSnapshot newMetric_snap = userMetrics_snap.get(index++);
+                        if (!newMetric_snap.exists()) {
+                            DocumentReference ref = newMetric_snap.getReference();
+                            batch.set(ref, requiredMetrics.get(key));
+                        }
+                    }
 
-            if (batch == null) {
-                return Tasks.forResult(null);
-            } else {
-                return batch.commit();
-            }
+                    if (batch == null) {
+                        return Tasks.forResult(null);
+                    } else {
+                        return batch.commit();
+                    }
 
-        })
+                })
                 // after initializing metrics, make sure the friend count is accurate
                 .continueWithTask(t-> friendTracker(userId));
     }
@@ -141,9 +141,9 @@ public class AchievementsRepo {
                 lastUpdate = com.google.firebase.Timestamp.now();
             }
             LocalDate lastLoginDay = lastUpdate.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
 
             boolean sameDay = today.isEqual(lastLoginDay);
             boolean nextDay = today.equals(lastLoginDay.plusDays(1));
