@@ -66,10 +66,10 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         int goal = achievement.goal > 0 ? achievement.goal : 1;
 
         holder.progressBar.setMax(goal);
-        holder.progressBar.setProgress(current);
+        holder.progressBar.setProgress((achievement.achieved) ? goal : current);
 
         // Color the bar green if complete
-        if (current >= goal) {
+        if (current >= goal || achievement.achieved ) {
             holder.progressBar.setProgressTintList(
                     ColorStateList.valueOf(Color.parseColor("#566E3D"))
             );
@@ -77,7 +77,7 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
 
         // If you have already completed progress, don't keep counting
         // For example, for an achievement for logging in once, don't display 3/1
-        int currentDisplay = Math.min(current, goal);
+        int currentDisplay = (achievement.achieved) ? goal : Math.min(current, goal);
         holder.progressBarText.setText(currentDisplay + "/" + goal);
 
         if (achievement.achieved || current != 0) {
