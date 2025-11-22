@@ -15,6 +15,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.example.gamigosjava.R;
@@ -22,10 +24,14 @@ import com.example.gamigosjava.data.api.BGGMappers;
 import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
+import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
+import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
+import com.example.gamigosjava.ui.adapter.MatchAdapter;
+import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -37,7 +43,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,6 +65,17 @@ public class ViewMatchActivity extends BaseActivity {
     // to be used if we are not updated a match and instead are creating a new one.
     private String eventId;
     private String matchId;
+
+
+
+    private List<Friend> inviteeList = new ArrayList<>();
+    private ArrayAdapter inviteeAdapter;
+
+    private List<Player> playerList;
+
+    private RecyclerView recyclerView;
+    private ScoresAdapter scoresAdapter;
+
 
     // TODO: get match info.
     @Override
@@ -103,6 +119,15 @@ public class ViewMatchActivity extends BaseActivity {
 
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
+        playerList = new ArrayList<>();
+
+
+        inviteeAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                inviteeList
+        );
+        inviteeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         matchFormContainerHandle = findViewById(R.id.matchFormContainer);
         userGameAdapter = new ArrayAdapter<>(
@@ -120,9 +145,20 @@ public class ViewMatchActivity extends BaseActivity {
         apiGameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         getGames();
+        getInvitees();
+
+
 
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
+
+        recyclerView = findViewById(R.id.recyclerViewPlayerScores);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        scoresAdapter = new ScoresAdapter();
+        scoresAdapter.setItems(playerList);
+        recyclerView.setAdapter(scoresAdapter);
+
+        getPlayers();
 
         // Set board game dropdown for each new match form.
         Spinner gameName = matchFormContainerHandle
@@ -159,9 +195,131 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
+        Spinner inviteeDropDown = findViewById(R.id.dropdown_invitees);
+        inviteeDropDown.setAdapter(inviteeAdapter);
+        Button addPlayer = findViewById(R.id.button_addPlayer);
+        if (addPlayer != null) {
+            addPlayer.setOnClickListener(v -> {
+                Player newPlayer = new Player();
+                newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
+
+                boolean inList = false;
+                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
+                    if (scoresAdapter.playerList.get(i).friend.id.equals(newPlayer.friend.id)) {
+                        inList = true;
+                        break;
+                    }
+                }
+                if (inList) {
+                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                scoresAdapter.playerList.add(newPlayer);
+                scoresAdapter.notifyDataSetChanged();
+            });
+        }
+
         matchItem = new Match();
 
     }
+
+
+
+    private void getPlayers() {
+        if (currentUser == null) {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        CollectionReference playerRefs = db.collection("matches").document(matchId).collection("players");
+
+        playerRefs.get().addOnSuccessListener(snaps -> {
+            if (snaps.isEmpty()) {
+                Log.d(TAG, "No Players found.");
+                return;
+            }
+
+            for (DocumentSnapshot doc: snaps) {
+                String playerId = doc.getString("userId");
+                Integer score = doc.get("score", Integer.class);
+
+                DocumentReference playerRef = db.collection("users").document(playerId);
+                playerRef.get().onSuccessTask(docSnap -> {
+                    Friend friend = new Friend();
+                    friend.id = playerId;
+                    friend.displayName = docSnap.getString("displayName");
+                    friend.friendUId = docSnap.getString("uid");
+
+                    Player knownPlayer = new Player(friend, score);
+                    scoresAdapter.playerList.add(knownPlayer);
+                    scoresAdapter.notifyDataSetChanged();
+                    return null;
+                });
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to find known players for this match: " + e.getMessage());
+        });
+    }
+
+
+    private void getInvitees() {
+
+        if (currentUser == null) {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String uid = currentUser.getUid();
+
+        CollectionReference inviteesRef = db
+                .collection("events")
+                .document(eventId)
+                .collection("invitees");
+
+        inviteesRef
+                .get()
+                .addOnSuccessListener(snap -> {
+                    if (snap.isEmpty()) {
+                        Log.d(TAG, "Invitees list is empty.");
+                        return;
+                    }
+
+                    for (DocumentSnapshot d : snap) {
+                        DocumentReference inviteeRef = d.getDocumentReference("userRef");
+                        inviteeRef.get().onSuccessTask(inviteeSnap -> {
+                            String id = inviteeSnap.getId();
+                            String friendUid = inviteeSnap.getString("uid");
+                            String displayName = inviteeSnap.getString("displayName");
+
+                            Friend f = new Friend(id, friendUid, displayName);
+                            boolean inFriendList = false;
+                            for (int i = 0; i < inviteeList.size(); i++) {
+                                if (inviteeList.get(i).id.equals(f.id)) {
+                                    inFriendList = true;
+                                    break;
+                                }
+                            }
+
+                            if (!inFriendList) {
+                                Log.d(TAG, "Added invitee to list");
+                                inviteeList.add(f);
+                                inviteeAdapter.notifyDataSetChanged();
+
+                            }
+                            return null;
+                        });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load invitees: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+
+
+
+
 
     private void getGames() {
         if (currentUser == null) {
@@ -377,6 +535,7 @@ public class ViewMatchActivity extends BaseActivity {
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
                         finish();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
@@ -391,6 +550,8 @@ public class ViewMatchActivity extends BaseActivity {
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
+
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
                         eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));

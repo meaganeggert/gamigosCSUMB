@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:padding="16dp"
     android:layout_width="wrap_content"
@@ -41,56 +42,6 @@
     </LinearLayout>
 
 
-<!--    <TextView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Date and Time"-->
-<!--        android:textSize="12dp"-->
-<!--        android:layout_marginTop="12dp"/>-->
-<!--    <LinearLayout-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:orientation="horizontal"-->
-<!--        android:layout_gravity="center">-->
-
-<!--        <TextView-->
-<!--            android:id="@+id/textView_matchStart"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:ems="15"-->
-<!--            android:hint="Match Start"-->
-<!--            android:padding="3dp"-->
-<!--            android:textSize="12dp"/>-->
-
-<!--        <Button-->
-<!--            android:id="@+id/button_selectTimeStart"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="set"/>-->
-<!--    </LinearLayout>-->
-
-<!--    <LinearLayout-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:orientation="horizontal"-->
-<!--        android:layout_gravity="center">-->
-
-<!--        <TextView-->
-<!--            android:id="@+id/textView_matchEnd"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:ems="15"-->
-<!--            android:hint="Match End"-->
-<!--            android:padding="3dp"-->
-<!--            android:textSize="12dp"/>-->
-
-<!--        <Button-->
-<!--            android:id="@+id/button_selectTimeEnd"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="set"/>-->
-<!--    </LinearLayout>-->
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -120,4 +71,62 @@
         android:gravity="start|top"
         android:hint="Notes..."
         android:inputType="textMultiLine"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Player"
+        android:textSize="12dp"
+        android:layout_marginTop="12dp"/>
+    <LinearLayout
+        android:layout_width="330dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/dropdown_invitees"
+            android:layout_width="275dp"
+            android:layout_height="40dp"
+            android:background="@android:drawable/btn_dropdown"
+            android:spinnerMode="dropdown"
+            android:layout_gravity="center_vertical"/>
+
+        <Button
+            android:id="@+id/button_addPlayer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Player"
+            android:layout_gravity="start"
+            android:layout_marginRight="250dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Score"
+            android:layout_gravity="right"/>
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPlayerScores"
+        android:background="#EEEEEE"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        tools:listitem="@layout/player_row"
+        android:layout_gravity="center_horizontal"/>
+
+
+
 </LinearLayout>
