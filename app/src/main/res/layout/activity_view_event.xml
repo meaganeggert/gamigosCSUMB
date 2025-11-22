@@ -16,13 +16,30 @@
         android:orientation="vertical"
         android:layout_gravity="center_horizontal">
 
-        <Button
-            android:id="@+id/button_startEvent"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start Event"
+            android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="20dp"/>
+            android:layout_margin="20dp">
+
+            <Button
+                android:id="@+id/button_startEvent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Event"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"/>
+            <Button
+                android:id="@+id/button_endEvent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="End Event"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"
+                android:enabled="false"/>
+        </LinearLayout>
+
 
         <FrameLayout
             android:id="@+id/eventFormContainer"

@@ -81,6 +81,8 @@ public class ViewEventActivity extends BaseActivity {
     List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
 
+    Button startEvent, endEvent;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        api = BGGService.getInstance();
@@ -110,7 +112,8 @@ public class ViewEventActivity extends BaseActivity {
         initEventForm(R.layout.fragment_event_form, eventContainer.getId());
         getEventDetails(eventId);
 
-        Button startEvent = findViewById(R.id.button_startEvent);
+        startEvent = findViewById(R.id.button_startEvent);
+        endEvent = findViewById(R.id.button_endEvent);
         if (startEvent != null) {
             startEvent.setOnClickListener(v -> {
                 if (eventItem.id == null) {
@@ -119,7 +122,25 @@ public class ViewEventActivity extends BaseActivity {
                 }
 
                 eventItem.status = "active";
+                eventItem.scheduledAt = Timestamp.now();
                 updateEvent();
+                startEvent.setEnabled(false);
+                endEvent.setEnabled(true);
+            });
+        }
+
+        if (endEvent != null) {
+            endEvent.setOnClickListener(v -> {
+                if (eventItem.id == null) {
+                    Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                eventItem.status = "past";
+                eventItem.endedAt = Timestamp.now();
+                updateEvent();
+//                startEvent.setEnabled(false);
+                endEvent.setEnabled(false);
             });
         }
 
@@ -133,6 +154,7 @@ public class ViewEventActivity extends BaseActivity {
 
                 getUserInput();
                 updateEvent();
+                finish();
             });
         }
 
@@ -248,9 +270,6 @@ public class ViewEventActivity extends BaseActivity {
             uploadFriendInvites();
             return null;
         });
-
-
-        finish();
     }
 
 
@@ -391,6 +410,11 @@ public class ViewEventActivity extends BaseActivity {
             eventItem.hostId = snap.getString("hostId");
             eventItem.notes = snap.getString("notes");
             setEventForm(eventItem);
+
+            if(eventItem.status.equals("active")) {
+                startEvent.setEnabled(false);
+                endEvent.setEnabled(true);
+            }
 
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage());
