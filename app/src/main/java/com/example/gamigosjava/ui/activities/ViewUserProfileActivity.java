@@ -13,9 +13,11 @@ import com.example.gamigosjava.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -297,7 +299,7 @@ public class ViewUserProfileActivity extends BaseActivity {
     private void unfriend() {
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setTitle("Remove Friend")
-                .setMessage("Are you sure you want to remove this friend?")
+                .setMessage("Are you sure you want to remove this friend? \nThis will delete the messages between the two of you as well")
                 .setPositiveButton("Yes", (dialog, which) -> {
                     var batch = db.batch();
                     DocumentReference myFriendRef = db.collection("users")
@@ -317,12 +319,76 @@ public class ViewUserProfileActivity extends BaseActivity {
                                 currentRelation = REL_NONE;
                                 updateButtons();
                                 Toast.makeText(this, "Friend removed", Toast.LENGTH_SHORT).show();
+
+                                String convoId = dmId(myUid, otherUid);
+                                deleteConversationAndSubcollections(convoId);
                             })
                             .addOnFailureListener(e ->
                                     Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    private void deleteConversationAndSubcollections(String convoId) {
+        DocumentReference convoRef = db.collection("conversations").document(convoId);
+
+        // Step 1: delete all messages
+        convoRef.collection("messages").get()
+                .addOnSuccessListener(messageSnap -> {
+                    if (!messageSnap.isEmpty()) {
+                        WriteBatch batch = db.batch();
+                        for (DocumentSnapshot doc : messageSnap.getDocuments()) {
+                            batch.delete(doc.getReference());
+                        }
+                        batch.commit()
+                                .addOnSuccessListener(unused -> deleteParticipantsAndParent(convoRef))
+                                .addOnFailureListener(e -> Toast.makeText(this,
+                                        "Error deleting messages: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT).show());
+                    } else {
+                        // no messages, go straight to next step
+                        deleteParticipantsAndParent(convoRef);
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(this,
+                        "Error retrieving messages for deletion: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
+    }
+
+    private void deleteParticipantsAndParent(DocumentReference convoRef) {
+        // Step 2: delete all participantsData docs
+        convoRef.collection("participantsData").get()
+                .addOnSuccessListener(partSnap -> {
+                    if (!partSnap.isEmpty()) {
+                        WriteBatch batch = db.batch();
+                        for (DocumentSnapshot doc : partSnap.getDocuments()) {
+                            batch.delete(doc.getReference());
+                        }
+                        batch.commit()
+                                .addOnSuccessListener(unused -> deleteConversationDoc(convoRef))
+                                .addOnFailureListener(e -> Toast.makeText(this,
+                                        "Error deleting participant data: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT).show());
+                    } else {
+                        // no participantsData, just delete parent
+                        deleteConversationDoc(convoRef);
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(this,
+                        "Failed to retrieve participant data: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
+    }
+
+    private void deleteConversationDoc(DocumentReference convoRef) {
+        // Step 3: delete parent conversation document
+        convoRef.delete()
+                .addOnSuccessListener(unused -> Toast.makeText(this,
+                        "Chat history cleared",
+                        Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(this,
+                        "Error deleting conversation: " + e.getMessage(),
+                        Toast.LENGTH_SHORT).show());
     }
 
     //  DM helper
@@ -377,8 +443,14 @@ public class ViewUserProfileActivity extends BaseActivity {
     }
 
     private void launchMessages(String conversationId, String title, String otherUid) {
-            Intent intent = MessagesActivity.newIntent(this, conversationId, title, otherUid);
-            startActivity(intent);
+        Intent intent = MessagesActivity.newIntent(
+                this,
+                conversationId,
+                title,
+                otherUid,
+                false      // DM, not group
+        );
+        startActivity(intent);
     }
 
     @Override

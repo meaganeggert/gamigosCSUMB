@@ -1,10 +1,8 @@
 package com.example.gamigosjava.ui.activities;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.widget.FrameLayout;
-import android.widget.RadioButton;
 
 import androidx.annotation.LayoutRes;
 import com.bumptech.glide.Glide;
@@ -21,7 +19,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -31,10 +28,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected NavigationView navView;
     protected Toolbar toolbar;
     protected ShapeableImageView avatarView;
-    private ActionBarDrawerToggle toggle;
 
-    private FirebaseFirestore db;
-    private FirebaseUser currentUser;
     private DocumentReference userDocRef;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -46,18 +40,19 @@ public abstract class BaseActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         avatarView = findViewById(R.id.imageAvatar);
 
-        db = FirebaseFirestore.getInstance();
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             userDocRef = db.collection("users").document(currentUser.getUid());
+            loadAvatar();
+        } else {
+            avatarView.setImageResource(android.R.drawable.ic_menu_camera);
         }
-
-        loadAvatar();
 
         setSupportActionBar(toolbar);
 
         // Hook up hamburger icon to DrawerLayout
-        toggle = new ActionBarDrawerToggle(
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
@@ -98,6 +93,11 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_messages && !(this instanceof com.example.gamigosjava.ui.activities.ConversationsActivity)) {
+                startActivity(new Intent(this, ConversationsActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             } else if (id == R.id.nav_logout) {
                 // Sign Out of Firebase
                 FirebaseAuth.getInstance().signOut();
@@ -113,9 +113,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
 
         // Avatar click takes you to the profile page
-        avatarView.setOnClickListener(v -> {
-            startActivity(new Intent(this, com.example.gamigosjava.ui.activities.ProfileActivity.class));
-        });
+        avatarView.setOnClickListener(v -> startActivity(new Intent(this, ProfileActivity.class)));
 
         // Optional: give a default title
         // setTitle("HelloWorld");
@@ -137,6 +135,11 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 
     private void loadAvatar() {
+        if (userDocRef == null || avatarView == null) {
+            if (avatarView != null) {
+                avatarView.setImageResource(android.R.drawable.ic_menu_camera);
+            }
+        }
 
         userDocRef.get().addOnSuccessListener(doc -> {
             if (doc.exists()) {
@@ -147,9 +150,16 @@ public abstract class BaseActivity extends AppCompatActivity {
                             .load(photoUrl)
                             .placeholder(android.R.drawable.ic_menu_camera)
                             .into(avatarView);
+                } else {
+                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
                 }
+            } else {
+                avatarView.setImageResource(android.R.drawable.ic_menu_camera);
             }
-        });
+                })
+                .addOnFailureListener(e -> {
+                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
+                });
     }
 
 }
