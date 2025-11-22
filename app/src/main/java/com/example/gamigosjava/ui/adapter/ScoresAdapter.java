@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,33 +18,34 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
-import com.example.gamigosjava.data.model.Friend;
-import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder>{
     private final static String TAG = "ScoresAdapter";
     public List<Player> playerList = new ArrayList<>();
+    private Context context;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
         EditText playerScore;
+        EditText playerPlacement;
+        Button removePlayer;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             playerName = itemView.findViewById(R.id.textView_playerName);
             playerScore = itemView.findViewById(R.id.editTextNumber_playerScore);
+            playerPlacement = itemView.findViewById(R.id.editTextNumber_playerPlacement);
+            removePlayer = itemView.findViewById(R.id.button_removePlayer);
         }
 
 
@@ -55,7 +55,8 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     @Override
     public ScoresAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.player_row, parent, false);
+                .inflate(R.layout.row_player, parent, false);
+        context = view.getContext();
         return new ScoresAdapter.ViewHolder(view);
     }
 
@@ -65,6 +66,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         android.util.Log.d(TAG, "Binding: " + player.friend.displayName);
 
         holder.playerName.setText(player.friend.displayName != null ? player.friend.displayName : "Unknown");
+
 
         holder.playerScore.addTextChangedListener(new TextWatcher() {
             @Override
@@ -88,6 +90,52 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             }
         });
         holder.playerScore.setText(player.score.toString());
+
+        holder.playerPlacement.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String placementText = holder.playerPlacement.getText().toString();
+                if (placementText.isEmpty()) {
+                    player.placement = 0;
+                } else {
+                    player.setPlacement(placementText);
+                }
+            }
+        });
+        holder.playerPlacement.setText(player.placement.toString());
+
+        holder.removePlayer.setOnClickListener(v -> {
+
+            new AlertDialog.Builder(context)
+                    .setTitle("Confirm Deletion")
+                    .setMessage("Are you sure you want to remove this player (" + player.friend.displayName + ")?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            playerList.remove(player);
+                            notifyDataSetChanged();
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+
+        });
+
     }
 
     @Override
@@ -117,14 +165,13 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
 
         CollectionReference playersCol = db.collection("matches").document(matchId).collection("players");
         FirestoreUtils.deleteCollection(db, playersCol, 10).onSuccessTask(v -> {
-            playerList.sort((p1,p2) -> Integer.compare(p2.score, p1.score));
 
             for (int i = 0; i < playerList.size(); i++) {
                 Player p = playerList.get(i);
                 HashMap<String, Object> playerHash = new HashMap<>();
                 playerHash.put("userId", p.friend.id);
                 playerHash.put("score", p.score);
-                playerHash.put("placement", i + 1);
+                playerHash.put("placement", p.placement);
 
                 playersCol.add(playerHash).addOnSuccessListener(doc -> {
                     Log.d(TAG, "Successfully added player details to database: " + p.friend.displayName);

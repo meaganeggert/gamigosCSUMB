@@ -250,6 +250,7 @@ public class ViewEventActivity extends BaseActivity {
         });
 
 
+        finish();
     }
 
 

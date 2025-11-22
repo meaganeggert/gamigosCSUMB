@@ -243,6 +243,7 @@ public class ViewMatchActivity extends BaseActivity {
             for (DocumentSnapshot doc: snaps) {
                 String playerId = doc.getString("userId");
                 Integer score = doc.get("score", Integer.class);
+                Integer placement = doc.get("placement", Integer.class);
 
                 DocumentReference playerRef = db.collection("users").document(playerId);
                 playerRef.get().onSuccessTask(docSnap -> {
@@ -251,7 +252,7 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = docSnap.getString("displayName");
                     friend.friendUId = docSnap.getString("uid");
 
-                    Player knownPlayer = new Player(friend, score);
+                    Player knownPlayer = new Player(friend, score, placement);
                     scoresAdapter.playerList.add(knownPlayer);
                     scoresAdapter.notifyDataSetChanged();
                     return null;

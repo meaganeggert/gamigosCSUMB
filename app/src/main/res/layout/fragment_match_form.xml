@@ -27,18 +27,18 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <SearchView
+            android:id="@+id/searchView_bggSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="Search Board Game Geek..."/>
+
         <Spinner
             android:id="@+id/dropdown_gameName"
             android:layout_width="330dp"
             android:layout_height="40dp"
             android:background="@android:drawable/btn_dropdown"
             android:spinnerMode="dropdown"/>
-
-        <SearchView
-            android:id="@+id/searchView_bggSearch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:queryHint="Search Board Game Geek..."/>
     </LinearLayout>
 
 
@@ -106,16 +106,29 @@
         android:layout_gravity="center_horizontal">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="2"
             android:layout_height="wrap_content"
             android:text="Player"
-            android:layout_gravity="start"
-            android:layout_marginRight="250dp"/>
+            android:layout_gravity="center_vertical"/>
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="#"
+            android:layout_gravity="center_vertical"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="Score"
-            android:layout_gravity="right"/>
+            android:layout_gravity="center_vertical"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Remove"
+            android:layout_gravity="center_vertical"/>
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewPlayerScores"
@@ -123,8 +136,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"
-        tools:listitem="@layout/player_row"
+        android:padding="6dp"
+        tools:listitem="@layout/row_player"
         android:layout_gravity="center_horizontal"/>
 
 
