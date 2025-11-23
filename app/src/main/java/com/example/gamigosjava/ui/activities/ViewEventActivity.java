@@ -32,6 +32,7 @@ import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
+import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
@@ -47,6 +48,8 @@ import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -139,7 +142,7 @@ public class ViewEventActivity extends BaseActivity {
                 eventItem.status = "past";
                 eventItem.endedAt = Timestamp.now();
                 updateEvent();
-//                startEvent.setEnabled(false);
+                uploadUserMatchMetrics();
                 endEvent.setEnabled(false);
             });
         }
@@ -336,7 +339,22 @@ public class ViewEventActivity extends BaseActivity {
                     } else {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
+
+                        matchResult.eventId = matchSnap.getString("eventId");
+                        matchResult.notes = matchSnap.getString("notes");
+                        matchResult.rulesVariant = matchSnap.getString("rules_variant");
+                        matchResult.startedAt = matchSnap.getTimestamp("startedAt");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+                        matchResult.gameId = matchResult.gameRef.getId();
+
+                        CollectionReference playersCollection = db
+                                .collection("matches")
+                                .document(matchResult.id)
+                                .collection("players");
+
+                        matchResult.playersRef = playersCollection;
+                        matches.add(matchResult);
+
                         getGameDetails(matchResult);
                         Log.d(TAG, "Found match: " + matchResult.id);
                     }
@@ -344,6 +362,97 @@ public class ViewEventActivity extends BaseActivity {
             }
         });
     }
+
+    private void uploadUserMatchMetrics() {
+        matches.sort(Comparator.comparing(m -> m.startedAt));
+
+        for (Match m: matches) {
+            m.playersRef.get().addOnSuccessListener(snaps -> {
+                if (snaps.isEmpty()) {
+                    Log.d(TAG, "No players in match " + m.id);
+                    return;
+                }
+
+                List<Player> matchResults = new ArrayList<>();
+                for (DocumentSnapshot player: snaps) {
+                    Player user = new Player();
+                    user.friend.id = player.getString("userId");
+                    user.placement = player.get("placement", Integer.class);
+                    user.score = player.get("score", Integer.class);
+
+                    matchResults.add(user);
+                }
+
+                for (Player p: matchResults) {
+                    CollectionReference userMetrics = db
+                            .collection("users")
+                            .document(p.friend.id)
+                            .collection("gameMetrics");
+
+                    DocumentReference gameMetric = userMetrics.document(m.gameId);
+
+                    gameMetric.get().addOnSuccessListener(snap -> {
+                        HashMap<String, Object> metricHash = new HashMap<>();
+
+                        int win = 0;
+                        int loss = 0;
+                        int winStreak = 0;
+                        int lossStreak = 0;
+                        int timesPlayed = 0;
+                        Timestamp firstTimePlayed = m.startedAt;
+                        Timestamp lastTimePlayed = m.startedAt;
+
+                        if (p.placement == 1) {
+                            win++;
+                            winStreak++;
+                        } else {
+                            loss++;
+                            lossStreak++;
+                        }
+                        timesPlayed++;
+
+                        if (snap.exists()) {
+                            win = win + snap.get("wins", Integer.class);
+                            loss = loss + snap.get("losses", Integer.class);
+                            timesPlayed = timesPlayed + snap.get("times_played", Integer.class);
+                            firstTimePlayed = snap.getTimestamp("first_time_played");
+
+                            // If user won, set the loss streak to 0 and increment the current win streak.
+                            // If user lost, set the win streak to 0 and increment the current loss streak.
+                            if (winStreak > lossStreak) {
+                                winStreak = winStreak + snap.get("win_streak", Integer.class);
+                            } else {
+                                lossStreak = lossStreak + snap.get("loss_streak", Integer.class);
+                            }
+                        }
+
+                        metricHash.put("game_ref", m.gameRef);
+                        metricHash.put("wins", win);
+                        metricHash.put("losses", loss);
+                        metricHash.put("win_streak", winStreak);
+                        metricHash.put("loss_streak", lossStreak);
+                        metricHash.put("times_played", timesPlayed);
+                        metricHash.put("first_time_played", firstTimePlayed);
+                        metricHash.put("last_time_played", lastTimePlayed);
+
+                        gameMetric.set(metricHash).addOnSuccessListener(v -> {
+                            Log.d(TAG, "Successfully updated user game metrics.");
+                        }).addOnFailureListener(e -> {
+                            Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
+                        });
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
+                    });
+
+
+                }
+            });
+
+        }
+    }
+
+
+
 
     private void getGameDetails(Match match) {
         DocumentReference gameDoc = match.gameRef;

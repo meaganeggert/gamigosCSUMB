@@ -32,6 +32,7 @@ import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.example.gamigosjava.ui.adapter.ScoresAdapter;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
@@ -203,6 +204,10 @@ public class ViewMatchActivity extends BaseActivity {
                 Player newPlayer = new Player();
                 newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
 
+                if (newPlayer.friend == null) {
+                    return;
+                }
+
                 boolean inList = false;
                 for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
                     if (scoresAdapter.playerList.get(i).friend.id.equals(newPlayer.friend.id)) {
@@ -229,6 +234,11 @@ public class ViewMatchActivity extends BaseActivity {
     private void getPlayers() {
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (matchId.isEmpty()) {
+            Log.d(TAG, "Cannot get players, no match Id selected.");
             return;
         }
 
@@ -264,12 +274,40 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
+    private void getHost() {
+        db.collection("events").document(eventId).get().addOnSuccessListener(snap -> {
+            if (snap.exists()) {
+                db.collection("users").document(snap.getString("hostId")).get().addOnSuccessListener(s -> {
+                    if (!s.exists()) return;
+
+                    Friend host = new Friend();
+                    host.id = s.getId();
+                    host.displayName = s.getString("displayName");
+                    host.friendUId = s.getString("uid");
+
+                    Log.d(TAG, "HOST NAME: " + host.displayName);
+                    Log.d(TAG, "HOST ID: " + host.id);
+                    Log.d(TAG, "HOST UID: " + host.friendUId);
+
+                    inviteeList.add(host);
+                    inviteeAdapter.notifyDataSetChanged();
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to get host info: " + e.getMessage());
+                });
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to find event info: " + e.getMessage());
+        });
+
+    }
     private void getInvitees() {
 
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        getHost();
 
         String uid = currentUser.getUid();
 
@@ -543,6 +581,7 @@ public class ViewMatchActivity extends BaseActivity {
                     });
         } else {
             // Upload the new match and add a reference to it in the event subcollection "matches"
+            match.replace("startedAt", Timestamp.now());
             db.collection("matches").add(match)
                     .addOnSuccessListener(documentReference -> {
                         matchItem.id = documentReference.getId();
@@ -551,7 +590,7 @@ public class ViewMatchActivity extends BaseActivity {
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id);
 
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();

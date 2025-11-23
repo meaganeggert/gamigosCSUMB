@@ -33,7 +33,7 @@ public class EventsRepo {
         matchesRef.get().addOnSuccessListener(snaps -> {
             if (snaps.isEmpty()) {
                 Log.d(TAG, "Event matches are not found.");
-                subTasks.add(FirestoreUtils.deleteCollection(db, matchesRef, snaps.size()));
+                subTasks.add(FirestoreUtils.deleteCollection(db, matchesRef, 10));
                 subTasks.add(FirestoreUtils.deleteCollection(db, inviteesRef, 10));
                 return;
             }
@@ -47,7 +47,7 @@ public class EventsRepo {
 
             Tasks.whenAll(matchTasks).onSuccessTask(subV -> {
                 Log.d(TAG, "Deleting event invite and match references.");
-                subTasks.add(FirestoreUtils.deleteCollection(db, matchesRef, snaps.size()));
+                subTasks.add(FirestoreUtils.deleteCollection(db, matchesRef, 10));
                 subTasks.add(FirestoreUtils.deleteCollection(db, inviteesRef, 10));
                 return null;
             });

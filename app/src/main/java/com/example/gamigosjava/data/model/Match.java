@@ -1,6 +1,7 @@
 package com.example.gamigosjava.data.model;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 
 public class Match {
@@ -14,4 +15,5 @@ public class Match {
     public Timestamp startedAt;
     public Timestamp endedAt;
     public DocumentReference gameRef;
+    public CollectionReference playersRef;
 }

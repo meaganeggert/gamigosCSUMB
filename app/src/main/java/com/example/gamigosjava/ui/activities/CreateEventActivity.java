@@ -272,7 +272,6 @@ public class CreateEventActivity extends BaseActivity {
                         Log.d(TAG, "Failed to upload friend invite: " + e.getMessage());
                     });
         }
-
     }
 
 
