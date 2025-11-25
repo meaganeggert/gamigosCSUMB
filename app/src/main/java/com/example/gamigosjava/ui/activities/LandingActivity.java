@@ -4,29 +4,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import android.content.Intent;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.gamigosjava.data.model.ActivityItem;
-import com.example.gamigosjava.ui.activities.BaseActivity;
 
 // Firebase
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.ui.adapter.FeedAdapter;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 // Credential Manager (AndroidX)
-import androidx.credentials.CredentialManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +39,8 @@ public class LandingActivity extends BaseActivity {
 
         // Set title for NavBar
         setTopTitle("Gamigos");
+
+        checkAndRequestNotificationPermission();
 
         feedRecycler = findViewById(R.id.recyclerViewFeed);
         defaultEmptyText = findViewById(R.id.emptyText);

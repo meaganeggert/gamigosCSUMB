@@ -1,7 +1,14 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.FrameLayout;
 
 import androidx.annotation.LayoutRes;
@@ -9,6 +16,7 @@ import com.bumptech.glide.Glide;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 
@@ -23,7 +31,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 public abstract class BaseActivity extends AppCompatActivity {
-
     protected DrawerLayout drawer;
     protected NavigationView navView;
     protected Toolbar toolbar;
@@ -192,4 +199,78 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    private static final int REQ_POST_NOTIFICATIONS = 2001;
+    private static final String PREFS_NAME = "gamigos_prefs";
+    private static final String KEY_NOTIF_SETTINGS_DIALOG_SHOWN = "notif_settings_dialog_shown";
+
+    protected void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQ_POST_NOTIFICATIONS
+                );
+            } else {
+                // Permission already granted → only maybe show our dialog once
+                maybePromptEnableNotificationsOnce();
+            }
+        } else {
+            // Below Android 13 → no runtime permission, just maybe show our dialog once
+            maybePromptEnableNotificationsOnce();
+        }
+    }
+
+    private void maybePromptEnableNotificationsOnce() {
+        NotificationManagerCompat nm = NotificationManagerCompat.from(this);
+
+        // If OS-level notifications are ON, nothing to do
+        if (nm.areNotificationsEnabled()) return;
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean alreadyShown = prefs.getBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, false);
+
+        // We've already shown the dialog before → don't show it again
+        if (alreadyShown) return;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Enable Notifications")
+                .setMessage("Gamigos uses notifications for messages and friend requests. Turn them on in settings?")
+                .setPositiveButton("Open Settings", (dialog, which) -> {
+                    prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
+                    openNotificationSettings();
+                })
+                .setNegativeButton("Not now", (dialog, which) -> {
+                    // Still mark as shown so we don’t nag them again
+                    prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
+                })
+                .show();
+    }
+
+    private void openNotificationSettings() {
+        Intent intent;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+        } else {
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:" + getPackageName()));
+        }
+
+        startActivity(intent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_POST_NOTIFICATIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted → now we can check if OS toggle is off and maybe show dialog once
+                maybePromptEnableNotificationsOnce();
+            }
+        }
+    }
 }
