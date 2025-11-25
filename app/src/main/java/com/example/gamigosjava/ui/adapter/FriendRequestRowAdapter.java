@@ -1,5 +1,7 @@
 package com.example.gamigosjava.ui.adapter;
 
+import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,6 +68,15 @@ public class FriendRequestRowAdapter extends RecyclerView.Adapter<FriendRequestV
             h.btnDecline.setVisibility(View.GONE);
             h.btnPending.setVisibility(View.VISIBLE);
         }
+
+        Context ctx = h.itemView.getContext();
+
+        int normalColor = Color.TRANSPARENT;
+        int highlightColor = androidx.core.content.ContextCompat.getColor(ctx, R.color.friend_request_highlight);
+
+        h.itemView.setBackgroundColor(
+                row.highlight ? highlightColor : normalColor
+        );
     }
 
     @Override
@@ -81,5 +92,6 @@ public class FriendRequestRowAdapter extends RecyclerView.Adapter<FriendRequestV
         public String displayName;
         public String photoUrl;
         public int type;
+        public boolean highlight = false;
     }
 }
