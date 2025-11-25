@@ -23,18 +23,21 @@ import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
+import com.example.gamigosjava.data.model.Image;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.adapter.ImageAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -85,6 +88,8 @@ public class ViewEventActivity extends BaseActivity {
     private MatchAdapter matchAdapter;
 
     Button startEvent, endEvent;
+    List<Image> images;
+    ImageAdapter imageAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -101,10 +106,13 @@ public class ViewEventActivity extends BaseActivity {
 
         matches = new ArrayList<>();
         matchSummaryList = new ArrayList<>();
+        images = new ArrayList<>();
 
         eventId = getIntent().getStringExtra("selectedEventId");
+        Log.d(TAG, "Event ID: " + eventId);
 
         getMatches(eventId);
+        getEventImages();
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -237,6 +245,48 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
+        Button photos = findViewById(R.id.button_eventPhotos);
+        if(photos != null) {
+            photos.setOnClickListener(v -> {
+                Intent intent = new Intent(ViewEventActivity.this, ImageUploadActivity.class);
+                intent.putExtra("selectedEventId", eventId);
+                startActivity(intent);
+            });
+        }
+
+        RecyclerView imagesView = findViewById(R.id.recyclerViewEventImages);
+        imagesView.setLayoutManager(new GridLayoutManager(this, 3));
+        imageAdapter = new ImageAdapter();
+        imageAdapter.setItems(images);
+        imagesView.setAdapter(imageAdapter);
+
+        recyclerView = findViewById(R.id.recyclerViewMatchGame);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        matchAdapter = new MatchAdapter();
+        recyclerView.setAdapter(matchAdapter);
+
+    }
+
+    private void getEventImages() {
+        if (currentUser == null) return;
+
+        db.collection("events")
+                .document(eventId)
+                .collection("images")
+                .addSnapshotListener((snaps, e) -> {
+                    if (snaps.isEmpty()) return;
+
+                    images.clear();
+                    for (DocumentSnapshot docSnap: snaps) {
+                        Image existingImage = new Image();
+                        existingImage.authorId = docSnap.getString("authorId");
+                        existingImage.imageUrl = docSnap.getString("photoUrl");
+                        Log.d("IMAGE", "Adding image: " + existingImage.imageUrl);
+                        images.add(existingImage);
+                        imageAdapter.setItems(images);
+                    }
+//                    imageAdapter.notifyDataSetChanged();
+                });
     }
 
     private void getUserInput() {
@@ -345,7 +395,9 @@ public class ViewEventActivity extends BaseActivity {
                         matchResult.rulesVariant = matchSnap.getString("rules_variant");
                         matchResult.startedAt = matchSnap.getTimestamp("startedAt");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-                        matchResult.gameId = matchResult.gameRef.getId();
+                        if (matchResult.gameRef != null) {
+                            matchResult.gameId = matchResult.gameRef.getId();
+                        }
 
                         CollectionReference playersCollection = db
                                 .collection("matches")
