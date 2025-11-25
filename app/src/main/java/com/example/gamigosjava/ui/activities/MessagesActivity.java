@@ -4,10 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-
 import androidx.fragment.app.Fragment;
 
 import com.example.gamigosjava.R;
+
+import javax.annotation.Nullable;
 
 public class MessagesActivity extends BaseActivity {
     private static final String EXTRA_CONVO_ID = "EXTRA_CONVO_ID";
@@ -18,7 +19,7 @@ public class MessagesActivity extends BaseActivity {
     public static Intent newIntent(Context ctx,
                                    String conversationId,
                                    String title,
-                                   String otherUid,
+                                   @Nullable String otherUid,
                                    boolean isGroup) {
         Intent intent = new Intent(ctx, MessagesActivity.class);
         intent.putExtra(EXTRA_CONVO_ID, conversationId);
@@ -35,6 +36,8 @@ public class MessagesActivity extends BaseActivity {
 
         String title = getIntent().getStringExtra(EXTRA_TITLE);
         setTopTitle(title != null ? title : "Messages");
+
+        enableBackToConversations();
 
         String convoId  = getIntent().getStringExtra(EXTRA_CONVO_ID);
         String otherUid = getIntent().getStringExtra(EXTRA_OTHER_UID);

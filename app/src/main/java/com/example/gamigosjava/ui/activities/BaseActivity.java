@@ -30,6 +30,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected ShapeableImageView avatarView;
 
     private DocumentReference userDocRef;
+    protected ActionBarDrawerToggle drawerToggle;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,14 +53,14 @@ public abstract class BaseActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Hook up hamburger icon to DrawerLayout
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        drawerToggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
         );
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        toggle.getDrawerArrowDrawable().setColor(
+        drawer.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
+        drawerToggle.getDrawerArrowDrawable().setColor(
                 ContextCompat.getColor(this, R.color.white)
         );
 
@@ -157,9 +158,38 @@ public abstract class BaseActivity extends AppCompatActivity {
                 avatarView.setImageResource(android.R.drawable.ic_menu_camera);
             }
                 })
-                .addOnFailureListener(e -> {
-                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
-                });
+                .addOnFailureListener(e -> avatarView.setImageResource(android.R.drawable.ic_menu_camera));
+    }
+
+    protected void enableBackToConversations() {
+        // Lock the drawer closed so swiping from the edge doesn’t open it
+        if (drawer != null) {
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        }
+
+        // Disable the hamburger behavior
+        if (drawerToggle != null) {
+            drawerToggle.setDrawerIndicatorEnabled(false);
+            drawer.removeDrawerListener(drawerToggle);
+        }
+
+        // Show the back arrow
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(
+                    ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white_24)
+            );
+        }
+
+        // Clicking the arrow explicitly goes to ConversationsActivity
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> {
+                Intent intent = new Intent(this, ConversationsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
+        }
     }
 
 }
