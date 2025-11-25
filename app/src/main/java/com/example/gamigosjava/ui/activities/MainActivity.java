@@ -1,6 +1,9 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.util.Log;
@@ -17,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.repository.AchievementAwarder;
 import com.example.gamigosjava.data.repository.AchievementsRepo;
+import com.example.gamigosjava.notifications.NotificationTokenManager;
 import com.example.gamigosjava.ui.AchievementNotifier;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,6 +42,7 @@ import androidx.credentials.exceptions.GetCredentialException;
 // Google Identity
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.annotation.NonNull;
 
@@ -100,6 +105,20 @@ public class MainActivity extends AppCompatActivity {
                 return insets;
             });
         }
+
+        //  Creating notification channel
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "default_channel",
+                    "General Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) {
+                nm.createNotificationChannel(channel);
+            }
+        }
+
     }
 
     private void startGoogleSignIn() {
@@ -155,6 +174,15 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Firebase sign-in success: " + (user != null ? user.getUid() : "null"));
                         if (user != null) {
                             Log.d(TAG, "User != null");
+                            //  Save Firebase Cloud Messaging token here
+                            FirebaseMessaging.getInstance()
+                                    .getToken()
+                                    .addOnCompleteListener(tokenTask -> {
+                                        if (!tokenTask.isSuccessful()) return;
+                                        String token = tokenTask.getResult();
+                                        NotificationTokenManager.saveTokenForCurrentUser(token);
+                                        Log.d(TAG, "Token saved: " + token);
+                                    });
                             ensureUserDocExists(user);
                             repo.ensureMetrics(user.getUid())
                                     .addOnSuccessListener( earned -> {

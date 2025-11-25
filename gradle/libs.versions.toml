@@ -2,6 +2,7 @@
 agp = "8.13.1"
 
 # testing
+core-ktx = "1.17.0"
 junit = "4.13.2"
 androidx-junit = "1.3.0"
 espresso = "3.7.0"
@@ -37,6 +38,7 @@ algolia = "3.27.0"
 [libraries]
 # ui
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 activity = { module = "androidx.activity:activity", version.ref = "activity" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
@@ -48,6 +50,7 @@ firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 
 # images
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }

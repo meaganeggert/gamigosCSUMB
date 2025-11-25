@@ -50,8 +50,6 @@ public class MessagesFragment extends Fragment {
 
     private ChatViewModel vm;
     private MessagesListAdapter adapter;
-
-    // 🔹 add these fields
     private String convoId;
     private String otherUid;
     private boolean isGroup;
@@ -77,7 +75,6 @@ public class MessagesFragment extends Fragment {
 
         vm = new ViewModelProvider(this).get(ChatViewModel.class);
 
-        // 🔹 read args into the fields
         Bundle args = getArguments();
         if (args != null) {
             convoId = args.getString(ARG_CONVO_ID);
@@ -166,7 +163,6 @@ public class MessagesFragment extends Fragment {
                 .addOnSuccessListener(unused ->
                         Log.d("MessagesFragment", "Group photo deleted for convo " + convoId))
                 .addOnFailureListener(e -> {
-                    // It's okay if there was no photo; ignore "object not found" errors
                     if (e instanceof com.google.firebase.storage.StorageException
                             && ((StorageException) e).getErrorCode()
                             == StorageException.ERROR_OBJECT_NOT_FOUND) {
