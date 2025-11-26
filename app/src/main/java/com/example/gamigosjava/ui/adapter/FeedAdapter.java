@@ -89,6 +89,26 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             // Trophy image
             holder.imageIcon.setImageResource(R.drawable.ic_event_24);
+        } else if (item.getType().equals("FRIEND_ADDED")) {
+            // Construct message
+            String friendOneName = item.getActorName().split(" ")[0];
+            String friendTwoName = item.getTargetName().split(" ")[0];
+            String message = friendOneName + " and " + friendTwoName + " are now friends.";
+
+            holder.textTitle.setText(message);
+            holder.textDescript.setVisibility(GONE);
+
+            // Temporary Timestamp
+            Timestamp whenCreated = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenCreated.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.ic_friends_24);
         } else if (item.getType().equals("EVENT_ATTENDED")) {
             // TODO: Fill this in
         } else if (item.getType().equals("GAME_WON")) {
