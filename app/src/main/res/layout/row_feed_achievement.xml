@@ -8,7 +8,7 @@
     android:background="@color/medgrey">
 
     <ImageView
-        android:id="@+id/feed_AchievementIcon"
+        android:id="@+id/feed_icon"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:scaleType="centerCrop"
@@ -22,26 +22,45 @@
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <TextView
-        android:id="@+id/feed_AchievementTitle"
+        android:id="@+id/feed_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="X earned Y"
         android:textColor="@color/darkblue"
         android:layout_gravity="center_vertical"
+        android:textAlignment="center"
         android:maxLines="1"
         app:autoSizeMaxTextSize="20sp"
         app:autoSizeMinTextSize="10sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
-        app:cornerRadius="10dp"
         android:fontFamily="serif-monospace"
-        app:layout_constraintStart_toEndOf="@id/feed_AchievementIcon"
-        app:layout_constraintTop_toBottomOf="@id/feed_AchievementTime"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
+        app:layout_constraintTop_toBottomOf="@id/feed_time"
+        app:layout_constraintBottom_toTopOf="@id/feed_description"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/feed_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="By doing something crazy"
+        android:textColor="@color/darkblue"
+        android:layout_gravity="center_vertical"
+        android:textAlignment="center"
+        android:maxLines="1"
+        app:autoSizeMaxTextSize="12sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        android:fontFamily="serif-monospace"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
+        app:layout_constraintTop_toBottomOf="@id/feed_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-        android:id="@+id/feed_AchievementTime"
+        android:id="@+id/feed_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="0.5dp"
