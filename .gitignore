@@ -40,6 +40,10 @@ firebasecb/package.json
 firebasecb/package-lock.json
 firebasecb/functions/node_modules/
 firebasecb/functions/.env
+firebasecb/
+functions/
+.firebaserc
+.firebase/
 
 # --- Global Firebase logs / config you don't want in repo ---
 firebase-debug.log

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FriendsLanding extends BaseActivity {
+    public static final String EXTRA_FOCUS_REQUEST_UID = "EXTRA_FOCUS_REQUEST_UID";
     private FirebaseUser currentUser;
     private FirebaseFirestore db;
     private TextView tvRequestsHeader;
@@ -37,6 +38,8 @@ public class FriendsLanding extends BaseActivity {
     private ListenerRegistration friendsListener;
     private ListenerRegistration incomingListener;
     private ListenerRegistration outgoingListener;
+    private RecyclerView rvRequests;
+    private String focusRequestUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +53,11 @@ public class FriendsLanding extends BaseActivity {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
 
+        focusRequestUid = getIntent().getStringExtra(EXTRA_FOCUS_REQUEST_UID);
+
         //  Setting up Requests Recycler View
         tvRequestsHeader = findViewById(R.id.tvRequestsHeader);
-        RecyclerView rvRequests = findViewById(R.id.rvRequests);
+        rvRequests = findViewById(R.id.rvRequests);
 
         rvRequests.setLayoutManager(new LinearLayoutManager(this));
         requestsAdapter = new FriendRequestRowAdapter(requestRows, new FriendRequestRowAdapter.RequestActionListener() {
@@ -256,7 +261,42 @@ public class FriendsLanding extends BaseActivity {
 
         // toggle header
         tvRequestsHeader.setVisibility(requestRows.isEmpty() ? View.GONE : View.VISIBLE);
+
+        maybeScrollToFocusedRequest();
     }
+
+    private void maybeScrollToFocusedRequest() {
+        if (focusRequestUid == null || rvRequests == null || requestRows.isEmpty()) return;
+
+        int foundIndex = -1;
+        for (int i = 0; i < requestRows.size(); i++) {
+            if (focusRequestUid.equals(requestRows.get(i).uid)) {
+                foundIndex = i;
+                break;
+            }
+        }
+
+        if (foundIndex >= 0) {
+            final int indexFinal = foundIndex;      // <-- make final copy
+            FriendRequestRowAdapter.RequestRow row = requestRows.get(indexFinal);
+
+            rvRequests.smoothScrollToPosition(indexFinal);
+
+            // highlight ON
+            row.highlight = true;
+            requestsAdapter.notifyItemChanged(indexFinal);
+
+            // highlight OFF after delay
+            rvRequests.postDelayed(() -> {
+                row.highlight = false;
+                requestsAdapter.notifyItemChanged(indexFinal);
+            }, 1500);
+
+            focusRequestUid = null;
+        }
+    }
+
+
 
     private void acceptRequest(String otherUid) {
         String myUid = currentUser.getUid();

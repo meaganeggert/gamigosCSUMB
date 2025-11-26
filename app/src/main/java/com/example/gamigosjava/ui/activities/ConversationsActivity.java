@@ -69,7 +69,6 @@ public class ConversationsActivity extends BaseActivity {
     private void startConversationsListener() {
         if (currentUid == null) return;
 
-        // Remove old listener if any (defensive)
         if (conversationsListener != null) {
             conversationsListener.remove();
             conversationsListener = null;
@@ -113,7 +112,7 @@ public class ConversationsActivity extends BaseActivity {
                     }
 
                     adapter.setConversations(new ArrayList<>(conversations));
-                    fetchUserInfoForDMs(conversations); // to fill in names/photos
+                    fetchUserInfoForDMs(conversations);
                 });
     }
 
@@ -129,7 +128,7 @@ public class ConversationsActivity extends BaseActivity {
                     .addOnSuccessListener(userDoc -> {
                         c.setOtherName(userDoc.getString("displayName"));
                         c.setOtherPhotoUrl(userDoc.getString("photoUrl"));
-                        adapter.notifyDataSetChanged(); // fine for small list
+                        adapter.notifyDataSetChanged();
                     });
         }
     }
