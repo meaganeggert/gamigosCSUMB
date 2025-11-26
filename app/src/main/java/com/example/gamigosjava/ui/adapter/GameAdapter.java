@@ -75,4 +75,9 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.ViewHolder> {
         notifyDataSetChanged(); // tells RecyclerView to refresh
     }
 
+    public GameSummary getItemAt(int i) {
+        if (i > games.size()-1) return null;
+        return games.get(i);
+    }
+
 }

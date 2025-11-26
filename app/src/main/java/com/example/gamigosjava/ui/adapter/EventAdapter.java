@@ -72,4 +72,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
         notifyDataSetChanged(); // tells RecyclerView to refresh
     }
 
+    public EventSummary getItemAt(int i) {
+        return events.get(i);
+    }
+
 }

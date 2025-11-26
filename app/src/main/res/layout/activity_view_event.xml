@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:layout_gravity="center_horizontal"
+    tools:context=".ui.activities.ViewEventActivity">
+
+    <LinearLayout
+        android:id="@+id/viewEventRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp">
+
+            <Button
+                android:id="@+id/button_startEvent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Event"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"/>
+            <Button
+                android:id="@+id/button_endEvent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="End Event"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"
+                android:enabled="false"/>
+        </LinearLayout>
+
+
+        <FrameLayout
+            android:id="@+id/eventFormContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/cardview_light_background"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+
+
+        <LinearLayout
+            android:layout_width="360dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="center_horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Games"
+                    android:textSize="24dp"
+                    android:layout_gravity="center_vertical"/>
+
+                <Button
+                    android:id="@+id/button_addMatch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="New Game"
+                    android:layout_gravity="right"
+                    android:layout_marginStart="165dp"
+                    />
+            </LinearLayout>
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewMatchGame"
+                android:background="#EEEEEE"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="8dp"
+                tools:listitem="@layout/game_row"
+                android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp">
+
+            <Button
+                android:id="@+id/button_cancelEventChanges"
+                android:layout_width="155dp"
+                android:layout_height="wrap_content"
+                android:text="Cancel Changes"
+                android:layout_gravity="center_horizontal"/>
+
+            <Button
+                android:id="@+id/button_saveEvent"
+                android:layout_width="155dp"
+                android:layout_height="wrap_content"
+                android:text="Save Changes"
+                android:layout_gravity="center_horizontal"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_deleteEvent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete Event"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="@color/biometric_error_color"/>
+
+    </LinearLayout>
+
+
+</ScrollView>
