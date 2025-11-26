@@ -1,6 +1,7 @@
 package com.example.gamigosjava.ui.adapter;
 
 import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -73,9 +74,11 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             // Construct message
             String firstName = item.getActorName().split(" ")[0];
             String eventName = item.getTargetName();
+            Log.d(TAG, "eventName: " + eventName);
             String message = firstName + " created an event!";
 
             holder.textTitle.setText(message);
+            holder.textDescript.setVisibility(VISIBLE);
             holder.textDescript.setText(eventName);
 
             // Temporary Timestamp
