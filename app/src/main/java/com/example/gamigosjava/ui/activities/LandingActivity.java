@@ -19,6 +19,7 @@ import com.example.gamigosjava.ui.adapter.FeedAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
 // Credential Manager (AndroidX)
@@ -39,6 +40,8 @@ public class LandingActivity extends BaseActivity {
     private FeedAdapter feedAdapter;
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    private ListenerRegistration feedListener; // Will allow for real-time feed updates
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +64,24 @@ public class LandingActivity extends BaseActivity {
     }
 
     private void loadFeed() {
-        db.collection("activities")
+        // Kill the listener if it's already running
+        if (feedListener != null) feedListener.remove();
+
+        feedListener = db.collection("activities")
                 .whereEqualTo("type", "ACHIEVEMENT_EARNED")
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null ) {
+                        Log.e(TAG, "Feed Listener Error: ", e);
+                        defaultEmptyText.setText("Feed failed to load.");
+                        defaultEmptyText.setVisibility(View.VISIBLE);
+                        feedRecycler.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    if (queryDocumentSnapshots == null) return;
+
                     List<ActivityItem> feedList = new ArrayList<>();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         ActivityItem feedItem = doc.toObject(ActivityItem.class);
@@ -87,12 +102,23 @@ public class LandingActivity extends BaseActivity {
                         defaultEmptyText.setVisibility(View.GONE);
                         feedRecycler.setVisibility(View.VISIBLE);
                     }
-                })
-                .addOnFailureListener(e-> {
-                    Log.e(TAG, "Feed failed to load: ", e);
-                    defaultEmptyText.setText("FAILED TO LOAD");
-                    defaultEmptyText.setVisibility(View.VISIBLE);
-                    feedRecycler.setVisibility(View.GONE);
                 });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Kill accidental duplicates
+        if (feedListener != null) {
+            feedListener.remove();
+            feedListener = null;
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Listen when the feed starts
+        loadFeed();
     }
 }

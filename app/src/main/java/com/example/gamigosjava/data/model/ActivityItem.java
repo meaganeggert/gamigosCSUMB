@@ -4,14 +4,14 @@ import com.google.firebase.Timestamp;
 
 public class ActivityItem {
     private String id;
-    private String type;
-    private String actorId;
-    private String actorName;
-    private String targetId;
-    private String targetName;
-    private String message;
-    private String visibility;
-    private Timestamp createdAt;
+    private String type; // ACHIEVEMENT_EARNED, EVENT_CREATED, GAME_WON, EVENT_ATTENDED,
+    private String actorId; // user id
+    private String actorName; // user who earned the achievement
+    private String targetId; // achievement id
+    private String targetName; // achievement name
+    private String message; // pre-built achievement message
+    private String visibility; // who can see this
+    private Timestamp createdAt; // when achievement was earned
 
     public ActivityItem() {}
 
