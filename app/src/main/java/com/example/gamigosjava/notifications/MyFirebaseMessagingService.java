@@ -16,12 +16,14 @@ import androidx.core.app.NotificationCompat;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.ui.activities.FriendsLanding;
 import com.example.gamigosjava.ui.activities.MessagesActivity;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
+    private static final String TAG = "FirebaseMessagingService";
 
     private static final String CHANNEL_MESSAGES = "channel_messages";
     private static final String CHANNEL_FRIEND_REQUESTS = "channel_friend_requests";
@@ -35,8 +37,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Map<String, String> data = remoteMessage.getData();
         String type = data.get("type");
+        String senderUid = data.get("senderUid");
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
 
         if ("message".equals(type)) {
+            if (senderUid.equals(currentUserId) && currentUserId != null) {
+                Log.i(TAG, "Ignoring message from myself: " + currentUserName);
+                return;
+            }
             showMessageNotification(data);
         } else if ("friend_request".equals(type)) {
             showFriendRequestNotification(data);
