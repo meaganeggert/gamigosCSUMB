@@ -548,6 +548,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.rulesVariant = ruleChangeValue.getText().toString();
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
+        matchItem.endedAt = Timestamp.now();
         // Timestamps will have been set by the showDateTime interface.
 
         // Connect values from the match object to the hashmap to be uploaded.
@@ -674,6 +675,7 @@ public class ViewMatchActivity extends BaseActivity {
     private void getMatchDetails(String matchId) {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
+            matchItem.startedAt = Timestamp.now();
             return;
         }
 

@@ -67,7 +67,7 @@ public class ImageUploadActivity extends BaseActivity {
                         pendingImageUri = uri;
                         imageView.setImageURI(uri);
                         uploadButton.setEnabled(true);
-                        uploadImageToFirebaseStorage(uri);
+//                        uploadImageToFirebaseStorage(uri);
                     } else {
                         Log.e(TAG, "No image selected");
                         Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show();

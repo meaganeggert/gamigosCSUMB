@@ -5,7 +5,6 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,6 +34,7 @@ import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
+import com.example.gamigosjava.data.model.UserGameMetric;
 import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.ImageAdapter;
@@ -46,12 +46,9 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +90,6 @@ public class ViewEventActivity extends BaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-//        api = BGGService.getInstance();
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
@@ -285,7 +281,6 @@ public class ViewEventActivity extends BaseActivity {
                         images.add(existingImage);
                         imageAdapter.setItems(images);
                     }
-//                    imageAdapter.notifyDataSetChanged();
                 });
     }
 
@@ -389,11 +384,11 @@ public class ViewEventActivity extends BaseActivity {
                     } else {
                         Match matchResult = new Match();
                         matchResult.id = matchSnap.getId();
-
                         matchResult.eventId = matchSnap.getString("eventId");
                         matchResult.notes = matchSnap.getString("notes");
                         matchResult.rulesVariant = matchSnap.getString("rules_variant");
                         matchResult.startedAt = matchSnap.getTimestamp("startedAt");
+                        matchResult.endedAt = matchSnap.getTimestamp("endedAt");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
                         if (matchResult.gameRef != null) {
                             matchResult.gameId = matchResult.gameRef.getId();
@@ -415,9 +410,11 @@ public class ViewEventActivity extends BaseActivity {
         });
     }
 
+
     private void uploadUserMatchMetrics() {
         matches.sort(Comparator.comparing(m -> m.startedAt));
 
+        // Get user reference from players involved in each match.
         for (Match m: matches) {
             m.playersRef.get().addOnSuccessListener(snaps -> {
                 if (snaps.isEmpty()) {
@@ -435,57 +432,142 @@ public class ViewEventActivity extends BaseActivity {
                     matchResults.add(user);
                 }
 
+                // Update each users metrics
                 for (Player p: matchResults) {
+                    DocumentReference gamesPlayedRef = db.collection("users")
+                            .document(p.friend.id)
+                            .collection("metrics")
+                            .document("games_played");
+
+                    // Update the user's games_played count
+                    gamesPlayedRef.get().addOnSuccessListener(snap -> {
+                        Integer gamesPlayed = 1;
+                        HashMap<String, Object> gamesPlayedHash = new HashMap<>();
+
+                        if (!snap.exists()) {
+                            gamesPlayedHash.put("count", gamesPlayed);
+                            gamesPlayedRef.set(gamesPlayedHash).addOnSuccessListener(v -> {
+                                Log.d(TAG, "Successfully updated user games_played count.");
+                            }).addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to update user games_played count: " + e.getMessage());
+                            });
+
+                            return;
+                        }
+
+                        gamesPlayedHash.put("count", snap.get("count", Integer.class) + gamesPlayed);
+                        gamesPlayedRef.set(gamesPlayedHash);
+                    });
+
+
+                    // Update the user's game_metrics
                     CollectionReference userMetrics = db
                             .collection("users")
                             .document(p.friend.id)
-                            .collection("gameMetrics");
+                            .collection("metrics")
+                            .document("games_played")
+                            .collection("game_metrics");
 
                     DocumentReference gameMetric = userMetrics.document(m.gameId);
 
                     gameMetric.get().addOnSuccessListener(snap -> {
                         HashMap<String, Object> metricHash = new HashMap<>();
 
-                        int win = 0;
-                        int loss = 0;
-                        int winStreak = 0;
-                        int lossStreak = 0;
-                        int timesPlayed = 0;
-                        Timestamp firstTimePlayed = m.startedAt;
-                        Timestamp lastTimePlayed = m.startedAt;
-
+                        UserGameMetric result = new UserGameMetric();
+                        // Set default values for user match results.
                         if (p.placement == 1) {
-                            win++;
-                            winStreak++;
+                            result.timesWon++;
+                            result.winStreak++;
+                            result.bestWinStreak++;
+                            result.averageWinStreak++;
+                            result.winningStreakCount++;
                         } else {
-                            loss++;
-                            lossStreak++;
+                            result.timesLost++;
+                            result.lossStreak++;
+                            result.worstLosingStreak++;
                         }
-                        timesPlayed++;
 
+                        result.bestScore = p.score;
+                        result.worstScore = p.score;
+                        result.averageScore = p.score;
+                        result.scoreTotal = p.score;
+
+                        result.timesPlayed++;
+                        result.firstTimePlayed = m.startedAt;
+                        result.lastTimePlayed = m.endedAt;
+
+                        // If user has played before, get user data from database to update
                         if (snap.exists()) {
-                            win = win + snap.get("wins", Integer.class);
-                            loss = loss + snap.get("losses", Integer.class);
-                            timesPlayed = timesPlayed + snap.get("times_played", Integer.class);
-                            firstTimePlayed = snap.getTimestamp("first_time_played");
+                            result.timesPlayed = result.timesPlayed + snap.get("times_played", Integer.class);
+                            result.firstTimePlayed = snap.getTimestamp("first_time_played");
 
-                            // If user won, set the loss streak to 0 and increment the current win streak.
-                            // If user lost, set the win streak to 0 and increment the current loss streak.
-                            if (winStreak > lossStreak) {
-                                winStreak = winStreak + snap.get("win_streak", Integer.class);
-                            } else {
-                                lossStreak = lossStreak + snap.get("loss_streak", Integer.class);
+                            // Score related ===========================
+                            result.scoreTotal = p.score +  snap.get("score_total", Integer.class);
+                            result.bestScore = snap.get("best_score", Integer.class);
+                            result.worstScore = snap.get("worst_score", Integer.class);
+                            result.averageScore = result.scoreTotal / result.timesPlayed;
+
+                            if (p.score > result.bestScore) result.bestScore = p.score;
+                            if (p.score < result.worstScore) result.worstScore = p.score;
+
+
+                            // Win/Loss related ===========================
+                            result.timesWon = result.timesWon + snap.get("times_won", Integer.class);
+                            result.timesLost = result.timesLost + snap.get("times_lost", Integer.class);
+                            result.bestWinStreak = snap.get("best_win_streak", Integer.class);
+                            result.winningStreakCount = snap.get("win_streak_count", Integer.class);
+                            result.averageWinStreak = snap.get("average_win_streak", Integer.class);
+                            result.worstLosingStreak = snap.get("worst_losing_streak", Integer.class);
+
+                            // If user won, keep the loss streak set to 0 and update win streak info.
+                            if (result.winStreak > result.lossStreak) {
+                                Integer existingStreak = snap.get("win_streak", Integer.class);
+
+                                if (existingStreak > 0) {   // Already on win streak
+                                    result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                                } else {                    // New win streak
+                                    result.winningStreakCount++;
+                                    result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                                }
+                                result.winStreak = result.winStreak + existingStreak;
+
+                                if (result.winStreak > result.bestWinStreak) result.bestWinStreak = result.winStreak;
+                            }
+
+                            // If user lost, keep the win streak set to 0 and update loss streak info.
+                            else {
+                                Integer existingLosingStreak = snap.get("loss_streak", Integer.class);
+
+                                result.lossStreak = result.lossStreak + existingLosingStreak;
+                                if (result.lossStreak > result.worstLosingStreak) result.worstLosingStreak = result.lossStreak;
                             }
                         }
 
+                        // Reference to game details
                         metricHash.put("game_ref", m.gameRef);
-                        metricHash.put("wins", win);
-                        metricHash.put("losses", loss);
-                        metricHash.put("win_streak", winStreak);
-                        metricHash.put("loss_streak", lossStreak);
-                        metricHash.put("times_played", timesPlayed);
-                        metricHash.put("first_time_played", firstTimePlayed);
-                        metricHash.put("last_time_played", lastTimePlayed);
+
+                        // Win results
+                        metricHash.put("times_won", result.timesWon);
+                        metricHash.put("win_streak", result.winStreak);
+                        metricHash.put("best_win_streak", result.bestWinStreak);
+                        metricHash.put("average_win_streak", result.averageWinStreak);
+                        metricHash.put("win_streak_count", result.winningStreakCount);
+
+                        // Loss results
+                        metricHash.put("times_lost", result.timesLost);
+                        metricHash.put("loss_streak", result.lossStreak);
+                        metricHash.put("worst_losing_streak", result.worstLosingStreak);
+
+                        // Score results
+                        metricHash.put("best_score", result.bestScore);
+                        metricHash.put("worst_score", result.worstScore);
+                        metricHash.put("average_score", result.averageScore);
+                        metricHash.put("score_total", result.scoreTotal);
+
+                        // Timestamp results
+                        metricHash.put("times_played", result.timesPlayed);
+                        metricHash.put("first_time_played", result.firstTimePlayed);
+                        metricHash.put("last_time_played", result.lastTimePlayed);
 
                         gameMetric.set(metricHash).addOnSuccessListener(v -> {
                             Log.d(TAG, "Successfully updated user game metrics.");
