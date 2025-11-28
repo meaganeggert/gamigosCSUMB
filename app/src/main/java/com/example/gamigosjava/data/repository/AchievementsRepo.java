@@ -138,7 +138,7 @@ public class AchievementsRepo {
             long currentStreak = streakSnap.exists() && streakSnap.contains("current") ? streakSnap.getLong("current") : 1L;
             long bestStreak = streakSnap.exists() && streakSnap.contains("best") ? streakSnap.getLong("best") : 1L;
             if (lastUpdate == null) {
-                lastUpdate = com.google.firebase.Timestamp.now();
+                lastUpdate = Timestamp.now();
             }
             LocalDate lastLoginDay = lastUpdate.toDate()
                     .toInstant()

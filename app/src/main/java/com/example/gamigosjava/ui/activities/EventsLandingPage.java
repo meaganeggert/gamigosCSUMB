@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -98,6 +99,26 @@ public class EventsLandingPage extends BaseActivity {
         eventAdapterActive = new EventAdapter();
         recyclerViewActive.setAdapter(eventAdapterActive);
 
+        // Allow the individual events to be clickable
+        recyclerViewActive.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+           @Override
+           public void onChildViewAttachedToWindow(@NonNull View view) {
+               view.setOnClickListener(v -> {
+                   int index = recyclerViewActive.getChildLayoutPosition(view);
+                   String selectedEventId = eventAdapterActive.getItemAt(index).id;
+
+                   Intent intent = new Intent(EventsLandingPage.this, ViewEventActivity.class);
+                   intent.putExtra("selectedEventId", selectedEventId);
+                   startActivity(intent);
+               });
+           }
+
+           @Override
+           public void onChildViewDetachedFromWindow(@NonNull View view) {
+
+           }
+       });
+
         // Find Past Events Link
         View pastEventsLink = findViewById(R.id.pastEventsTitle);
         if (pastEventsLink != null) {
@@ -139,5 +160,25 @@ public class EventsLandingPage extends BaseActivity {
         recyclerViewPast.setLayoutManager(new LinearLayoutManager(this));
         eventAdapterPast = new EventAdapter();
         recyclerViewPast.setAdapter(eventAdapterPast);
+
+        // Allow the individual events to be clickable
+        recyclerViewPast.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(@NonNull View view) {
+                view.setOnClickListener(v -> {
+                    int index = recyclerViewPast.getChildLayoutPosition(view);
+                    String selectedEventId = eventAdapterPast.getItemAt(index).id;
+
+                    Intent intent = new Intent(EventsLandingPage.this, ViewEventActivity.class);
+                    intent.putExtra("selectedEventId", selectedEventId);
+                    startActivity(intent);
+                });
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(@NonNull View view) {
+
+            }
+        });
     }
 }
