@@ -20,6 +20,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.Source;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class EventsLandingPage extends BaseActivity {
@@ -35,7 +36,7 @@ public class EventsLandingPage extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_events_landing_page);
-        com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
+        Timestamp now = Timestamp.now();
         Log.i(TAG, "Today's date: " + now);
 
         // Set title for NavBar

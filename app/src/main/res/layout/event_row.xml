@@ -38,6 +38,18 @@
             android:layout_height="wrap_content" />
 
         <TextView
+            android:id="@+id/playersAttending"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Players Attended:"
+            android:textColor="#000000"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="sans-serif-light"
+            android:textSize="14sp"
+            />
+
+        <TextView
             android:id="@+id/textPlaytime"
             android:text="Playtime: 45 min"
             android:textColor="#000000"

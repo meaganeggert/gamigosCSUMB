@@ -28,12 +28,15 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
-        TextView title, players, playtime;
+        TextView title, playersAttending, playtime;
+        TextView gamesPlayed;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             image = itemView.findViewById(R.id.imageEvent);
             title = itemView.findViewById(R.id.eventTitle);
+            playersAttending = itemView.findViewById(R.id.playersAttending);
+
         }
     }
 
@@ -58,14 +61,32 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
 
         holder.title.setText(event.title != null ? event.title : "Unknown");
 
-        if (event.imageUrl != null && !event.imageUrl.isEmpty()) {
-            Picasso.get()
-                    .load(event.imageUrl)
-                    .placeholder(R.drawable.ic_launcher_background) // optional placeholder
-                    .error(R.drawable.ic_launcher_foreground)       // fallback if broken
-                    .into(holder.image);
+        // display players that attended dynamically
+        if (event.playersAttending == null || event.playersAttending.isEmpty()) {
+            holder.playersAttending.setText("No players");
         } else {
-            holder.image.setImageResource(R.drawable.ic_launcher_background);
+            StringBuilder playerString = new StringBuilder();
+            for (int i = 0; i < event.playersAttending.size(); i++) {
+                if ( i > 0 ) playerString.append(", ");
+                playerString.append(event.playersAttending.get(i).getName());
+            }
+            holder.playersAttending.setText(playerString);
+
+        }
+
+        if (isActiveEvent) {
+            if (event.imageUrl != null && !event.imageUrl.isEmpty()) {
+                Picasso.get()
+                        .load(event.imageUrl)
+                        .placeholder(R.drawable.ic_launcher_background) // optional placeholder
+                        .error(R.drawable.ic_launcher_foreground)       // fallback if broken
+                        .into(holder.image);
+            } else {
+                holder.image.setImageResource(R.drawable.ic_launcher_background);
+            }
+            holder.image.setVisibility(View.VISIBLE);
+        } else {
+            holder.image.setVisibility(View.GONE);
         }
     }
 

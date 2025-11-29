@@ -2,12 +2,17 @@ package com.example.gamigosjava.data.repository;
 
 import android.util.Log;
 
+import com.example.gamigosjava.data.model.Attendee;
+import com.example.gamigosjava.data.model.EventSummary;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,5 +71,84 @@ public class EventsRepo {
             return null;
         });
 //        return Tasks.whenAll(subTasks).onSuccessTask(v -> eventRef.delete());
+    }
+
+    // Function to load all events and their attendees for display in the event page
+    public Task<List<EventSummary>> loadAllEventAttendees(boolean searchingForActive, int viewLimit) {
+        Timestamp now = Timestamp.now();
+        if (searchingForActive) {
+            Query query = db.collection("events")
+                    .whereGreaterThanOrEqualTo("scheduledAt", now)
+                    .orderBy("scheduledAt", Query.Direction.ASCENDING)
+                    .limit(viewLimit);
+
+            return query.get()
+                    .continueWithTask(task -> {
+                        QuerySnapshot eventSnap = task.getResult();
+
+                        List<Task<EventSummary>> taskToLoadEachEvent = new ArrayList<>();
+
+                        for (DocumentSnapshot eventDoc : eventSnap.getDocuments()) {
+                            taskToLoadEachEvent.add(loadSingleEventAttendees(eventDoc));
+                        }
+
+                        return Tasks.whenAllSuccess(taskToLoadEachEvent);
+                    });
+        } else {
+            Query query = db.collection("events")
+                    .whereLessThan("scheduledAt", now)
+                    .orderBy("scheduledAt", Query.Direction.DESCENDING)
+                    .limit(viewLimit);
+
+            return query.get()
+                    .continueWithTask(task -> {
+                        QuerySnapshot eventSnap = task.getResult();
+
+                        List<Task<EventSummary>> taskToLoadEachEvent = new ArrayList<>();
+
+                        for (DocumentSnapshot eventDoc : eventSnap.getDocuments()) {
+                            taskToLoadEachEvent.add(loadSingleEventAttendees(eventDoc));
+                        }
+
+                        return Tasks.whenAllSuccess(taskToLoadEachEvent);
+                    });
+        }
+
+    }
+
+    private Task<EventSummary> loadSingleEventAttendees (DocumentSnapshot eventDoc) {
+        EventSummary event = eventDoc.toObject(EventSummary.class);
+        assert event != null;
+        event.id = eventDoc.getId();
+
+        CollectionReference invitees_ref = eventDoc.getReference().collection("invitees");
+
+        return invitees_ref.get().continueWithTask( task -> {
+            QuerySnapshot inviteesSnap = task.getResult();
+
+            List<Task<Void>> getAttendeesTasks = new ArrayList<>();
+
+            for (DocumentSnapshot attendeeDoc : inviteesSnap.getDocuments()) {
+                DocumentReference attendee_ref = attendeeDoc.getDocumentReference("userRef");
+
+                if (attendee_ref == null) continue;
+
+                Task<Void> attendeeTask = attendee_ref.get().continueWith(attendeeDocTask -> {
+                    DocumentSnapshot attendeeDocSnap = attendeeDocTask.getResult();
+
+                    Attendee a = new Attendee();
+                    a.setUserId(attendeeDocSnap.getId());
+                    a.setName(attendeeDocSnap.getString("name"));
+                    a.setAvatarUrl(attendeeDocSnap.getString("photoUrl"));
+
+                    event.playersAttending.add(a);
+                    return null;
+                });
+
+                getAttendeesTasks.add(attendeeTask);
+            }
+
+            return Tasks.whenAll(getAttendeesTasks).continueWith(t->event);
+        });
     }
 }

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.EventSummary;
+import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.ui.adapter.EventAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -50,41 +51,33 @@ public class GetAllEventsActivity extends BaseActivity {
         // Get Firestore instance
         db = FirebaseFirestore.getInstance();
 
-        // Read event collection from database
-        Query query = db.collection("events");
-            if(filter.equals("active")) {
-                Log.d(TAG, "Looking for active events");
-                query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
-                        .orderBy("scheduledAt", Query.Direction.ASCENDING);
-            }
-            else {
-                Log.d(TAG, "Looking for past events");
-                query = query.whereLessThan("scheduledAt", now)
-                        .orderBy("scheduledAt", Query.Direction.DESCENDING);
-            }
-
-            query.get(Source.SERVER)
-                .addOnSuccessListener(q -> {
-                    List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : q) {
-                        String id = doc.getId();
-                        String title = doc.getString("title");
-                        String status = doc.getString("status");
-                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
-                        Log.i(TAG, "ScheduledAt " + scheduledTime);
-
-                        eventList.add(new EventSummary(id, title, "", status));
-                    }
-                    eventAdapter.setItems(eventList);
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
-
+        // Get Event Repo
+        EventsRepo eventsRepo = new EventsRepo(db);
 
         // RecyclerView + Adapter
         recyclerView = findViewById(R.id.recyclerViewEvents);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         eventAdapter = new EventAdapter(filter.equals("active"));
         recyclerView.setAdapter(eventAdapter);
+
+        // Read event collection from database
+        if (filter.equalsIgnoreCase("active")) {
+            eventsRepo.loadAllEventAttendees(true, 10)
+                .addOnSuccessListener( events -> {
+                    eventAdapter.setItems(events);
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Error loading active events: ", e);
+                });
+        } else {
+            eventsRepo.loadAllEventAttendees(false, 10)
+                    .addOnSuccessListener( events -> {
+                        eventAdapter.setItems(events);
+                    })
+                    .addOnFailureListener( e-> {
+                        Log.e(TAG, "Error loading past events: ", e);
+                    });
+        }
 
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
