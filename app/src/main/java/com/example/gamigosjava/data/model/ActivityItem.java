@@ -6,12 +6,12 @@ public class ActivityItem {
     private String id;
     private String type; // ACHIEVEMENT_EARNED, EVENT_CREATED, GAME_WON, EVENT_ATTENDED,
     private String actorId; // user id
-    private String actorName; // user who earned the achievement
-    private String targetId; // achievement id
-    private String targetName; // achievement name
-    private String message; // pre-built achievement message
+    private String actorName; // user who earned the achievement, created the event, etc.
+    private String targetId; // achievement id, event id, game id
+    private String targetName; // achievement name, event name, game name
+    private String message; // pre-built message
     private String visibility; // who can see this
-    private Timestamp createdAt; // when achievement was earned
+    private Timestamp createdAt; // when achievement was earned, event was created, game was won
 
     public ActivityItem() {}
 

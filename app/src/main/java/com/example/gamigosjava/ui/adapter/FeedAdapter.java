@@ -1,5 +1,9 @@
 package com.example.gamigosjava.ui.adapter;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder> {
+    private static final String TAG = "FeedAdapter";
 
     private final List<ActivityItem> feedItems = new ArrayList<>();
 
@@ -45,25 +50,92 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
     public void onBindViewHolder(@NonNull FeedViewHolder holder, int position) {
         ActivityItem item = feedItems.get(position);
 
-        // Construct message
-        String firstName = item.getActorName().split(" ")[0];
-        String achievementName = item.getTargetName();
-        String message = firstName + " earned " + achievementName + "!";
+        if (item.getType().equals("ACHIEVEMENT_EARNED")) {
+            // Construct message
+            String firstName = item.getActorName().split(" ")[0];
+            String achievementName = item.getTargetName();
+            String message = firstName + " earned " + achievementName + "!";
 
-        holder.textMessage.setText(message);
+            holder.textTitle.setText(message);
+            holder.textDescript.setVisibility(GONE);
 
-        // Temporary Timestamp
-        // TODO: FIX THIS
-        Timestamp whenAchieved = item.getCreatedAt();
-        LocalDateTime achievementTimeDate = whenAchieved.toDate()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
-        holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+            // Temporary Timestamp
+            Timestamp whenAchieved = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenAchieved.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
 
-        // Trophy image
-        holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
+        } else if (item.getType().equals("EVENT_CREATED")) {
+            // Construct message
+            String firstName = item.getActorName().split(" ")[0];
+            String eventName = item.getTargetName();
+            Log.d(TAG, "eventName: " + eventName);
+            String message = firstName + " created an event!";
+
+            holder.textTitle.setText(message);
+            holder.textDescript.setVisibility(VISIBLE);
+            holder.textDescript.setText(eventName);
+
+            // Temporary Timestamp
+            Timestamp whenCreated = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenCreated.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.ic_event_24);
+        } else if (item.getType().equals("FRIEND_ADDED")) {
+            // Construct message
+            String friendOneName = item.getActorName().split(" ")[0];
+            String friendTwoName = item.getTargetName().split(" ")[0];
+            String message = friendOneName + " and " + friendTwoName + " are now friends.";
+
+            holder.textTitle.setText(message);
+            holder.textDescript.setVisibility(GONE);
+
+            // Temporary Timestamp
+            Timestamp whenCreated = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenCreated.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.ic_friends_24);
+        } else if (item.getType().equals("EVENT_ATTENDED")) {
+            // TODO: Fill this in
+        } else if (item.getType().equals("GAME_WON")) {
+            // TODO: Fill this in
+        } else {
+            holder.textTitle.setText("Error retrieving content.");
+            Log.d(TAG, "ActivityItem Type: " + item.getType());
+
+            // Temporary Timestamp
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            if (item != null) {
+                Timestamp whenAchieved = item.getCreatedAt();
+                LocalDateTime achievementTimeDate = whenAchieved.toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime();
+
+                holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+            }
+            holder.textTimestamp.setText(LocalDateTime.now().format(dateFormatter));
+
+            // Question image
+            holder.imageIcon.setImageResource(R.drawable.ic_question_24);
+        }
     }
 
     @Override
@@ -73,14 +145,16 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
     static class FeedViewHolder extends RecyclerView.ViewHolder {
         ImageView imageIcon;
-        TextView textMessage;
+        TextView textTitle;
+        TextView textDescript;
         TextView textTimestamp;
 
         FeedViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageIcon = itemView.findViewById(R.id.feed_AchievementIcon);
-            textMessage = itemView.findViewById(R.id.feed_AchievementTitle);
-            textTimestamp = itemView.findViewById(R.id.feed_AchievementTime);
+            imageIcon = itemView.findViewById(R.id.feed_icon);
+            textTitle = itemView.findViewById(R.id.feed_title);
+            textDescript = itemView.findViewById(R.id.feed_description);
+            textTimestamp = itemView.findViewById(R.id.feed_time);
         }
     }
 }
