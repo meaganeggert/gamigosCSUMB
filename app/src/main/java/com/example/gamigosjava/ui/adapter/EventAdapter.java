@@ -20,6 +20,11 @@ import java.util.List;
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> {
 
     private final List<EventSummary> events = new ArrayList<>();
+    private final boolean isActiveEvent; // boolean to display active/past events differently
+
+    public EventAdapter(boolean isActiveEvent) {
+        this.isActiveEvent = isActiveEvent;
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
@@ -35,9 +40,15 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.event_row, parent, false);
-        return new ViewHolder(view);
+        if (isActiveEvent) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.event_row, parent, false);
+            return new ViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.event_row_past, parent, false);
+            return new ViewHolder(view);
+        }
     }
 
     @Override

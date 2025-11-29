@@ -83,7 +83,7 @@ public class GetAllEventsActivity extends BaseActivity {
         // RecyclerView + Adapter
         recyclerView = findViewById(R.id.recyclerViewEvents);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        eventAdapter = new EventAdapter();
+        eventAdapter = new EventAdapter(filter.equals("active"));
         recyclerView.setAdapter(eventAdapter);
 
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {

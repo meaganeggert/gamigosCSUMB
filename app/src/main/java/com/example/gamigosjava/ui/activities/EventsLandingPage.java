@@ -96,7 +96,7 @@ public class EventsLandingPage extends BaseActivity {
         // RecyclerView + Adapter
         recyclerViewActive = findViewById(R.id.recyclerViewActiveEvents);
         recyclerViewActive.setLayoutManager(new LinearLayoutManager(this));
-        eventAdapterActive = new EventAdapter();
+        eventAdapterActive = new EventAdapter(true);
         recyclerViewActive.setAdapter(eventAdapterActive);
 
         // Allow the individual events to be clickable
@@ -158,7 +158,7 @@ public class EventsLandingPage extends BaseActivity {
         // RecyclerView + Adapter
         recyclerViewPast = findViewById(R.id.recyclerViewPastEvents);
         recyclerViewPast.setLayoutManager(new LinearLayoutManager(this));
-        eventAdapterPast = new EventAdapter();
+        eventAdapterPast = new EventAdapter(false);
         recyclerViewPast.setAdapter(eventAdapterPast);
 
         // Allow the individual events to be clickable
