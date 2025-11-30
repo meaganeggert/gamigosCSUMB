@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:padding="8dp"
     android:layout_width="match_parent"
@@ -105,6 +106,18 @@
             android:fontFamily="sans-serif-light"
             android:textSize="14sp"
            />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/attendeeRecycler"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/small_avatar_image"
+            tools:itemCount="3"
+        />
 
     </LinearLayout>
 </LinearLayout>

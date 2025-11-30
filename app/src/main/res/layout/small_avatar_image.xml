@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.imageview.ShapeableImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/avatarImage"
+    android:layout_width="32dp"
+    android:layout_height="32dp"
+    android:layout_marginEnd="4dp"
+    android:scaleType="centerCrop"
+    android:clipToOutline="true"
+    app:shapeAppearanceOverlay="@style/CircularImage"
+    android:src="@drawable/ic_person_24" />
