@@ -599,6 +599,7 @@ public class ViewEventActivity extends BaseActivity {
             if (snap == null) {
                 Log.d(TAG, "Couldn't find game details");
             }
+
             String title = snap.getString("title");
             String imageUrl = snap.getString("imageUrl");
             Integer maxPlayers = snap.get("maxPlayers", Integer.class);
@@ -754,6 +755,18 @@ public class ViewEventActivity extends BaseActivity {
             endEvent.setVisibility(Button.VISIBLE);
             deleteEvent.setVisibility(Button.VISIBLE);
             updateEventButton.setVisibility(Button.VISIBLE);
+        }
+
+        if (event.status.equals("past")) {
+            startEvent.setEnabled(false);
+            endEvent.setEnabled(false);
+            deleteEvent.setEnabled(false);
+            updateEventButton.setEnabled(false);
+
+            for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                Button deleteMatchBtn = recyclerView.getChildAt(i).findViewById(R.id.button_deleteMatch);
+                deleteMatchBtn.setEnabled(false);
+            }
         }
 
         CollectionReference inviteRef = db.collection("events")

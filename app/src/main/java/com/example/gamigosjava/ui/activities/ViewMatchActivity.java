@@ -24,6 +24,7 @@ import com.example.gamigosjava.data.api.BGGMappers;
 import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
+import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
@@ -66,6 +67,7 @@ public class ViewMatchActivity extends BaseActivity {
     // to be used if we are not updated a match and instead are creating a new one.
     private String eventId;
     private String matchId;
+    private Event eventItem;
 
 
 
@@ -77,6 +79,7 @@ public class ViewMatchActivity extends BaseActivity {
     private RecyclerView recyclerView;
     private ScoresAdapter scoresAdapter;
 
+    private Button saveButton;
 
     // TODO: get match info.
     @Override
@@ -91,8 +94,9 @@ public class ViewMatchActivity extends BaseActivity {
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm();
         getMatchDetails(matchId);
+        getEventDetails(eventId);
 
-        Button saveButton = findViewById(R.id.button_saveMatch);
+        saveButton = findViewById(R.id.button_saveMatch);
         if (saveButton != null) {
             saveButton.setOnClickListener(v -> {
                 uploadGameInfo();
@@ -274,6 +278,40 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
+    private void getEventDetails(String eventId) {
+        if (currentUser == null) {
+            Log.e(TAG, "Failed to get event details: User is not logged in.");
+            return;
+        }
+
+        DocumentReference eventRef = db.collection("events")
+                .document(eventId);
+
+        eventRef.get().addOnSuccessListener(snap -> {
+            if (snap == null) {
+                Log.e(TAG, "Event " + eventId + " not found.");
+                return;
+            }
+
+            eventItem = new Event();
+            eventItem.id = snap.getId();
+            eventItem.createdAt = snap.getTimestamp("createdAt");
+            eventItem.endedAt = snap.getTimestamp("endedAt");
+            eventItem.scheduledAt = snap.getTimestamp("scheduledAt");
+            eventItem.title = snap.getString("title");
+            eventItem.visibility = snap.getString("visibility");
+            eventItem.status = snap.getString("status");
+            eventItem.hostId = snap.getString("hostId");
+            eventItem.notes = snap.getString("notes");
+
+            if(eventItem.status.equals("past")) {
+                saveButton.setEnabled(false);
+            }
+
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage());
+        });
+    }
     private void getHost() {
         db.collection("events").document(eventId).get().addOnSuccessListener(snap -> {
             if (snap.exists()) {
