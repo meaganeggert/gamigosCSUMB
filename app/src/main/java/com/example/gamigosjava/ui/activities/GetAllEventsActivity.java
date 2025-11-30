@@ -73,6 +73,7 @@ public class GetAllEventsActivity extends BaseActivity {
             eventsRepo.loadAllEventAttendees(false, 10)
                     .addOnSuccessListener( events -> {
                         eventAdapter.setItems(events);
+                        Log.i(TAG, "Past events loaded successfully");
                     })
                     .addOnFailureListener( e-> {
                         Log.e(TAG, "Error loading past events: ", e);

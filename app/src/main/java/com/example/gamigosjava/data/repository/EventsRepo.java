@@ -77,6 +77,7 @@ public class EventsRepo {
     public Task<List<EventSummary>> loadAllEventAttendees(boolean searchingForActive, int viewLimit) {
         Timestamp now = Timestamp.now();
         if (searchingForActive) {
+            Log.i(TAG, "Loading event details for active events");
             Query query = db.collection("events")
                     .whereGreaterThanOrEqualTo("scheduledAt", now)
                     .orderBy("scheduledAt", Query.Direction.ASCENDING)
@@ -95,6 +96,7 @@ public class EventsRepo {
                         return Tasks.whenAllSuccess(taskToLoadEachEvent);
                     });
         } else {
+            Log.i(TAG, "Loading event details for past events");
             Query query = db.collection("events")
                     .whereLessThan("scheduledAt", now)
                     .orderBy("scheduledAt", Query.Direction.DESCENDING)
@@ -117,6 +119,7 @@ public class EventsRepo {
     }
 
     private Task<EventSummary> loadSingleEventAttendees (DocumentSnapshot eventDoc) {
+
         EventSummary event = eventDoc.toObject(EventSummary.class);
         assert event != null;
         event.id = eventDoc.getId();
@@ -131,15 +134,19 @@ public class EventsRepo {
             for (DocumentSnapshot attendeeDoc : inviteesSnap.getDocuments()) {
                 DocumentReference attendee_ref = attendeeDoc.getDocumentReference("userRef");
 
-                if (attendee_ref == null) continue;
+                if (attendee_ref == null) {
+                    Log.d(TAG, "Attendee_ref = null");
+                    continue;
+                }
 
                 Task<Void> attendeeTask = attendee_ref.get().continueWith(attendeeDocTask -> {
                     DocumentSnapshot attendeeDocSnap = attendeeDocTask.getResult();
 
                     Attendee a = new Attendee();
                     a.setUserId(attendeeDocSnap.getId());
-                    a.setName(attendeeDocSnap.getString("name"));
+                    a.setName(attendeeDocSnap.getString("displayName"));
                     a.setAvatarUrl(attendeeDocSnap.getString("photoUrl"));
+                    Log.d(TAG, "Attendee: " + a.getName() + " added to event " + event.title);
 
                     event.playersAttending.add(a);
                     return null;
@@ -148,7 +155,10 @@ public class EventsRepo {
                 getAttendeesTasks.add(attendeeTask);
             }
 
-            return Tasks.whenAll(getAttendeesTasks).continueWith(t->event);
+            return Tasks.whenAll(getAttendeesTasks).continueWith(t-> {
+                Log.d(TAG, "Final attendee count for event " + event.title + ": " + (event.playersAttending != null ? event.playersAttending.size() : -37));
+                return event;
+            });
         });
     }
 }

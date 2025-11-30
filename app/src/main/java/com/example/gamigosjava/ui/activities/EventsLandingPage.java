@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.EventSummary;
+import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.ui.adapter.EventAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -70,27 +71,30 @@ public class EventsLandingPage extends BaseActivity {
         // Get Firestore instance
         db = FirebaseFirestore.getInstance();
 
+        // Get EventsRepo
+        EventsRepo eventsRepo = new EventsRepo(db);
+
         // Read event collection from database
-        Query query = db.collection("events");
-        query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
-                .orderBy("scheduledAt", Query.Direction.ASCENDING)
-                .limit(2); // Pull active events
-
-        query.get(Source.SERVER)
-                .addOnSuccessListener(q -> {
-                    List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : q) {
-                        String id = doc.getId();
-                        String title = doc.getString("title");
-                        String status = doc.getString("status");
-                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
-                        Log.i(TAG, "ScheduledAt " + scheduledTime);
-
-                        eventList.add(new EventSummary(id, title, "", status));
-                    }
-                    eventAdapterActive.setItems(eventList);
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
+//        Query query = db.collection("events");
+//        query = query.whereGreaterThanOrEqualTo("scheduledAt", now)
+//                .orderBy("scheduledAt", Query.Direction.ASCENDING)
+//                .limit(2); // Pull active events
+//
+//        query.get(Source.SERVER)
+//                .addOnSuccessListener(q -> {
+//                    List<EventSummary> eventList = new ArrayList<>();
+//                    for (DocumentSnapshot doc : q) {
+//                        String id = doc.getId();
+//                        String title = doc.getString("title");
+//                        String status = doc.getString("status");
+//                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
+//                        Log.i(TAG, "ScheduledAt " + scheduledTime);
+//
+//                        eventList.add(new EventSummary(id, title, "", status));
+//                    }
+//                    eventAdapterActive.setItems(eventList);
+//                })
+//                .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
 
 
 
@@ -99,6 +103,15 @@ public class EventsLandingPage extends BaseActivity {
         recyclerViewActive.setLayoutManager(new LinearLayoutManager(this));
         eventAdapterActive = new EventAdapter(true);
         recyclerViewActive.setAdapter(eventAdapterActive);
+
+        // Changes to load events with attendees
+        eventsRepo.loadAllEventAttendees(true, 10)
+                .addOnSuccessListener( events -> {
+                    eventAdapterActive.setItems(events);
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Error loading active events: ", e);
+                });
 
         // Allow the individual events to be clickable
         recyclerViewActive.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
@@ -134,33 +147,42 @@ public class EventsLandingPage extends BaseActivity {
         }
 
         // Read event collection from database
-        query = db.collection("events");
-        query = query.whereLessThan("scheduledAt", now)
-                .orderBy("scheduledAt", Query.Direction.DESCENDING)
-                .limit(2); // Pull past events
-
-        query.get(Source.SERVER)
-                .addOnSuccessListener(q -> {
-                    List<EventSummary> eventList = new ArrayList<>();
-                    for (DocumentSnapshot doc : q) {
-                        String id = doc.getId();
-                        String title = doc.getString("title");
-                        String status = doc.getString("status");
-                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
-                        Log.i(TAG, "ScheduledAt " + scheduledTime);
-
-                        eventList.add(new EventSummary(id, title, "", status));
-                    }
-                    eventAdapterPast.setItems(eventList);
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
-
+//        query = db.collection("events");
+//        query = query.whereLessThan("scheduledAt", now)
+//                .orderBy("scheduledAt", Query.Direction.DESCENDING)
+//                .limit(2); // Pull past events
+//
+//        query.get(Source.SERVER)
+//                .addOnSuccessListener(q -> {
+//                    List<EventSummary> eventList = new ArrayList<>();
+//                    for (DocumentSnapshot doc : q) {
+//                        String id = doc.getId();
+//                        String title = doc.getString("title");
+//                        String status = doc.getString("status");
+//                        Timestamp scheduledTime = doc.getTimestamp("scheduledAt");
+//                        Log.i(TAG, "ScheduledAt " + scheduledTime);
+//
+//                        eventList.add(new EventSummary(id, title, "", status));
+//                    }
+//                    eventAdapterPast.setItems(eventList);
+//                })
+//                .addOnFailureListener(e -> Log.e(TAG, "Error: ", e));
 
         // RecyclerView + Adapter
         recyclerViewPast = findViewById(R.id.recyclerViewPastEvents);
         recyclerViewPast.setLayoutManager(new LinearLayoutManager(this));
         eventAdapterPast = new EventAdapter(false);
         recyclerViewPast.setAdapter(eventAdapterPast);
+
+        // Changes to load events with attendees
+        eventsRepo.loadAllEventAttendees(false, 2)
+                .addOnSuccessListener( events -> {
+                    eventAdapterPast.setItems(events);
+                    Log.i(TAG, "Past events loaded successfully");
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Error loading past events: ", e);
+                });
 
         // Allow the individual events to be clickable
         recyclerViewPast.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
