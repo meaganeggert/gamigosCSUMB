@@ -123,6 +123,8 @@ public class EventsRepo {
         EventSummary event = eventDoc.toObject(EventSummary.class);
         assert event != null;
         event.id = eventDoc.getId();
+        String hostId = eventDoc.getString("hostId");
+        assert hostId != null;
 
         CollectionReference invitees_ref = eventDoc.getReference().collection("invitees");
 
@@ -130,6 +132,31 @@ public class EventsRepo {
             QuerySnapshot inviteesSnap = task.getResult();
 
             List<Task<Void>> getAttendeesTasks = new ArrayList<>();
+
+            DocumentReference host_ref = db.collection("users").document(hostId);
+
+            if (host_ref == null) {
+                Log.d(TAG, "Host_ref = null");
+            } else {
+
+                // Save the info for all of the attendees (event's invitee collection)
+                Task<Void> hostTask = host_ref.get().continueWith(hostDocTask -> {
+                    DocumentSnapshot hostDocSnap = hostDocTask.getResult();
+                    if (hostDocSnap != null && hostDocSnap.exists()) {
+                        Attendee host = new Attendee();
+                        host.setUserId(hostDocSnap.getId());
+                        host.setName(hostDocSnap.getString("displayName"));
+                        host.setAvatarUrl(hostDocSnap.getString("photoUrl"));
+                        host.setHost(true);
+                        event.playersAttending.add(0, host); // Add host to beginning of list
+                        Log.d(TAG, "Host: " + host.getName() + " added to event " + event.title);
+                    } else {
+                        Log.d(TAG, "Error adding host");
+                    }
+                    return null;
+                });
+                getAttendeesTasks.add(hostTask);
+            }
 
             for (DocumentSnapshot attendeeDoc : inviteesSnap.getDocuments()) {
                 DocumentReference attendee_ref = attendeeDoc.getDocumentReference("userRef");
@@ -139,6 +166,7 @@ public class EventsRepo {
                     continue;
                 }
 
+                // Save the info for all of the attendees (event's invitee collection)
                 Task<Void> attendeeTask = attendee_ref.get().continueWith(attendeeDocTask -> {
                     DocumentSnapshot attendeeDocSnap = attendeeDocTask.getResult();
 

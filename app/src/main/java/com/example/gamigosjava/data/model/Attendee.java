@@ -4,6 +4,11 @@ public class Attendee {
     private String userId;
     private String name;
     private String avatarUrl;
+    boolean isHost;
+
+
+
+
 
     public Attendee() {}
 
@@ -30,5 +35,13 @@ public class Attendee {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isHost() {
+        return isHost;
+    }
+
+    public void setHost(boolean host) {
+        isHost = host;
     }
 }
