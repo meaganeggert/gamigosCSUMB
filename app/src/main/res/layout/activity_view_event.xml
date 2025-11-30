@@ -29,7 +29,8 @@
                 android:layout_height="wrap_content"
                 android:text="Start Event"
                 android:layout_gravity="center_horizontal"
-                android:layout_margin="3dp"/>
+                android:layout_margin="3dp"
+                android:visibility="gone"/>
             <Button
                 android:id="@+id/button_endEvent"
                 android:layout_width="wrap_content"
@@ -37,7 +38,8 @@
                 android:text="End Event"
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="3dp"
-                android:enabled="false"/>
+                android:enabled="false"
+                android:visibility="gone"/>
         </LinearLayout>
 
 
@@ -146,7 +148,8 @@
                 android:layout_width="155dp"
                 android:layout_height="wrap_content"
                 android:text="Save Changes"
-                android:layout_gravity="center_horizontal"/>
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"/>
 
         </LinearLayout>
 
@@ -157,7 +160,8 @@
             android:text="Delete Event"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="20dp"
-            android:backgroundTint="@color/biometric_error_color"/>
+            android:backgroundTint="@color/biometric_error_color"
+            android:visibility="gone"/>
 
     </LinearLayout>
 

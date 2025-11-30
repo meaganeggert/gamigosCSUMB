@@ -84,7 +84,7 @@ public class ViewEventActivity extends BaseActivity {
     List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
 
-    Button startEvent, endEvent;
+    Button startEvent, endEvent, deleteEvent, updateEventButton;
     List<Image> images;
     ImageAdapter imageAdapter;
 
@@ -151,9 +151,9 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button saveChanges = findViewById(R.id.button_saveEvent);
-        if (saveChanges != null) {
-            saveChanges.setOnClickListener(v -> {
+        updateEventButton = findViewById(R.id.button_saveEvent);
+        if (updateEventButton != null) {
+            updateEventButton.setOnClickListener(v -> {
                 if (eventItem.id == null) {
                     Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
                     return;
@@ -177,7 +177,7 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button deleteEvent = findViewById(R.id.button_deleteEvent);
+        deleteEvent = findViewById(R.id.button_deleteEvent);
         if (deleteEvent != null) {
             deleteEvent.setOnClickListener(v -> {
                 if (eventItem.id == null) {
@@ -748,6 +748,13 @@ public class ViewEventActivity extends BaseActivity {
         notes.setText(event.notes);
         schedule.setText(event.scheduledAt.toDate().toString());
         visibility.setSelection(visibilityList.indexOf(event.visibility));
+
+        if (currentUser.getUid().equals(event.hostId)) {
+            startEvent.setVisibility(Button.VISIBLE);
+            endEvent.setVisibility(Button.VISIBLE);
+            deleteEvent.setVisibility(Button.VISIBLE);
+            updateEventButton.setVisibility(Button.VISIBLE);
+        }
 
         CollectionReference inviteRef = db.collection("events")
                 .document(eventId)
