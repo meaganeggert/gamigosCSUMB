@@ -21,12 +21,14 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "FirebaseMessagingService";
 
     private static final String CHANNEL_MESSAGES = "channel_messages";
     private static final String CHANNEL_FRIEND_REQUESTS = "channel_friend_requests";
+    private static final String CHANNEL_EVENT_INVITES = "channel_event_invites";
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
@@ -38,17 +40,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Map<String, String> data = remoteMessage.getData();
         String type = data.get("type");
         String senderUid = data.get("senderUid");
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
 
         if ("message".equals(type)) {
-            if (senderUid.equals(currentUserId) && currentUserId != null) {
+            assert senderUid != null;
+            if (senderUid.equals(currentUserId)) {
                 Log.i(TAG, "Ignoring message from myself: " + currentUserName);
                 return;
             }
             showMessageNotification(data);
         } else if ("friend_request".equals(type)) {
             showFriendRequestNotification(data);
+        } else if ("event_invite".equals(type)) {
+            showEventInviteNotification(data);
         } else if (remoteMessage.getNotification() != null) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                     .setSmallIcon(R.drawable.ic_notification_24)
@@ -60,6 +65,59 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             manager.notify((int) (System.currentTimeMillis() & 0xfffffff), builder.build());
         }
+    }
+
+    private void showEventInviteNotification(Map<String, String> data) {
+        String eventId = data.get("eventId");
+        String eventTitle = data.get("eventTitle");
+        String hostName = data.get("hostName");
+
+        createChannelIfNeeded(CHANNEL_EVENT_INVITES, "Event Invites");
+
+        String titleText = "Event invite";
+        String bodyText;
+
+        if (hostName != null && !hostName.isEmpty() && eventTitle != null && !eventTitle.isEmpty()) {
+            bodyText = hostName + " invited you to " + eventTitle;
+        } else if (eventTitle != null && !eventTitle.isEmpty()) {
+            bodyText = "You were invited to " + eventTitle;
+        } else {
+            bodyText = "You received an event invite";
+        }
+
+        Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
+        intent.putExtra("selectedEventId", eventId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = (eventId != null ? eventId.hashCode() : (int) System.currentTimeMillis());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_INVITES)
+                        .setSmallIcon(R.drawable.ic_event_24)
+                        .setContentTitle(titleText)
+                        .setContentText(bodyText)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bodyText))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
     }
 
 
@@ -112,7 +170,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                 .setSmallIcon(R.drawable.outline_mark_email_unread_24)
-                .setContentTitle(title)           // group name OR sender name
+                .setContentTitle(title)
                 .setContentText(
                         isGroup && senderName != null
                                 ? senderName + ": " + messagePreview
