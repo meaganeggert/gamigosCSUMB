@@ -37,6 +37,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
         TextView gamesPlayed;
 
         RecyclerView attendeeAvatarRecycler;
+        RecyclerView matchViewRecycler;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -44,9 +45,14 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             title = itemView.findViewById(R.id.eventTitle);
             playtime = itemView.findViewById(R.id.textPlaytime);
             playersAttending = itemView.findViewById(R.id.playersAttending);
+            gamesPlayed = itemView.findViewById(R.id.matchesPlayed);
             attendeeAvatarRecycler = itemView.findViewById(R.id.attendeeRecycler);
+            matchViewRecycler = itemView.findViewById(R.id.matchRecycler);
             if ( attendeeAvatarRecycler != null ) {
                 attendeeAvatarRecycler.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            }
+            if ( matchViewRecycler != null ) {
+                matchViewRecycler.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             }
         }
     }
@@ -77,6 +83,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             holder.playersAttending.setText("No players");
             holder.attendeeAvatarRecycler.setAdapter(null);
             holder.attendeeAvatarRecycler.setVisibility(GONE);
+            holder.matchViewRecycler.setAdapter(null);
+            holder.matchViewRecycler.setVisibility(GONE);
         } else {
             // Uncomment if you want to display names instead of avatars
 //            StringBuilder playerString = new StringBuilder();
@@ -92,6 +100,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             holder.attendeeAvatarRecycler.setVisibility(VISIBLE);
             AttendeeAdapter attendeeAdapter = new AttendeeAdapter(event.playersAttending);
             holder.attendeeAvatarRecycler.setAdapter(attendeeAdapter);
+
+            holder.gamesPlayed.setText("");
+            holder.gamesPlayed.setVisibility(GONE);
+            holder.matchViewRecycler.setVisibility(VISIBLE);
+            MatchViewAdapter matchAdapter = new MatchViewAdapter(event.matchesPlayed);
+            holder.matchViewRecycler.setAdapter(matchAdapter);
         }
 
         if (isActiveEvent) {

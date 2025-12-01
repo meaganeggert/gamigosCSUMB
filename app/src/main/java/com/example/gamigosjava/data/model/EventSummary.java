@@ -10,7 +10,7 @@ public class EventSummary {
     public String status;
     public String timeElapsed;
     public List<Attendee> playersAttending = new ArrayList<>();
-
+    public List<Match> matchesPlayed = new ArrayList<>();
     public EventSummary() {}
 
 //    public EventSummary(String id, String title, String imageUrl, String status) {
@@ -20,13 +20,16 @@ public class EventSummary {
 //        this.status = status;
 //    }
 
-    public EventSummary(String id, String title, String imageUrl, String status, List<Attendee> playersAttending) {
+    public EventSummary(String id, String title, String imageUrl, String status, List<Attendee> playersAttending, List<Match> matchesPlayed ) {
         this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
         this.status = status;
         if (playersAttending != null) {
             this.playersAttending = playersAttending;
+        }
+        if (matchesPlayed != null) {
+            this.matchesPlayed = matchesPlayed;
         }
     }
 }

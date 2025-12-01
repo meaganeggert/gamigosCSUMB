@@ -119,5 +119,52 @@
             tools:itemCount="3"
         />
 
+        <!--    Horizontal Rule -->
+        <View
+            android:id="@+id/gamesPlayedHR"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/medgrey"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            />
+
+        <TextView
+            android:id="@+id/matchesPlayedTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Games Played:"
+            android:textColor="#000000"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="sans-serif-light"
+            android:textSize="14sp"
+            />
+
+        <TextView
+            android:id="@+id/matchesPlayed"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Game 1, Game 2, Game 3"
+            android:textColor="#000000"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="sans-serif-light"
+            android:textSize="14sp"
+            />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/matchRecycler"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/small_avatar_image"
+            tools:itemCount="3"
+            />
+
     </LinearLayout>
 </LinearLayout>

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.example.gamigosjava.data.model.Attendee;
 import com.example.gamigosjava.data.model.EventSummary;
+import com.example.gamigosjava.data.model.Match;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
@@ -22,7 +23,9 @@ public class EventsRepo {
 
     private final FirebaseFirestore db;
 
-    public EventsRepo(FirebaseFirestore db) {this.db = db;}
+    public EventsRepo(FirebaseFirestore db) {
+        this.db = db;
+    }
 
     public Task<Void> deleteEvent(DocumentReference eventRef) {
         // delete last
@@ -44,7 +47,7 @@ public class EventsRepo {
             }
 
             List<Task<Void>> matchTasks = new ArrayList<>();
-            for (DocumentSnapshot matchSnap: snaps) {
+            for (DocumentSnapshot matchSnap : snaps) {
                 Log.d(TAG, "Deleting match: " + matchSnap.getId());
                 DocumentReference matchRef = matchSnap.getDocumentReference("matchRef");
                 matchTasks.add(matchRef.delete());
@@ -118,7 +121,7 @@ public class EventsRepo {
 
     }
 
-    private Task<EventSummary> loadSingleEventDetails (DocumentSnapshot eventDoc) {
+    private Task<EventSummary> loadSingleEventDetails(DocumentSnapshot eventDoc) {
 
         EventSummary event = eventDoc.toObject(EventSummary.class);
         assert event != null;
@@ -140,12 +143,13 @@ public class EventsRepo {
             String formattedTimeElapsed = String.format("%02d:%02d:%02d", hours, minutes, seconds);
             event.timeElapsed = formattedTimeElapsed;
         } else {
-            event.timeElapsed = "Data Unavailable";
+            event.timeElapsed = "Playtime unavailable";
         }
 
         CollectionReference invitees_ref = eventDoc.getReference().collection("invitees");
+        CollectionReference matches_ref = eventDoc.getReference().collection("matches");
 
-        return invitees_ref.get().continueWithTask( task -> {
+        return invitees_ref.get().continueWithTask(task -> {
             QuerySnapshot inviteesSnap = task.getResult();
 
             List<Task<Void>> getAttendeesTasks = new ArrayList<>();
@@ -200,9 +204,45 @@ public class EventsRepo {
                 getAttendeesTasks.add(attendeeTask);
             }
 
-            return Tasks.whenAll(getAttendeesTasks).continueWith(t-> {
-                Log.d(TAG, "Final attendee count for event " + event.title + ": " + (event.playersAttending != null ? event.playersAttending.size() : -37));
-                return event;
+            return matches_ref.get().continueWithTask(matchTask -> {
+                QuerySnapshot gamesSnap = matchTask.getResult();
+
+                List<Task<Void>> gamesTasks = new ArrayList<>();
+
+                if (gamesSnap != null) {
+                    for (DocumentSnapshot matchDoc : gamesSnap.getDocuments()) {
+                        DocumentReference game_ref = matchDoc.getDocumentReference("matchRef");
+
+                        if (game_ref == null) {
+                            Log.d(TAG, "Game_ref = null");
+                            continue;
+                        }
+
+                        // Save the info for all of the attendees (event's invitee collection)
+                        Task<Void> gameTask = game_ref.get().continueWith(gameDocTask -> {
+                            DocumentSnapshot gameDocSnap = gameDocTask.getResult();
+
+                            Match m = new Match();
+                            m.id = gameDocSnap.getId();
+                            m.imageUrl = gameDocSnap.getString("imageUrl");
+                            Log.d(TAG, "Game: " + m.id + " added to event " + event.title);
+
+                            event.matchesPlayed.add(m);
+                            return null;
+                        });
+
+                        gamesTasks.add(gameTask);
+                    }
+                }
+
+                List<Task<Void>> allTasks = new ArrayList<>();
+                allTasks.addAll(getAttendeesTasks);
+                allTasks.addAll(gamesTasks);
+
+                return Tasks.whenAll(allTasks).continueWith(t -> {
+                    Log.d(TAG, "Final attendee count for event " + event.title + ": " + (event.playersAttending != null ? event.playersAttending.size() : -37));
+                    return event;
+                });
             });
         });
     }
