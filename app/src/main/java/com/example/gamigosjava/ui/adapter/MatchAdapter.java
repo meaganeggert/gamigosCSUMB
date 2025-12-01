@@ -3,6 +3,7 @@ package com.example.gamigosjava.ui.adapter;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.MatchSummary;
+import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -81,23 +83,29 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            DocumentReference matchRefDoc = db.collection("events")
-                                    .document(match.eventId)
-                                    .collection("matches")
-                                    .document(match.id);
+                            if (!match.eventId.isEmpty()) {
+                                DocumentReference matchRefDoc = db.collection("events")
+                                        .document(match.eventId)
+                                        .collection("matches")
+                                        .document(match.id);
+
+                                matchRefDoc.delete().onSuccessTask(refVoid -> {
+                                    Log.d("Match Adapter", "Deleted match from event " + match.eventId);
+                                    return null;
+                                });
+                            }
 
                             DocumentReference matchDoc = db.collection("matches")
                                     .document(match.id);
 
-                            matchRefDoc.delete().onSuccessTask(refVoid -> {
-                                matchDoc.delete().onSuccessTask(matchVoid -> {
-                                    Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
-//                                    matches.remove(position);
-//                                    notifyDataSetChanged();
-                                    return null;
-                                });
+                            FirestoreUtils.deleteCollection(db, matchDoc.collection("players"), 10);
+                            matchDoc.delete().onSuccessTask(matchVoid -> {
+                                Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
+                                    matches.remove(match);
+                                    notifyDataSetChanged();
                                 return null;
                             });
+
                         }
                     })
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

@@ -16,4 +16,5 @@ public class Match {
     public Timestamp endedAt;
     public DocumentReference gameRef;
     public CollectionReference playersRef;
+    public String hostId;
 }

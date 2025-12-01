@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.activities.QuickPlayActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp">
+
+            <Button
+                android:id="@+id/button_startMatch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Match"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"/>
+            <Button
+                android:id="@+id/button_endMatch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="End Match"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="3dp"
+                android:enabled="false"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/matchFormContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical">
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_deleteMatch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Delete"/>
+
+
+
+    </LinearLayout>
+
+
+
+</ScrollView>

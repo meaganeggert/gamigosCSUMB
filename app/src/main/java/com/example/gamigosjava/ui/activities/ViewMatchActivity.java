@@ -88,11 +88,19 @@ public class ViewMatchActivity extends BaseActivity {
         setChildLayout(R.layout.activity_view_match);
         setTopTitle("Game");
 
+        api = BGGService.getInstance();
+        auth = FirebaseAuth.getInstance();
+        currentUser = auth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
+        matchItem = new Match();
+        matchItem.hostId = currentUser.getUid();
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm();
+
         getMatchDetails(matchId);
         getEventDetails(eventId);
 
@@ -117,15 +125,9 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
     private void addMatchForm() {
-        api = BGGService.getInstance();
-        auth = FirebaseAuth.getInstance();
-        currentUser = auth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
-
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
-
 
         inviteeAdapter = new ArrayAdapter<>(
                 this,
@@ -229,7 +231,6 @@ public class ViewMatchActivity extends BaseActivity {
             });
         }
 
-        matchItem = new Match();
 
     }
 
@@ -241,7 +242,7 @@ public class ViewMatchActivity extends BaseActivity {
             return;
         }
 
-        if (matchId.isEmpty()) {
+        if (matchId.isEmpty() || matchId == null) {
             Log.d(TAG, "Cannot get players, no match Id selected.");
             return;
         }
@@ -284,6 +285,8 @@ public class ViewMatchActivity extends BaseActivity {
             return;
         }
 
+        if (eventId.isEmpty()) return;
+
         DocumentReference eventRef = db.collection("events")
                 .document(eventId);
 
@@ -313,6 +316,27 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
     private void getHost() {
+        if (eventId.isEmpty() || eventId == null) {
+            db.collection("users").document(matchItem.hostId).get().addOnSuccessListener(s -> {
+                if (!s.exists()) return;
+
+                Friend host = new Friend();
+                host.id = s.getId();
+                host.displayName = s.getString("displayName");
+                host.friendUId = s.getString("uid");
+
+                Log.d(TAG, "HOST NAME: " + host.displayName);
+                Log.d(TAG, "HOST ID: " + host.id);
+                Log.d(TAG, "HOST UID: " + host.friendUId);
+
+                inviteeList.add(host);
+                inviteeAdapter.notifyDataSetChanged();
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to get host info: " + e.getMessage());
+            });
+            return;
+        }
+
         db.collection("events").document(eventId).get().addOnSuccessListener(snap -> {
             if (snap.exists()) {
                 db.collection("users").document(snap.getString("hostId")).get().addOnSuccessListener(s -> {
@@ -338,7 +362,48 @@ public class ViewMatchActivity extends BaseActivity {
         });
 
     }
+
+    private void getFriends() {
+        if (currentUser == null) return;
+
+        db.collection("users")
+                .document(matchItem.hostId)
+                .collection("friends")
+                .get()
+                .addOnSuccessListener(snaps -> {
+                    if (snaps.isEmpty()) return;
+
+                    for (DocumentSnapshot docSnap: snaps) {
+                        String id = docSnap.getId();
+                        String friendUid = docSnap.getString("uid");
+                        String displayName = docSnap.getString("displayName");
+
+                        Friend f = new Friend(id, friendUid, displayName);
+                        boolean inFriendList = false;
+                        for (int i = 0; i < inviteeList.size(); i++) {
+                            if (inviteeList.get(i).id.equals(f.id)) {
+                                inFriendList = true;
+                                break;
+                            }
+                        }
+
+                        if (!inFriendList) {
+                            Log.d(TAG, "Added invitee to list");
+                            inviteeList.add(f);
+                            inviteeAdapter.notifyDataSetChanged();
+
+                        }
+                    }
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to get user friends: " + e.getMessage());
+                });
+    }
     private void getInvitees() {
+        if (eventId.isEmpty() || eventId == null) {
+            getHost();
+            getFriends();
+            return;
+        }
 
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
@@ -604,6 +669,11 @@ public class ViewMatchActivity extends BaseActivity {
             match.put("gameRef", game.id);
         }
 
+        if (matchItem.hostId == null || matchItem.hostId.isEmpty()) {
+            matchItem.hostId = currentUser.getUid();
+        }
+        match.put("hostId", matchItem.hostId);
+
 
         // Update the match
         if (!matchId.isEmpty()) {
@@ -633,17 +703,20 @@ public class ViewMatchActivity extends BaseActivity {
 
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
-                        eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));
-                        db.collection("events")
-                                .document(eventId)
-                                .collection("matches")
-                                .document(matchItem.id)
-                                .set(eventMatchHash).addOnSuccessListener(v -> {
-                                    Log.d(TAG, "Successfully connected match " + matchItem.id + " to event " + matchItem.eventId + ".");
-                                }).addOnFailureListener(e -> {
-                                    Log.e(TAG, "Failed to connect match " + matchItem.id + " to event " + matchItem.eventId + ": " + e.getMessage());
-                                });
 
+                        // Match is tied to an event
+                        if (!eventId.equals("")) {
+                            eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));
+                            db.collection("events")
+                                    .document(eventId)
+                                    .collection("matches")
+                                    .document(matchItem.id)
+                                    .set(eventMatchHash).addOnSuccessListener(v -> {
+                                        Log.d(TAG, "Successfully connected match " + matchItem.id + " to event " + matchItem.eventId + ".");
+                                    }).addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to connect match " + matchItem.id + " to event " + matchItem.eventId + ": " + e.getMessage());
+                                    });
+                        }
                         finish();
                     })
                     .addOnFailureListener(e -> {
@@ -714,6 +787,7 @@ public class ViewMatchActivity extends BaseActivity {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
             matchItem.startedAt = Timestamp.now();
+            getFriends();
             return;
         }
 
@@ -726,14 +800,24 @@ public class ViewMatchActivity extends BaseActivity {
                 return;
             }
 
-            matchItem.id = snap.getId();
-            matchItem.endedAt = snap.getTimestamp("endedAt");
-            matchItem.gameId = snap.getId();
-            matchItem.gameRef = snap.getDocumentReference("gameRef");
-            matchItem.startedAt = snap.getTimestamp("startedAt");
-            matchItem.notes = snap.getString("notes");
-            matchItem.eventId = snap.getString("eventId");
-            matchItem.rulesVariant = snap.getString("rules_variant");
+            String id = snap.getId();
+            Timestamp endedAt = snap.getTimestamp("endedAt");
+//            matchItem.gameId = snap.getId();
+            DocumentReference gameRef = snap.getDocumentReference("gameRef");
+            Timestamp startedAt = snap.getTimestamp("startedAt");
+            String notes = snap.getString("notes");
+            String eventIdResult = snap.getString("eventId");
+            String rulesVariantResult = snap.getString("rules_variant");
+            String hostId = snap.getString("hostId");
+
+            if (id != null) matchItem.id = id;
+            if (endedAt != null) matchItem.endedAt = endedAt;
+            if (gameRef != null) matchItem.gameRef = gameRef;
+            if (startedAt != null) matchItem.startedAt = startedAt;
+            if (notes != null) matchItem.notes = notes;
+            if (eventIdResult != null) matchItem.eventId = eventIdResult;
+            if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
+            if (hostId != null) matchItem.hostId = hostId;
 
             setMatchDetails(matchItem);
 
@@ -743,6 +827,7 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
     private void setMatchDetails(Match match) {
+
         View matchForm = matchFormContainerHandle.getChildAt(0);
         TextView ruleChanges = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
         TextView notes = matchForm.findViewById(R.id.editTextTextMultiLine_notes);

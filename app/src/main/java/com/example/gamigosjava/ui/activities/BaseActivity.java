@@ -1,7 +1,14 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.FrameLayout;
 
 import androidx.annotation.LayoutRes;
@@ -9,6 +16,7 @@ import com.bumptech.glide.Glide;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 
@@ -23,13 +31,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 public abstract class BaseActivity extends AppCompatActivity {
-
     protected DrawerLayout drawer;
     protected NavigationView navView;
     protected Toolbar toolbar;
     protected ShapeableImageView avatarView;
 
     private DocumentReference userDocRef;
+    protected ActionBarDrawerToggle drawerToggle;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,14 +60,14 @@ public abstract class BaseActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Hook up hamburger icon to DrawerLayout
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        drawerToggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar,
                 R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close
         );
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        toggle.getDrawerArrowDrawable().setColor(
+        drawer.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
+        drawerToggle.getDrawerArrowDrawable().setColor(
                 ContextCompat.getColor(this, R.color.white)
         );
 
@@ -157,9 +165,112 @@ public abstract class BaseActivity extends AppCompatActivity {
                 avatarView.setImageResource(android.R.drawable.ic_menu_camera);
             }
                 })
-                .addOnFailureListener(e -> {
-                    avatarView.setImageResource(android.R.drawable.ic_menu_camera);
-                });
+                .addOnFailureListener(e -> avatarView.setImageResource(android.R.drawable.ic_menu_camera));
     }
 
+    protected void enableBackToConversations() {
+        // Lock the drawer closed so swiping from the edge doesn’t open it
+        if (drawer != null) {
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        }
+
+        // Disable the hamburger behavior
+        if (drawerToggle != null) {
+            drawerToggle.setDrawerIndicatorEnabled(false);
+            drawer.removeDrawerListener(drawerToggle);
+        }
+
+        // Show the back arrow
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(
+                    ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white_24)
+            );
+        }
+
+        // Clicking the arrow explicitly goes to ConversationsActivity
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> {
+                Intent intent = new Intent(this, ConversationsActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
+        }
+    }
+
+    private static final int REQ_POST_NOTIFICATIONS = 2001;
+    private static final String PREFS_NAME = "gamigos_prefs";
+    private static final String KEY_NOTIF_SETTINGS_DIALOG_SHOWN = "notif_settings_dialog_shown";
+
+    protected void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQ_POST_NOTIFICATIONS
+                );
+            } else {
+                // Permission already granted → only maybe show our dialog once
+                maybePromptEnableNotificationsOnce();
+            }
+        } else {
+            // Below Android 13 → no runtime permission, just maybe show our dialog once
+            maybePromptEnableNotificationsOnce();
+        }
+    }
+
+    private void maybePromptEnableNotificationsOnce() {
+        NotificationManagerCompat nm = NotificationManagerCompat.from(this);
+
+        // If OS-level notifications are ON, nothing to do
+        if (nm.areNotificationsEnabled()) return;
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean alreadyShown = prefs.getBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, false);
+
+        // We've already shown the dialog before → don't show it again
+        if (alreadyShown) return;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Enable Notifications")
+                .setMessage("Gamigos uses notifications for messages and friend requests. Turn them on in settings?")
+                .setPositiveButton("Open Settings", (dialog, which) -> {
+                    prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
+                    openNotificationSettings();
+                })
+                .setNegativeButton("Not now", (dialog, which) -> {
+                    // Still mark as shown so we don’t nag them again
+                    prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
+                })
+                .show();
+    }
+
+    private void openNotificationSettings() {
+        Intent intent;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+        } else {
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.parse("package:" + getPackageName()));
+        }
+
+        startActivity(intent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQ_POST_NOTIFICATIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted → now we can check if OS toggle is off and maybe show dialog once
+                maybePromptEnableNotificationsOnce();
+            }
+        }
+    }
 }
