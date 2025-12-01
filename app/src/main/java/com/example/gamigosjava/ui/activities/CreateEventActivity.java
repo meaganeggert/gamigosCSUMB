@@ -29,7 +29,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -227,6 +229,7 @@ public class CreateEventActivity extends BaseActivity {
                     Toast.makeText(this, "Event uploaded successfully.", Toast.LENGTH_SHORT).show();
                     uploadFriendInvites();
 //                    uploadMatches();
+                    addEventAsFeedActivity(eventItem.id, eventItem.title, currentUser.getUid(), currentUser.getDisplayName(), eventItem.visibility);
                     finish();
 
                 })
@@ -234,6 +237,32 @@ public class CreateEventActivity extends BaseActivity {
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to save event: " + e.getMessage());
                     Toast.makeText(this, "Failed to save event.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void addEventAsFeedActivity(String eventId, String eventName, String userId, String userName, String eventVisibility) {
+
+        // Find the right activity doc
+        DocumentReference activity_ref = db.collection("activities")
+                .document();
+
+        // Store necessary data
+        Map<String, Object> newActivity = new HashMap<>();
+        newActivity.put("type", "EVENT_CREATED");
+        newActivity.put("targetId", eventId);
+        newActivity.put("targetName", eventName);
+        newActivity.put("actorId", userId);
+        newActivity.put("actorName", userName);
+        newActivity.put("visibility", eventVisibility);
+        newActivity.put("message", userName.split(" ")[0] + " created " + eventName);
+        newActivity.put("createdAt", FieldValue.serverTimestamp());
+
+        activity_ref.set(newActivity)
+                .addOnSuccessListener(v-> {
+                    Log.d(TAG, "Event created as an activity for feed display");
+                })
+                .addOnFailureListener(e-> {
+                    Log.e(TAG, "Failed to add event as an activity.");
                 });
     }
 
