@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".ui.activities.QuickPlayActivity">
 
     <LinearLayout
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="20dp">
+            android:layout_margin="6dp">
 
             <Button
                 android:id="@+id/button_startMatch"
@@ -35,23 +35,6 @@
                 android:layout_margin="3dp"
                 android:enabled="false"/>
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/matchFormContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:orientation="vertical">
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/button_deleteMatch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Delete"/>
-
-
 
     </LinearLayout>
 

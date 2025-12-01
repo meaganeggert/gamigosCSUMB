@@ -14,6 +14,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -99,7 +101,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.hostId = currentUser.getUid();
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
-        addMatchForm();
+        addMatchForm(R.id.matchFormContainer);
 
         getMatchDetails(matchId);
         getEventDetails(eventId);
@@ -108,6 +110,7 @@ public class ViewMatchActivity extends BaseActivity {
         if (saveButton != null) {
             saveButton.setOnClickListener(v -> {
                 uploadGameInfo();
+                finish();
             });
         } else {
             Log.e(TAG, "Failed to find save match button.");
@@ -124,7 +127,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
-    private void addMatchForm() {
+    public void addMatchForm(@IdRes int containerId) {
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
@@ -136,7 +139,7 @@ public class ViewMatchActivity extends BaseActivity {
         );
         inviteeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        matchFormContainerHandle = findViewById(R.id.matchFormContainer);
+        matchFormContainerHandle = findViewById(containerId);
         userGameAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -651,7 +654,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.rulesVariant = ruleChangeValue.getText().toString();
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
-        matchItem.endedAt = Timestamp.now();
+//        matchItem.endedAt = Timestamp.now();
         // Timestamps will have been set by the showDateTime interface.
 
         // Connect values from the match object to the hashmap to be uploaded.
@@ -684,7 +687,6 @@ public class ViewMatchActivity extends BaseActivity {
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
                         scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
-                        finish();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
@@ -874,7 +876,7 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
-    private void uploadGameInfo() {
+    public void uploadGameInfo() {
         View matchForm = matchFormContainerHandle.getChildAt(0);
         Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
         GameSummary gameSummary = (GameSummary) gameName.getSelectedItem();
@@ -901,6 +903,18 @@ public class ViewMatchActivity extends BaseActivity {
                 .addOnFailureListener(e -> {
                     Log.d(TAG, "Failed to update board game database element " + gameSummary.id + ": " + e.getMessage());
                 });
+    }
+
+    public Match getMatchItem() {
+        return matchItem;
+    }
+
+    public void setMatchStart(Timestamp start) {
+        matchItem.startedAt = start;
+    }
+
+    public void setMatchEnd(Timestamp end) {
+        matchItem.endedAt = end;
     }
 }
 

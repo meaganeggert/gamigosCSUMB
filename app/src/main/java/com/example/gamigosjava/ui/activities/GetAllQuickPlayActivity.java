@@ -3,10 +3,12 @@ package com.example.gamigosjava.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -54,7 +56,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
         Button newGame = findViewById(R.id.button_newGame);
         if (newGame != null) {
             newGame.setOnClickListener(v -> {
-                Intent intent = new Intent(GetAllQuickPlayActivity.this, ViewMatchActivity.class);
+                Intent intent = new Intent(GetAllQuickPlayActivity.this, QuickPlayActivity.class);
                 intent.putExtra("selectedEventId", "");
                 intent.putExtra("selectedMatchId", "");
                 startActivity(intent);
@@ -69,6 +71,32 @@ public class GetAllQuickPlayActivity extends BaseActivity {
         }
 
         getAllMatches();
+
+        recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+            @Override
+            public void onChildViewAttachedToWindow(@NonNull View view) {
+                view.setOnClickListener(v -> {
+                    int index = recyclerView.getChildLayoutPosition(view);
+                    MatchSummary selectedMatch = matchAdapter.getItemAt(index);
+                    String selectedMatchId = "";
+                    String selectedMatchEventId = "";
+                    if (selectedMatch != null) {
+                        selectedMatchId = selectedMatch.id;
+                        selectedMatchEventId = selectedMatch.eventId;
+                    }
+
+                    Intent intent = new Intent(GetAllQuickPlayActivity.this, QuickPlayActivity.class);
+                    intent.putExtra("selectedMatchId", selectedMatchId);
+                    intent.putExtra("selectedEventId", selectedMatchEventId);
+                    startActivity(intent);
+                });
+            }
+
+            @Override
+            public void onChildViewDetachedFromWindow(@NonNull View view) {
+
+            }
+        });
     }
 
     private void getAllMatches() {
