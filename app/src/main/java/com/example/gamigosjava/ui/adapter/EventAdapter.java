@@ -42,6 +42,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             super(itemView);
             image = itemView.findViewById(R.id.imageEvent);
             title = itemView.findViewById(R.id.eventTitle);
+            playtime = itemView.findViewById(R.id.textPlaytime);
             playersAttending = itemView.findViewById(R.id.playersAttending);
             attendeeAvatarRecycler = itemView.findViewById(R.id.attendeeRecycler);
             if ( attendeeAvatarRecycler != null ) {
@@ -104,8 +105,11 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
                 holder.image.setImageResource(R.drawable.ic_launcher_background);
             }
             holder.image.setVisibility(VISIBLE);
+
         } else {
             holder.image.setVisibility(GONE);
+            holder.playtime.setText(event.timeElapsed);
+            holder.playtime.setVisibility(VISIBLE);
         }
     }
 

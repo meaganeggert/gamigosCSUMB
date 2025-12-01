@@ -126,6 +126,23 @@ public class EventsRepo {
         String hostId = eventDoc.getString("hostId");
         assert hostId != null;
 
+        Timestamp startTime = eventDoc.getTimestamp("createdAt");
+        Timestamp endTime = eventDoc.getTimestamp("endedAt");
+        if (startTime != null && endTime != null) {
+            long timeDifference = endTime.toDate().getTime() - startTime.toDate().getTime();
+
+            long timeDifferenceInSeconds = timeDifference / 1000;
+            long hours = timeDifferenceInSeconds / 3600;
+            long minutes = (timeDifferenceInSeconds % 3600) / 60;
+            long seconds = timeDifferenceInSeconds % 60;
+
+            Log.i(TAG, "TimeElapsed: " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds.");
+            String formattedTimeElapsed = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            event.timeElapsed = formattedTimeElapsed;
+        } else {
+            event.timeElapsed = "Data Unavailable";
+        }
+
         CollectionReference invitees_ref = eventDoc.getReference().collection("invitees");
 
         return invitees_ref.get().continueWithTask( task -> {

@@ -8,6 +8,7 @@ public class EventSummary {
     public String title;
     public String imageUrl;
     public String status;
+    public String timeElapsed;
     public List<Attendee> playersAttending = new ArrayList<>();
 
     public EventSummary() {}
