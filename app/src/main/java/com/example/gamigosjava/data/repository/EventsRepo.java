@@ -74,7 +74,7 @@ public class EventsRepo {
     }
 
     // Function to load all events and their attendees for display in the event page
-    public Task<List<EventSummary>> loadAllEventAttendees(boolean searchingForActive, int viewLimit) {
+    public Task<List<EventSummary>> loadAllEventDetails(boolean searchingForActive, int viewLimit) {
         Timestamp now = Timestamp.now();
         if (searchingForActive) {
             Log.i(TAG, "Loading event details for active events");
@@ -90,7 +90,7 @@ public class EventsRepo {
                         List<Task<EventSummary>> taskToLoadEachEvent = new ArrayList<>();
 
                         for (DocumentSnapshot eventDoc : eventSnap.getDocuments()) {
-                            taskToLoadEachEvent.add(loadSingleEventAttendees(eventDoc));
+                            taskToLoadEachEvent.add(loadSingleEventDetails(eventDoc));
                         }
 
                         return Tasks.whenAllSuccess(taskToLoadEachEvent);
@@ -109,7 +109,7 @@ public class EventsRepo {
                         List<Task<EventSummary>> taskToLoadEachEvent = new ArrayList<>();
 
                         for (DocumentSnapshot eventDoc : eventSnap.getDocuments()) {
-                            taskToLoadEachEvent.add(loadSingleEventAttendees(eventDoc));
+                            taskToLoadEachEvent.add(loadSingleEventDetails(eventDoc));
                         }
 
                         return Tasks.whenAllSuccess(taskToLoadEachEvent);
@@ -118,7 +118,7 @@ public class EventsRepo {
 
     }
 
-    private Task<EventSummary> loadSingleEventAttendees (DocumentSnapshot eventDoc) {
+    private Task<EventSummary> loadSingleEventDetails (DocumentSnapshot eventDoc) {
 
         EventSummary event = eventDoc.toObject(EventSummary.class);
         assert event != null;

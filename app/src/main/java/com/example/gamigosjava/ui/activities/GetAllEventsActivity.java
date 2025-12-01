@@ -62,7 +62,7 @@ public class GetAllEventsActivity extends BaseActivity {
 
         // Read event collection from database
         if (filter.equalsIgnoreCase("active")) {
-            eventsRepo.loadAllEventAttendees(true, 10)
+            eventsRepo.loadAllEventDetails(true, 10)
                 .addOnSuccessListener( events -> {
                     eventAdapter.setItems(events);
                 })
@@ -70,7 +70,7 @@ public class GetAllEventsActivity extends BaseActivity {
                     Log.e(TAG, "Error loading active events: ", e);
                 });
         } else {
-            eventsRepo.loadAllEventAttendees(false, 10)
+            eventsRepo.loadAllEventDetails(false, 10)
                     .addOnSuccessListener( events -> {
                         eventAdapter.setItems(events);
                         Log.i(TAG, "Past events loaded successfully");
