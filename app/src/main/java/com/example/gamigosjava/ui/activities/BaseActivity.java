@@ -2,6 +2,8 @@ package com.example.gamigosjava.ui.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -9,10 +11,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.FrameLayout;
 
 import androidx.annotation.LayoutRes;
 import com.bumptech.glide.Glide;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -21,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.notifications.EventStartReceiver;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -149,6 +155,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         }
 
+        assert userDocRef != null;
         userDocRef.get().addOnSuccessListener(doc -> {
             if (doc.exists()) {
                 String photoUrl = doc.getString("photoUrl");
@@ -262,8 +269,89 @@ public abstract class BaseActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    protected void scheduleEventStartAlarm(
+            String eventId,
+            String eventTitle,
+            String hostName,
+            long triggerAtMillis
+    ) {
+        if (eventId == null) return;
+
+        Intent alarmIntent = new Intent(this, EventStartReceiver.class);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_ID, eventId);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_TITLE, eventTitle);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_HOST_NAME, hostName);
+
+        int requestCode = eventId.hashCode();
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                alarmIntent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        android.app.AlarmManager alarmManager =
+                (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        long now = System.currentTimeMillis();
+        if (triggerAtMillis <= now) {
+            // Don't schedule alarms in the past
+            return;
+        }
+
+        // Inexact window (5 minutes) – avoids exact-alarm permission
+        long windowLength = 5L * 60L * 1000L;
+
+        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            alarmManager.setWindow(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    windowLength,
+                    pendingIntent
+            );
+        } else {
+            alarmManager.set(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+            );
+        }
+
+        Log.d("EventAlarm", "Scheduled event-start alarm for " + eventId +
+                " at " + triggerAtMillis);
+    }
+
+    protected void cancelEventStartAlarm(String eventId) {
+        if (eventId == null) return;
+
+        Intent alarmIntent = new Intent(this, EventStartReceiver.class);
+        int requestCode = eventId.hashCode();
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                alarmIntent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_NO_CREATE
+                        : PendingIntent.FLAG_NO_CREATE
+        );
+
+        if (pendingIntent == null) return;  // nothing scheduled
+
+        android.app.AlarmManager alarmManager =
+                (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
+    }
+
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == REQ_POST_NOTIFICATIONS) {

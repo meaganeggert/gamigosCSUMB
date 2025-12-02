@@ -78,7 +78,6 @@ public class CreateEventActivity extends BaseActivity {
         );
         friendAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        // Important to make these two calls after the adapters have been set.
         getFriends();
 
         super.onCreate(savedInstanceState);
@@ -226,6 +225,11 @@ public class CreateEventActivity extends BaseActivity {
                     uploadFriendInvites();
 //                    uploadMatches();
                     addEventAsFeedActivity(eventItem.id, eventItem.title, currentUser.getUid(), currentUser.getDisplayName(), eventItem.visibility);
+                    //  Schedule local "event starting" alarm
+                    if (eventItem.scheduledAt != null) {
+                        long triggerAtMillis = eventItem.scheduledAt.toDate().getTime();
+                        scheduleEventStartAlarm(eventItem.id, eventItem.title, currentUser.getDisplayName(), triggerAtMillis);
+                    }
                     finish();
 
                 })

@@ -29,6 +29,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String CHANNEL_MESSAGES = "channel_messages";
     private static final String CHANNEL_FRIEND_REQUESTS = "channel_friend_requests";
     private static final String CHANNEL_EVENT_INVITES = "channel_event_invites";
+    private static final String CHANNEL_EVENT_START = "channel_event_start";
+    private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
@@ -54,6 +56,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             showFriendRequestNotification(data);
         } else if ("event_invite".equals(type)) {
             showEventInviteNotification(data);
+        } else if ("event_started".equals(type)) {
+            showEventStartedNotification(data);
         } else if (remoteMessage.getNotification() != null) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                     .setSmallIcon(R.drawable.ic_notification_24)
@@ -67,12 +71,69 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void showEventInviteNotification(Map<String, String> data) {
+    private void showEventStartedNotification(Map<String, String> data) {
         String eventId = data.get("eventId");
         String eventTitle = data.get("eventTitle");
         String hostName = data.get("hostName");
 
+        createChannelIfNeeded(CHANNEL_EVENT_STATUS, "Event Status");
+
+        String titleText = "Event is starting";
+        String bodyText;
+
+        if (hostName != null && !hostName.isEmpty() &&
+                eventTitle != null && !eventTitle.isEmpty()) {
+            bodyText = hostName + "'s event " + eventTitle + " is starting now";
+        } else if (eventTitle != null && !eventTitle.isEmpty()) {
+            bodyText = eventTitle + " is starting now";
+        } else {
+            bodyText = "An event you're invited to is starting now";
+        }
+
+        Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
+        intent.putExtra("selectedEventId", eventId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = (eventId != null ? eventId.hashCode() : (int) System.currentTimeMillis());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
+                        .setSmallIcon(R.drawable.ic_event_24) // pick whatever icon fits
+                        .setContentTitle(titleText)
+                        .setContentText(bodyText)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bodyText))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
+    }
+
+
+    private void showEventInviteNotification(Map<String, String> data) {
+        String eventId = data.get("eventId");
+        String eventTitle = data.get("eventTitle");
+        String hostName = data.get("hostName");
+        String scheduledAtStr = data.get("scheduledAt");  // 👈 comes from FCM data
+
         createChannelIfNeeded(CHANNEL_EVENT_INVITES, "Event Invites");
+        createChannelIfNeeded(CHANNEL_EVENT_START, "Event Start"); // for start alarm notif
 
         String titleText = "Event invite";
         String bodyText;
@@ -85,6 +146,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             bodyText = "You received an event invite";
         }
 
+        // === Existing invite notification ===
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
         intent.putExtra("selectedEventId", eventId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -118,6 +180,26 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
         manager.notify(notificationId, builder.build());
+
+        // === NEW: schedule "event starting" alarm ===
+        if (scheduledAtStr != null) {
+            try {
+                long scheduledAtMillis = Long.parseLong(scheduledAtStr);
+
+                // e.g. notify 10 minutes before start
+                long triggerAtMillis = scheduledAtMillis - 10L * 60L * 1000L;
+
+                long now = System.currentTimeMillis();
+                if (triggerAtMillis < now) {
+                    // If it's already within 10 minutes, fire at "now" + a few seconds
+                    triggerAtMillis = now + 5_000L;
+                }
+
+                scheduleEventStartAlarm(eventId, eventTitle, hostName, triggerAtMillis);
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Invalid scheduledAt millis: " + scheduledAtStr, e);
+            }
+        }
     }
 
 
@@ -225,8 +307,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify(notificationId, builder.build());
     }
 
-
-
     private void createChannelIfNeeded(String id, String name) {
         NotificationManager manager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -246,5 +326,53 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         super.onNewToken(token);
         //  Sends to Firestore so we can notify this device
         NotificationTokenManager.saveTokenForCurrentUser(token);
+    }
+
+    private void scheduleEventStartAlarm(
+            String eventId,
+            String eventTitle,
+            String hostName,
+            long triggerAtMillis
+    ) {
+        if (eventId == null) return;
+
+        Intent alarmIntent = new Intent(this, EventStartReceiver.class);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_ID, eventId);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_TITLE, eventTitle);
+        alarmIntent.putExtra(EventStartReceiver.EXTRA_HOST_NAME, hostName);
+
+        int requestCode = eventId.hashCode();
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                requestCode,
+                alarmIntent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        android.app.AlarmManager alarmManager =
+                (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            // Give the OS a 5-minute window to fire inside
+            long windowLength = 5L * 60L * 1000L; // 5 minutes
+            alarmManager.setWindow(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    windowLength,
+                    pendingIntent
+            );
+        } else {
+            alarmManager.set(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+            );
+        }
+
+        Log.d(TAG, "Scheduled (inexact) event start alarm for " + eventId + " at " + triggerAtMillis);
     }
 }

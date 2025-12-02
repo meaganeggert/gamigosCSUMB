@@ -2,10 +2,15 @@ package com.example.gamigosjava.ui.activities;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
-import android.opengl.Visibility;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +28,7 @@ import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,24 +49,21 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ViewEventActivity extends BaseActivity {
-    private String TAG = "View Event";
+    private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
+    private final String TAG = "View Event";
     private FirebaseFirestore db;
-    private FirebaseAuth auth;
     private FirebaseUser currentUser;
-
     private EventsRepo eventRepo;
 
     private RecyclerView recyclerView;
@@ -71,7 +74,7 @@ public class ViewEventActivity extends BaseActivity {
 
     private Date eventStart;
 
-    private Calendar calendar = Calendar.getInstance();
+    private final Calendar calendar = Calendar.getInstance();
 
     private Event eventItem;
 
@@ -89,7 +92,7 @@ public class ViewEventActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        api = BGGService.getInstance();
-        auth = FirebaseAuth.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
         eventRepo = new EventsRepo(db);
@@ -127,6 +130,10 @@ public class ViewEventActivity extends BaseActivity {
                 eventItem.status = "active";
                 eventItem.scheduledAt = Timestamp.now();
                 updateEvent();
+
+                //  Show event started notification
+                showEventStartedNotification(eventItem);
+
                 startEvent.setEnabled(false);
                 endEvent.setEnabled(true);
             });
@@ -184,19 +191,11 @@ public class ViewEventActivity extends BaseActivity {
                 new AlertDialog.Builder(ViewEventActivity.this)
                         .setTitle("Confirm Deletion")
                         .setMessage("Are you sure you want to delete this event? This action cannot be undone.")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                eventRepo.deleteEvent(db.collection("events").document(eventItem.id));
-                                finish();
-                            }
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            eventRepo.deleteEvent(db.collection("events").document(eventItem.id));
+                            finish();
                         })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                         .show();
 
             });
@@ -260,20 +259,42 @@ public class ViewEventActivity extends BaseActivity {
             return;
         }
 
-        db.collection("events").document(eventItem.id).set(eventItem).addOnSuccessListener(v -> {
-            Toast.makeText(this, "Successfully updated the event.", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Event Updated.");
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Failed to update the event: " + e.getMessage());
-            Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
-        });
+        db.collection("events").document(eventItem.id)
+                .set(eventItem)
+                .addOnSuccessListener(v -> {
+                    Toast.makeText(this, "Successfully updated the event.", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Event Updated.");
 
-        CollectionReference invitees = db.collection("events").document(eventItem.id).collection("invitees");
-        FirestoreUtils.deleteCollection(db, invitees, 10).onSuccessTask(v -> {
-            uploadFriendInvites();
-            return null;
-        });
+                    // Recreate local alarm ONLY for planned events
+                    cancelEventStartAlarm(eventItem.id);
+                    if ("planned".equals(eventItem.status) && eventItem.scheduledAt != null) {
+                        long triggerAtMillis = eventItem.scheduledAt.toDate().getTime();
+                        scheduleEventStartAlarm(
+                                eventItem.id,
+                                eventItem.title,
+                                currentUser.getDisplayName(),
+                                triggerAtMillis
+                        );
+                    }
+
+                    //  Only rewrite invitees when event is still planned
+                    if ("planned".equals(eventItem.status)) {
+                        CollectionReference invitees = db.collection("events")
+                                .document(eventItem.id)
+                                .collection("invitees");
+
+                        FirestoreUtils.deleteCollection(db, invitees, 10)
+                                .addOnSuccessListener(unused -> uploadFriendInvites())
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Failed to refresh invitees: " + e.getMessage()));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to update the event: " + e.getMessage());
+                    Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
+                });
     }
+
 
 
     private void uploadFriendInvites() {
@@ -303,12 +324,8 @@ public class ViewEventActivity extends BaseActivity {
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
 
-            inviteRef.set(invite).addOnSuccessListener(v -> {
-                        Log.d(TAG, "Successfully uploaded friend invites");
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.d(TAG, "Failed to upload friend invite: " + e.getMessage());
-                    });
+            inviteRef.set(invite).addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invites"))
+                    .addOnFailureListener(e -> Log.d(TAG, "Failed to upload friend invite: " + e.getMessage()));
         }
 
     }
@@ -345,14 +362,13 @@ public class ViewEventActivity extends BaseActivity {
                         matchResult.rulesVariant = matchSnap.getString("rules_variant");
                         matchResult.startedAt = matchSnap.getTimestamp("startedAt");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+                        assert matchResult.gameRef != null;
                         matchResult.gameId = matchResult.gameRef.getId();
 
-                        CollectionReference playersCollection = db
+                        matchResult.playersRef = db
                                 .collection("matches")
                                 .document(matchResult.id)
                                 .collection("players");
-
-                        matchResult.playersRef = playersCollection;
                         matches.add(matchResult);
 
                         getGameDetails(matchResult);
@@ -435,14 +451,8 @@ public class ViewEventActivity extends BaseActivity {
                         metricHash.put("first_time_played", firstTimePlayed);
                         metricHash.put("last_time_played", lastTimePlayed);
 
-                        gameMetric.set(metricHash).addOnSuccessListener(v -> {
-                            Log.d(TAG, "Successfully updated user game metrics.");
-                        }).addOnFailureListener(e -> {
-                            Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
-                        });
-                    }).addOnFailureListener(e -> {
-                        Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
-                    });
+                        gameMetric.set(metricHash).addOnSuccessListener(v -> Log.d(TAG, "Successfully updated user game metrics.")).addOnFailureListener(e -> Log.e(TAG, "Failed to update user game metrics: " + e.getMessage()));
+                    }).addOnFailureListener(e -> Log.e(TAG, "Failed to find user game metrics: " + e.getMessage()));
 
 
                 }
@@ -465,6 +475,7 @@ public class ViewEventActivity extends BaseActivity {
             if (snap == null) {
                 Log.d(TAG, "Couldn't find game details");
             }
+            assert snap != null;
             String title = snap.getString("title");
             String imageUrl = snap.getString("imageUrl");
             Integer maxPlayers = snap.get("maxPlayers", Integer.class);
@@ -525,9 +536,7 @@ public class ViewEventActivity extends BaseActivity {
                 endEvent.setEnabled(true);
             }
 
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage());
-        });
+        }).addOnFailureListener(e -> Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage()));
     }
 
     // Creates and adds a default event form.
@@ -627,7 +636,7 @@ public class ViewEventActivity extends BaseActivity {
 
             LinearLayout inviteLayout = eventContainer.findViewById(R.id.linearLayout_friend);
             for (DocumentSnapshot snap: snaps) {
-                snap.getDocumentReference("userRef").get().addOnSuccessListener(s -> {
+                Objects.requireNonNull(snap.getDocumentReference("userRef")).get().addOnSuccessListener(s -> {
                     setFriendDropdown(inviteLayout);
                     Spinner friendDropdown = (Spinner) inviteLayout.getChildAt(inviteLayout.getChildCount() - 1);
 
@@ -650,14 +659,10 @@ public class ViewEventActivity extends BaseActivity {
                         friendAdapter.notifyDataSetChanged();
                         friendDropdown.setSelection(friendList.indexOf(f));
                     }
-                }).addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to get friend invite: " + e.getMessage());
-                });
+                }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
             }
 
-        }).addOnFailureListener(e -> {
-            Log.e(TAG, "Failed to get friend invite list: " + e.getMessage());
-        });
+        }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite list: " + e.getMessage()));
     }
 
     // Get current users friend list.
@@ -699,9 +704,7 @@ public class ViewEventActivity extends BaseActivity {
                     }
                     friendAdapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     // Show UI to select date and time.
@@ -759,4 +762,70 @@ public class ViewEventActivity extends BaseActivity {
     private void removeDropdown(LinearLayout layout) {
         layout.removeViewAt(layout.getChildCount() - 1);
     }
+
+    // Local "event started" notification
+    private void showEventStartedNotification(Event event) {
+        if (event == null || event.id == null) return;
+
+        createEventStatusChannelIfNeeded();
+
+        String title = "Event is starting now";
+        String body = (event.title != null && !event.title.isEmpty())
+                ? event.title + " is starting now"
+                : "Your event is starting now";
+
+        // Tapping the notification should reopen this event
+        Intent intent = new Intent(this, ViewEventActivity.class);
+        intent.putExtra("selectedEventId", event.id);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = event.id.hashCode();
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
+                        .setSmallIcon(R.drawable.ic_event_24)  // use whatever icon you like
+                        .setContentTitle(title)
+                        .setContentText(body)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
+    }
+
+    private void createEventStatusChannelIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager == null) return;
+
+        if (manager.getNotificationChannel(CHANNEL_EVENT_STATUS) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_EVENT_STATUS,
+                    "Event status",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Notifications when your events start");
+            manager.createNotificationChannel(channel);
+        }
+    }
+
 }
