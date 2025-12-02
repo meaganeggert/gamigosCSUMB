@@ -6,4 +6,10 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="ToolbarTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:fontFamily">@font/oswald_light</item>
+        <item name="android:letterSpacing">0.05</item>
+    </style>
+
+
 </resources>

@@ -25,38 +25,37 @@
         android:id="@+id/gamigosTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="serif-monospace"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
         android:text="Gamigos"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="45sp"
-        android:layout_marginTop="10dp"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintTop_toBottomOf="@id/gamigosLogo"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/gamigosLogo" />
 
 <!--    Google Sign-In -->
     <Button
         android:id="@+id/button_signIn"
         android:layout_width="250dp"
         android:layout_height="65dp"
+        android:layout_marginTop="10dp"
         android:backgroundTint="@color/brown"
-        android:text="Sign In With Google"
-        android:fontFamily="sans-serif-light"
-        app:cornerRadius="10dp"
+        android:fontFamily="@font/jetbrains_mono_thin"
         android:maxLines="1"
+        android:text="Sign In With Google"
         app:autoSizeMaxTextSize="18sp"
         app:autoSizeMinTextSize="10sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
-        android:layout_marginTop="10dp"
+        app:cornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/gamigosTitle"
-        />
+        app:layout_constraintTop_toBottomOf="@id/gamigosTitle" />
 
 <!--    Bottom App Bar Background -->
     <com.google.android.material.bottomappbar.BottomAppBar

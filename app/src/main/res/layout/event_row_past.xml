@@ -6,9 +6,9 @@
     android:padding="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="1dp"
+    android:layout_marginVertical="3dp"
     android:minHeight="100dp"
-    android:background="#DDDDFF">
+    android:background="@color/neutraltan">
 
 <!--    Hide image in past events display -->
     <ImageView
@@ -28,27 +28,29 @@
 
         <TextView
             android:id="@+id/eventTitle"
-            android:text="Event Title"
-            android:paddingVertical="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginVertical="1dp"
-            android:textStyle="bold"
-            android:textColor="#000000"
+            android:fontFamily="@font/oswald_light"
+            app:lineHeight="30sp"
+            android:letterSpacing="0.05"
             android:maxLines="1"
+            android:paddingVertical="2dp"
+            android:text="Event Title"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textStyle="bold"
             app:autoSizeMaxTextSize="28sp"
             app:autoSizeMinTextSize="18sp"
             app:autoSizeStepGranularity="1sp"
-            app:autoSizeTextType="uniform"
-            android:layout_gravity="center"
-            android:textAlignment="textStart"
-            android:fontFamily="serif-monospace"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            app:autoSizeTextType="uniform" />
 
         <!--    Horizontal Rule -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/medgrey"
+            android:background="@color/darkblue"
             android:layout_marginTop="10dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
@@ -56,19 +58,19 @@
 
         <TextView
             android:id="@+id/textPlaytimeTitle"
-            android:text="Time Played:"
-            android:textColor="#000000"
-            android:fontFamily="sans-serif-light"
-            android:textSize="14sp"
-            android:layout_gravity="center"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/jetbrains_mono_thin"
+            android:text="Time Played:"
+            android:textColor="@color/darkblue"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/textPlaytime"
             android:text="00:00:00"
-            android:textColor="#000000"
-            android:fontFamily="sans-serif-light"
+            android:textColor="@color/darkblue"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
             android:layout_gravity="center"
             android:layout_width="wrap_content"
@@ -79,7 +81,7 @@
             android:id="@+id/activeHR"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/medgrey"
+            android:background="@color/yellow"
             android:layout_marginTop="10dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
@@ -90,10 +92,10 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Players Attended:"
-            android:textColor="#000000"
+            android:textColor="@color/darkblue"
             android:layout_gravity="center_horizontal"
             android:textAlignment="center"
-            android:fontFamily="sans-serif-light"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
             />
 
@@ -102,10 +104,10 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Player A, Player B, Player C"
-            android:textColor="#000000"
+            android:textColor="@color/darkblue"
             android:layout_gravity="center_horizontal"
             android:textAlignment="center"
-            android:fontFamily="sans-serif-light"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
            />
 
@@ -126,7 +128,7 @@
             android:id="@+id/gamesPlayedHR"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/medgrey"
+            android:background="@color/yellow"
             android:layout_marginTop="10dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
@@ -137,10 +139,10 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Games Played:"
-            android:textColor="#000000"
+            android:textColor="@color/darkblue"
             android:layout_gravity="center_horizontal"
             android:textAlignment="center"
-            android:fontFamily="sans-serif-light"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
             />
 
@@ -149,10 +151,10 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Game 1, Game 2, Game 3"
-            android:textColor="#000000"
+            android:textColor="@color/darkblue"
             android:layout_gravity="center_horizontal"
             android:textAlignment="center"
-            android:fontFamily="sans-serif-light"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
             />
 

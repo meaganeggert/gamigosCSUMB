@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="4dp"
-    android:layout_marginVertical="1dp"
-    android:background="@color/medgrey">
+    android:padding="2dp"
+    android:layout_marginVertical="3dp"
+    android:background="@color/neutraltan">
 
     <ImageView
         android:id="@+id/feed_icon"
@@ -34,7 +34,9 @@
         app:autoSizeMinTextSize="10sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
-        android:fontFamily="serif-monospace"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
+        android:lineHeight="22sp"
         app:layout_constraintStart_toEndOf="@id/feed_icon"
         app:layout_constraintTop_toBottomOf="@id/feed_time"
         app:layout_constraintBottom_toTopOf="@id/feed_description"
@@ -53,7 +55,7 @@
         app:autoSizeMinTextSize="10sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
-        android:fontFamily="serif-monospace"
+        android:fontFamily="@font/jetbrains_mono_thin"
         app:layout_constraintStart_toEndOf="@id/feed_icon"
         app:layout_constraintTop_toBottomOf="@id/feed_title"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -64,7 +66,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="0.5dp"
-        android:fontFamily="serif-monospace"
+        android:fontFamily="@font/jetbrains_mono_thin"
         android:maxLines="1"
         android:text="Just now"
         android:textColor="#645452"
