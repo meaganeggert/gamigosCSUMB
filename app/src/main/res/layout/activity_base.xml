@@ -20,6 +20,7 @@
                 android:layout_height="?attr/actionBarSize"
                 app:titleCentered="true"
                 app:titleTextColor="@android:color/white"
+                app:titleTextAppearance="@style/ToolbarTitle"
                 android:background="@color/darkblue">
 
                 <!-- Avatar-->
@@ -52,5 +53,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:itemTextAppearance="@style/MenuItems"
         app:menu="@menu/menu_drawer" />
 </androidx.drawerlayout.widget.DrawerLayout>

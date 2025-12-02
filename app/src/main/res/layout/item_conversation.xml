@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@color/neutraltan">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imageOtherAvatar"
@@ -35,12 +36,15 @@
                 android:id="@+id/tvOtherName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/oswald_light"
+                android:letterSpacing="0.05"
                 android:text="Other User"
                 android:textStyle="bold"
                 android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/tvLastMessage"
+                android:fontFamily="@font/jetbrains_mono"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
@@ -52,6 +56,7 @@
             android:id="@+id/tvLastUpdated"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
             android:text="12:34"
             android:textSize="12sp" />
     </LinearLayout>

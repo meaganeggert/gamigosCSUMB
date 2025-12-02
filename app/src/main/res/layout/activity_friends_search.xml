@@ -10,6 +10,7 @@
         android:id="@+id/rvResults"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@color/neutralbrown"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/searchContainer"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +23,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:background="@android:color/white"
+        android:background="@color/neutraltan"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -34,12 +35,16 @@
             android:layout_weight="1"
             android:hint="@string/search_bar_hint"
             android:autofillHints="Search Users"
+            android:fontFamily="@font/jetbrains_mono"
             android:inputType="text"/>
 
         <Button
             android:id="@+id/btnSearch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/darkblue"
             android:text="@string/search_text" />
     </LinearLayout>
 
