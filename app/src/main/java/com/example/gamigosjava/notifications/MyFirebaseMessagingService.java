@@ -64,6 +64,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             showEventEndedNotification(data);
         } else if ("event_rescheduled".equals(type)) {
             showEventRescheduledNotification(data);
+        } else if("event_deleted".equals(type)) {
+            showEventDeletedNotification(data);
         } else if (remoteMessage.getNotification() != null) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                     .setSmallIcon(R.drawable.ic_notification_24)
@@ -76,6 +78,62 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             manager.notify((int) (System.currentTimeMillis() & 0xfffffff), builder.build());
         }
     }
+
+    private void showEventDeletedNotification(Map<String, String> data) {
+        String eventId = data.get("eventId");
+        String eventTitle = data.get("eventTitle");
+        String hostName = data.get("hostName");
+
+        createChannelIfNeeded(CHANNEL_EVENT_STATUS, "Event Status");
+
+        String titleText = "Event cancelled";
+        String bodyText;
+
+        if (eventTitle != null && !eventTitle.isEmpty()) {
+            if (hostName != null && !hostName.isEmpty()) {
+                bodyText = hostName + " cancelled \"" + eventTitle + "\"";
+            } else {
+                bodyText = "The event \"" + eventTitle + "\" was cancelled";
+            }
+        } else {
+            bodyText = "An event you’re in was cancelled";
+        }
+
+        Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
+        intent.putExtra("selectedEventId", eventId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = (eventId != null ? eventId.hashCode() : (int) System.currentTimeMillis());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
+                        .setSmallIcon(R.drawable.ic_event_24)
+                        .setContentTitle(titleText)
+                        .setContentText(bodyText)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bodyText))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
+    }
+
 
     private void showEventRescheduledNotification(Map<String, String> data) {
         String eventId = data.get("eventId");

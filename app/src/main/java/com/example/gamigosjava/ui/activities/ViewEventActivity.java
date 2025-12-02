@@ -39,7 +39,6 @@ import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
-import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
@@ -63,9 +62,9 @@ public class ViewEventActivity extends BaseActivity {
     private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
     private final String TAG = "View Event";
     private boolean inviteesChanged = false;
+    private boolean isPopulatingInvitees = false;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
-    private EventsRepo eventRepo;
 
     private RecyclerView recyclerView;
     private ArrayAdapter<Friend> friendAdapter;
@@ -96,8 +95,6 @@ public class ViewEventActivity extends BaseActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
-        eventRepo = new EventsRepo(db);
-
 
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_view_event);
@@ -193,7 +190,10 @@ public class ViewEventActivity extends BaseActivity {
                         .setTitle("Confirm Deletion")
                         .setMessage("Are you sure you want to delete this event? This action cannot be undone.")
                         .setPositiveButton("Yes", (dialog, which) -> {
-                            eventRepo.deleteEvent(db.collection("events").document(eventItem.id));
+                            //  Cancel local alarm for this event
+                            cancelEventStartAlarm(eventItem.id);
+                            //  Delete the event doc (cloud function will notify invitees)
+                            db.collection("events").document(eventItem.id).delete();
                             finish();
                         })
                         .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
@@ -639,6 +639,8 @@ public class ViewEventActivity extends BaseActivity {
         schedule.setText(event.scheduledAt.toDate().toString());
         visibility.setSelection(visibilityList.indexOf(event.visibility));
 
+        isPopulatingInvitees = true;
+
         CollectionReference inviteRef = db.collection("events")
                 .document(eventId)
                 .collection("invitees");
@@ -646,6 +648,7 @@ public class ViewEventActivity extends BaseActivity {
         inviteRef.get().addOnSuccessListener(snaps -> {
             if (snaps.isEmpty()) {
                 Log.d(TAG, "No invitees found.");
+                isPopulatingInvitees = false;
                 return;
             }
 
@@ -676,8 +679,12 @@ public class ViewEventActivity extends BaseActivity {
                     }
                 }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
             }
+            isPopulatingInvitees = false;
 
-        }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite list: " + e.getMessage()));
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get friend invite list: " + e.getMessage());
+            isPopulatingInvitees = false;
+        });
     }
 
     // Get current users friend list.
@@ -776,7 +783,9 @@ public class ViewEventActivity extends BaseActivity {
                                        View view,
                                        int position,
                                        long id) {
-                inviteesChanged = true;
+                if (!isPopulatingInvitees) {
+                    inviteesChanged = true;
+                }
             }
 
             @Override
