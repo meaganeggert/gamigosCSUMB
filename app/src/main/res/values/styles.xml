@@ -11,5 +11,9 @@
         <item name="android:letterSpacing">0.05</item>
     </style>
 
+    <style name="MenuItems" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:fontFamily">@font/jetbrains_mono</item>
+    </style>
+
 
 </resources>

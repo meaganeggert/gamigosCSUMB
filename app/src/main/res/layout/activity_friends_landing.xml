@@ -3,29 +3,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/neutralbrown"
     android:padding="16dp">
 
     <!-- new: list of my friends -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFriends"
         android:layout_width="match_parent"
+        android:background="@color/neutralbrown"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="3dp"
-        android:background="?android:attr/listDivider"
+        android:background="@color/neutralbrown"
         android:layout_marginVertical="12dp" />
+
+    <!--    Horizontal Rule -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/neutraltan"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="1dp"
+        />
 
     <!-- Requests Section -->
     <TextView
         android:id="@+id/tvRequestsHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
         android:text="@string/requests"
         android:textStyle="bold"
         android:textSize="24sp"
+        android:textColor="@color/black"
         android:layout_marginBottom="16dp"
         android:visibility="gone" />
 
@@ -33,13 +49,17 @@
         android:id="@+id/rvRequests"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/neutralbrown"
         android:nestedScrollingEnabled="false" />
 
     <Button
         android:id="@+id/btnFriendSearchActivity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/yellow"
+        android:textColor="@color/darkblue"
         android:layout_marginTop="16dp"
+        android:fontFamily="@font/jetbrains_mono"
         android:text="@string/search_text" />
 
 </LinearLayout>

@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:background="@color/neutraltan">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imageFriendAvatar"
@@ -31,6 +32,7 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:text="Friend Name"
+            android:fontFamily="@font/jetbrains_mono"
             android:textSize="16sp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
