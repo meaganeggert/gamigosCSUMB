@@ -275,8 +275,11 @@ public class ViewEventActivity extends BaseActivity {
                     images.clear();
                     for (DocumentSnapshot docSnap: snaps) {
                         Image existingImage = new Image();
+                        existingImage.imageId = docSnap.getId();
                         existingImage.authorId = docSnap.getString("authorId");
                         existingImage.imageUrl = docSnap.getString("photoUrl");
+                        existingImage.uploadedAt = docSnap.getTimestamp("uploadedAt");
+                        existingImage.eventId = docSnap.getString("eventId");
                         Log.d("IMAGE", "Adding image: " + existingImage.imageUrl);
                         images.add(existingImage);
                         imageAdapter.setItems(images);

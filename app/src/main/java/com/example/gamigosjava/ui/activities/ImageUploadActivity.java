@@ -15,10 +15,10 @@ import android.widget.Toast;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.example.gamigosjava.R;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -133,7 +133,7 @@ public class ImageUploadActivity extends BaseActivity {
                         Log.d(TAG, "Uploaded Image: " + downloadUrl);
                         Toast.makeText(this, "Upload successful!", Toast.LENGTH_SHORT).show();
 
-                        uploadImageToDatabase(downloadUrl);
+                        uploadImageToEvent(downloadUrl);
                     });
                 })
                 .addOnFailureListener(e -> {
@@ -142,7 +142,7 @@ public class ImageUploadActivity extends BaseActivity {
                 });
     }
 
-    private void uploadImageToDatabase(String imageUrl) {
+    private void uploadImageToEvent(String imageUrl) {
         if (currentUser == null) return;
 
         CollectionReference eventImgRef = db.collection("events")
@@ -152,6 +152,8 @@ public class ImageUploadActivity extends BaseActivity {
         HashMap<String, Object> imageHash = new HashMap<>();
         imageHash.put("authorId", currentUser.getUid());
         imageHash.put("photoUrl", imageUrl);
+        imageHash.put("eventId", eventId);
+        imageHash.put("uploadedAt", Timestamp.now());
 
         eventImgRef.add(imageHash).addOnSuccessListener(docRef -> {
             Toast.makeText(this, "Image Uploaded Successfully", Toast.LENGTH_SHORT).show();
