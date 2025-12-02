@@ -20,6 +20,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -58,6 +60,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             showEventInviteNotification(data);
         } else if ("event_started".equals(type)) {
             showEventStartedNotification(data);
+        } else if ("event_ended".equals(type)) {
+            showEventEndedNotification(data);
+        } else if ("event_rescheduled".equals(type)) {
+            showEventRescheduledNotification(data);
         } else if (remoteMessage.getNotification() != null) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                     .setSmallIcon(R.drawable.ic_notification_24)
@@ -70,6 +76,130 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             manager.notify((int) (System.currentTimeMillis() & 0xfffffff), builder.build());
         }
     }
+
+    private void showEventRescheduledNotification(Map<String, String> data) {
+        String eventId = data.get("eventId");
+        String eventTitle = data.get("eventTitle");
+        String hostName = data.get("hostName");
+        String newScheduledAtStr = data.get("scheduledAt");
+
+        createChannelIfNeeded(CHANNEL_EVENT_STATUS, "Event Status");
+
+        String whenText = "";
+        if (newScheduledAtStr != null && !newScheduledAtStr.isEmpty()) {
+            try {
+                long millis = Long.parseLong(newScheduledAtStr);
+                DateFormat df = DateFormat.getDateTimeInstance(
+                        DateFormat.MEDIUM,
+                        DateFormat.SHORT
+                );
+                whenText = " to " + df.format(new Date(millis));
+            } catch (NumberFormatException ignored) {}
+        }
+
+        String titleText = "Event rescheduled";
+        String bodyText;
+
+        if (eventTitle != null && !eventTitle.isEmpty()) {
+            if (hostName != null && !hostName.isEmpty()) {
+                bodyText = hostName + " changed \"" + eventTitle + "\"" + whenText;
+            } else {
+                bodyText = "\"" + eventTitle + "\" was rescheduled" + whenText;
+            }
+        } else {
+            bodyText = "An event you’re invited to was rescheduled" + whenText;
+        }
+
+        Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
+        intent.putExtra("selectedEventId", eventId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = (eventId != null ? eventId.hashCode() : (int) System.currentTimeMillis());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
+                        .setSmallIcon(R.drawable.ic_event_24)
+                        .setContentTitle(titleText)
+                        .setContentText(bodyText)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bodyText))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
+    }
+
+    private void showEventEndedNotification(Map<String, String> data) {
+        String eventId = data.get("eventId");
+        String eventTitle = data.get("eventTitle");
+        String hostName = data.get("hostName");
+
+        createChannelIfNeeded(CHANNEL_EVENT_STATUS, "Event Status");
+
+        String titleText = "Event ended";
+        String bodyText;
+
+        if (eventTitle != null && !eventTitle.isEmpty()) {
+            if (hostName != null && !hostName.isEmpty()) {
+                bodyText = hostName + "'s event \"" + eventTitle + "\" has ended";
+            } else {
+                bodyText = "The event \"" + eventTitle + "\" has ended";
+            }
+        } else {
+            bodyText = "An event you’re in has ended";
+        }
+
+        Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
+        intent.putExtra("selectedEventId", eventId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        int requestCode = (eventId != null ? eventId.hashCode() : (int) System.currentTimeMillis());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                requestCode,
+                intent,
+                Build.VERSION.SDK_INT >= 31
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
+                        .setSmallIcon(R.drawable.ic_event_24)
+                        .setContentTitle(titleText)
+                        .setContentText(bodyText)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(bodyText))
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
+        manager.notify(notificationId, builder.build());
+    }
+
 
     private void showEventStartedNotification(Map<String, String> data) {
         String eventId = data.get("eventId");

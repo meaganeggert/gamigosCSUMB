@@ -62,6 +62,7 @@ import java.util.Objects;
 public class ViewEventActivity extends BaseActivity {
     private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
     private final String TAG = "View Event";
+    private boolean inviteesChanged = false;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
     private EventsRepo eventRepo;
@@ -278,7 +279,7 @@ public class ViewEventActivity extends BaseActivity {
                     }
 
                     //  Only rewrite invitees when event is still planned
-                    if ("planned".equals(eventItem.status)) {
+                    if ("planned".equals(eventItem.status) && inviteesChanged) {
                         CollectionReference invitees = db.collection("events")
                                 .document(eventItem.id)
                                 .collection("invitees");
@@ -567,6 +568,18 @@ public class ViewEventActivity extends BaseActivity {
                 eventStart = date;
                 eventStartText.setText(date.toString());
                 eventItem.scheduledAt = new Timestamp(date);
+                //  If the event was past/active and user picks a future time, set to planned
+                long now = System.currentTimeMillis();
+                long selectedTime = date.getTime();
+                if (selectedTime > now) {
+                    if (!"planned".equals(eventItem.status)) {
+                        eventItem.status = "planned";
+                        eventItem.endedAt = null;
+                        Log.d(TAG, "Rescheduled event in the future, setting status = planned");
+                    }
+                } else {
+                    Log.d(TAG, "Event in the past, not rescheduling");
+                }
             });
         });
 
@@ -586,6 +599,7 @@ public class ViewEventActivity extends BaseActivity {
                 addFriend.setOnClickListener(v -> {
                     if (!friendList.isEmpty() && friendLayout.getChildCount() < friendList.size()) {
                         setFriendDropdown(friendLayout);
+                        inviteesChanged = true;
                     } else {
                         Toast.makeText(this, "No friend to add.", Toast.LENGTH_SHORT).show();
                     }
@@ -600,6 +614,7 @@ public class ViewEventActivity extends BaseActivity {
                 removeFriend.setOnClickListener(v -> {
                     if (friendLayout.getChildCount() > 0) {
                         removeDropdown(friendLayout);
+                        inviteesChanged = true;
                     } else {
                         Toast.makeText(this, "No friend to remove.", Toast.LENGTH_SHORT).show();
                     }
@@ -745,13 +760,34 @@ public class ViewEventActivity extends BaseActivity {
     // Adds a dropdown to a linear layout, displaying a selction of the users friends.
     private void setFriendDropdown(LinearLayout layout) {
         Spinner newSpinner = new Spinner(this);
-        newSpinner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        newSpinner.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
         newSpinner.setId(View.generateViewId());
         newSpinner.setBackgroundResource(android.R.drawable.btn_dropdown);
 
         newSpinner.setAdapter(friendAdapter);
+
+        // Any selection change marks invitees as dirty
+        newSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent,
+                                       View view,
+                                       int position,
+                                       long id) {
+                inviteesChanged = true;
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                // do nothing
+            }
+        });
+
         layout.addView(newSpinner);
     }
+
 
     // Sets the specified dropdown's selection by passing in a list.
     private void setDropdown(Spinner dropdown, List<String> list) {
