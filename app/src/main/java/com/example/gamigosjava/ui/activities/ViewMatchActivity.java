@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,7 +79,9 @@ public class ViewMatchActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ScoresAdapter scoresAdapter;
-    public Button saveButton, startMatch, endMatch;
+    public Button saveButton, startMatch, endMatch, addPlayer;
+    private EditText customPlayerInput;
+    private Spinner inviteeDropDown;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -202,21 +205,46 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
-        Spinner inviteeDropDown = findViewById(R.id.dropdown_invitees);
+        inviteeDropDown = findViewById(R.id.dropdown_invitees);
         inviteeDropDown.setAdapter(inviteeAdapter);
-        Button addPlayer = findViewById(R.id.button_addPlayer);
+
+        customPlayerInput = findViewById(R.id.editText_customPlayer);
+
+        Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
+        if (playerTypeToggle != null) {
+            playerTypeToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    inviteeDropDown.setVisibility(Spinner.GONE);
+                    customPlayerInput.setVisibility(Button.VISIBLE);
+                    addPlayerFromText();
+                } else {
+                    inviteeDropDown.setVisibility(Spinner.VISIBLE);
+                    customPlayerInput.setVisibility(Button.GONE);
+                    addPlayerFromSpinner();
+                }
+            });
+        }
+
+        addPlayer = findViewById(R.id.button_addPlayer);
+        addPlayerFromSpinner();
+
+    }
+
+    private void addPlayerFromSpinner() {
         if (addPlayer != null) {
             addPlayer.setOnClickListener(v -> {
                 Player newPlayer = new Player();
                 newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
 
-                if (newPlayer.friend == null) {
-                    return;
-                }
+                if (newPlayer.friend == null) return;
+                if (newPlayer.friend.id == null) return;
 
                 boolean inList = false;
                 for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    if (scoresAdapter.playerList.get(i).friend.id.equals(newPlayer.friend.id)) {
+                    Player player = scoresAdapter.playerList.get(i);
+                    if (player.friend.id == null) continue;
+
+                    if (player.friend.id.equals(newPlayer.friend.id)) {
                         inList = true;
                         break;
                     }
@@ -230,8 +258,33 @@ public class ViewMatchActivity extends BaseActivity {
                 scoresAdapter.notifyDataSetChanged();
             });
         }
+    }
+    private void addPlayerFromText() {
+        if (addPlayer != null) {
+            addPlayer.setOnClickListener(v -> {
+                String customName = customPlayerInput.getText().toString();
+                if (customName.isEmpty()) return;
 
+                Player newPlayer = new Player();
+                newPlayer.friend = new Friend();
+                newPlayer.friend.displayName = customName;
 
+                boolean inList = false;
+                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
+                    if (scoresAdapter.playerList.get(i).friend.displayName.equals(newPlayer.friend.displayName)) {
+                        inList = true;
+                        break;
+                    }
+                }
+                if (inList) {
+                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                scoresAdapter.playerList.add(newPlayer);
+                scoresAdapter.notifyDataSetChanged();
+            });
+        }
     }
 
 
@@ -258,8 +311,23 @@ public class ViewMatchActivity extends BaseActivity {
 
             for (DocumentSnapshot doc: snaps) {
                 String playerId = doc.getString("userId");
+                String displayName = doc.getString("displayName");
                 Integer score = doc.get("score", Integer.class);
                 Integer placement = doc.get("placement", Integer.class);
+
+                Log.d(TAG, "Got Player " + displayName);
+
+                if (playerId ==  null && displayName != null) {
+                    Friend friend = new Friend();
+                    friend.id = playerId;
+                    friend.displayName = displayName;
+                    friend.friendUId = playerId;
+
+                    Player knownPlayer = new Player(friend, score, placement);
+                    scoresAdapter.playerList.add(knownPlayer);
+                    scoresAdapter.notifyDataSetChanged();
+                    continue;
+                }
 
                 DocumentReference playerRef = db.collection("users").document(playerId);
                 playerRef.get().onSuccessTask(docSnap -> {
@@ -988,6 +1056,8 @@ public class ViewMatchActivity extends BaseActivity {
 
             // Update each users metrics
             for (Player p: matchResults) {
+                if (p.friend.id == null || p.friend.id.isEmpty()) return;
+
                 DocumentReference gamesPlayedRef = db.collection("users")
                         .document(p.friend.id)
                         .collection("metrics")

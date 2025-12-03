@@ -172,6 +172,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
                 playerHash.put("userId", p.friend.id);
                 playerHash.put("score", p.score);
                 playerHash.put("placement", p.placement);
+                playerHash.put("displayName", p.friend.displayName);
 
                 playersCol.add(playerHash).addOnSuccessListener(doc -> {
                     Log.d(TAG, "Successfully added player details to database: " + p.friend.displayName);
