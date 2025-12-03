@@ -15,6 +15,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GamigosJava"
         tools:targetApi="31">
+        <receiver
+            android:name=".notifications.EventStartReceiver"
+            android:exported="false"
+        />
         <service
             android:name=".notifications.MyFirebaseMessagingService"
             android:exported="false">
