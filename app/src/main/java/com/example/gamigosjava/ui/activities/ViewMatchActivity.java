@@ -230,6 +230,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Adds a user as a player for the match to track scores using a dropdown of invitees.
     private void addPlayerFromSpinner() {
         if (addPlayer != null) {
             addPlayer.setOnClickListener(v -> {
@@ -259,6 +260,8 @@ public class ViewMatchActivity extends BaseActivity {
             });
         }
     }
+
+    // Adds a non-user as a player for the match to track scores using a text input.
     private void addPlayerFromText() {
         if (addPlayer != null) {
             addPlayer.setOnClickListener(v -> {
@@ -288,7 +291,7 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
-
+    // Gets previously established players for the current match if there are any.
     private void getPlayers() {
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
@@ -309,6 +312,7 @@ public class ViewMatchActivity extends BaseActivity {
                 return;
             }
 
+            // Get all players listed in the match
             for (DocumentSnapshot doc: snaps) {
                 String playerId = doc.getString("userId");
                 String displayName = doc.getString("displayName");
@@ -317,6 +321,7 @@ public class ViewMatchActivity extends BaseActivity {
 
                 Log.d(TAG, "Got Player " + displayName);
 
+                // Get non user-players in the match
                 if (playerId ==  null && displayName != null) {
                     Friend friend = new Friend();
                     friend.id = playerId;
@@ -329,6 +334,7 @@ public class ViewMatchActivity extends BaseActivity {
                     continue;
                 }
 
+                // Get user players in the match
                 DocumentReference playerRef = db.collection("users").document(playerId);
                 playerRef.get().onSuccessTask(docSnap -> {
                     Friend friend = new Friend();
@@ -348,6 +354,7 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
+    // If the match is tied to an event, get the event info.
     private void getEventDetails(String eventId) {
         if (currentUser == null) {
             Log.e(TAG, "Failed to get event details: User is not logged in.");
@@ -384,6 +391,8 @@ public class ViewMatchActivity extends BaseActivity {
             Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage());
         });
     }
+
+    // Get the host of the event/match to include as a possible player and show/hide certain buttons
     private void getHost() {
         // Search match for host id.
         if (eventId.isEmpty() || eventId == null) {
@@ -396,8 +405,6 @@ public class ViewMatchActivity extends BaseActivity {
                 host.friendUId = s.getString("uid");
 
                 Log.d(TAG, "HOST NAME: " + host.displayName);
-                Log.d(TAG, "HOST ID: " + host.id);
-                Log.d(TAG, "HOST UID: " + host.friendUId);
 
                 hostUser = host;
                 inviteeList.add(host);
@@ -422,8 +429,6 @@ public class ViewMatchActivity extends BaseActivity {
                     host.friendUId = s.getString("uid");
 
                     Log.d(TAG, "HOST NAME: " + host.displayName);
-                    Log.d(TAG, "HOST ID: " + host.id);
-                    Log.d(TAG, "HOST UID: " + host.friendUId);
 
                     hostUser = host;
                     inviteeList.add(host);
@@ -440,6 +445,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Set visibility for certain features based on whether or not the current user is host.
     public void enableHostOptions() {
         if (!currentUser.getUid().equals(hostUser.id)) {
             return;
@@ -476,6 +482,8 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    // Get the host's friends list to use as the invitee list for possible players if there is no event
+    // Function is called in getInvites if there is no event tied to the match.
     private void getFriends() {
         if (currentUser == null) return;
 
@@ -511,6 +519,8 @@ public class ViewMatchActivity extends BaseActivity {
                     Log.e(TAG, "Failed to get user friends: " + e.getMessage());
                 });
     }
+
+    // Get invited players from the event to list as possible players of the match.
     private void getInvitees() {
         if (eventId.isEmpty() || eventId == null) {
             getHost();
@@ -572,10 +582,8 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
-
-
-
-
+    // Get list games the current user (not host) has to play in the match.
+    // Also calls function applyKnownUserGames to avoid including duplicates
     private void getGames() {
         if (currentUser == null) {
             Toast.makeText(this, "User is not logged in.", Toast.LENGTH_SHORT).show();
@@ -632,6 +640,7 @@ public class ViewMatchActivity extends BaseActivity {
         userGameAdapter.notifyDataSetChanged();
     }
 
+    // Adds games found from the current user's collections without any duplicates
     private void applyKnownUserGames(QuerySnapshot snap) {
         if (snap.isEmpty()) {
             Log.d("TAG", "Game Snap list was null");
@@ -674,6 +683,8 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    // Makes a BGG api call to get a list games the user wants to search for.
+    // Calls the function fetchThingDetails
     private void fetchGamesForQuery(String query) {
         api.search(query, "boardgame").enqueue(new Callback<SearchResponse>() {
             @Override public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> resp) {
@@ -705,6 +716,7 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
+    // Makes a BGG api call to get a game's details based on its id.
     private void fetchThingDetails(String idsCsv) {
         api.thing(idsCsv, 0).enqueue(new Callback<ThingResponse>() {
             @Override public void onResponse(Call<ThingResponse> call, Response<ThingResponse> resp) {
@@ -736,6 +748,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Uploads the match to firebase.
     // eventId, notes, rules variant, imageUrl, startedAt, endedAt, and a reference to the game played.
+    // Calls functions uploadUserGamesHosted, uploadUserGamesPlayed
     private void uploadMatch() {
         if (currentUser == null) {
             Log.e(TAG, "Must be logged in.");
@@ -840,6 +853,7 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    // Uploads the current board game reference as a quick way to find what BGG games the user has hosted for future matches.
     private void uploadUserGamesHosted(String uid, GameSummary gameSummary) {
         if (gameSummary.id == null) return;
 
@@ -859,6 +873,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Uploads the current board game reference as a quick way to find what BGG games the user has played for future matches.
     private void uploadUserGamesPlayed(String uid, GameSummary gameSummary) {
         if (gameSummary.id == null) return;
 
@@ -897,6 +912,8 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Gets the current match details previously saved.
+    // Calls the function setMatchDetails
     private void getMatchDetails(String matchId) {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
@@ -940,6 +957,7 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
+    // Applies the previously saved match details to the match form
     private void setMatchDetails(Match match) {
         if (match.startedAt != null) {
             startMatch.setEnabled(false);
@@ -993,6 +1011,7 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
+    // Uploads the game details to the database to be used as a cache before making calls to the BGG API.
     public void uploadGameInfo() {
         View matchForm = matchFormContainerHandle.getChildAt(0);
         Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
@@ -1035,6 +1054,8 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.endedAt = end;
     }
 
+    // Updates the user metric for the board game played. This can be for things to track such as
+    // times won, lost, best winning streak, etc.
     private void uploadUserMatchMetrics() {
         // Get user reference from players involved in each match.
         Match m = getMatchItem();
