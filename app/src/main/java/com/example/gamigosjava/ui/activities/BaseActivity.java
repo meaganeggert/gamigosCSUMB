@@ -207,7 +207,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Replace the hamburger with a simple back arrow that just calls onBackPressed().
+     * Replace the hamburger with a simple back arrow that behaves like the native Android back button.
      */
     protected void enableToolbarBackArrow() {
         // Lock the drawer closed so swiping from the edge doesn’t open it
@@ -230,7 +230,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             );
         }
 
-        // Clicking the arrow just goes "back" (finishes this Activity)
+        // Clicking the arrow just goes "back" (finishes this Activity) [Same as back button press]
         if (toolbar != null) {
             toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         }
