@@ -296,40 +296,49 @@ public class ViewEventActivity extends BaseActivity {
                 });
     }
 
-
-
     private void uploadFriendInvites() {
         List<Friend> friendsInvited = new ArrayList<>();
         LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
 
-        // Filters out repeated invites.
+        // Collect unique invitees from the spinners
         for (int i = 0; i < friendSection.getChildCount(); i++) {
             Spinner friendSpinner = (Spinner) friendSection.getChildAt(i);
             Friend friendItem = (Friend) friendSpinner.getSelectedItem();
 
-            if (!friendsInvited.contains(friendItem)) {
+            if (friendItem != null && !friendsInvited.contains(friendItem)) {
                 friendsInvited.add(friendItem);
             }
         }
 
-        // Uploads friend invites to the database one by one.
-        for (int i = 0; i < friendsInvited.size(); i++) {
-            Friend friendItem = friendsInvited.get(i);
+        if (currentUser == null) {
+            Log.w(TAG, "uploadFriendInvites: currentUser is null");
+            return;
+        }
 
+        for (Friend friendItem : friendsInvited) {
             DocumentReference inviteRef = db.collection("events")
                     .document(eventItem.id)
                     .collection("invitees")
-                    .document(friendItem.id);
+                    .document(friendItem.id);  // Stable per-friend doc ID
 
             Map<String, Object> invite = new HashMap<>();
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
+            invite.put("eventId", eventItem.id);
+            invite.put("eventTitle", eventItem.title);
+            invite.put("hostName", currentUser.getDisplayName());
+            invite.put("hostId", currentUser.getUid());
+            invite.put("scheduledAt", eventItem.scheduledAt); // Firestore Timestamp
 
-            inviteRef.set(invite).addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invites"))
+            inviteRef.set(invite)
+                    .addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invite for " + friendItem.displayName))
                     .addOnFailureListener(e -> Log.d(TAG, "Failed to upload friend invite: " + e.getMessage()));
         }
 
+        // Once rewritten, reset the dirty flag
+        inviteesChanged = false;
     }
+
 
     private void getMatches(String eventId) {
         if (currentUser == null) {
@@ -839,7 +848,7 @@ public class ViewEventActivity extends BaseActivity {
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
-                        .setSmallIcon(R.drawable.ic_event_24)  // use whatever icon you like
+                        .setSmallIcon(R.drawable.ic_event_24)
                         .setContentTitle(title)
                         .setContentText(body)
                         .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
