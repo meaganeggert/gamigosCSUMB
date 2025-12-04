@@ -74,6 +74,8 @@ public class FriendsSearchActivity extends BaseActivity {
         // Set title for NavBar
         setTopTitle("Friends");
 
+        enableToolbarBackArrow();
+
         // Firebase user (to skip self)
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();

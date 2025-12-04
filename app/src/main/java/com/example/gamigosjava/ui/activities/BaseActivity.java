@@ -206,6 +206,36 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Replace the hamburger with a simple back arrow that just calls onBackPressed().
+     */
+    protected void enableToolbarBackArrow() {
+        // Lock the drawer closed so swiping from the edge doesn’t open it
+        if (drawer != null) {
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        }
+
+        // Disable the hamburger behavior
+        if (drawerToggle != null) {
+            drawerToggle.setDrawerIndicatorEnabled(false);
+            drawer.removeDrawerListener(drawerToggle);
+        }
+
+        // Show the back arrow in the toolbar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(
+                    ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white_24)
+            );
+        }
+
+        // Clicking the arrow just goes "back" (finishes this Activity)
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        }
+    }
+
     private static final int REQ_POST_NOTIFICATIONS = 2001;
     private static final String PREFS_NAME = "gamigos_prefs";
     private static final String KEY_NOTIF_SETTINGS_DIALOG_SHOWN = "notif_settings_dialog_shown";
