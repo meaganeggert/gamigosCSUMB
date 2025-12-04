@@ -3,6 +3,8 @@ package com.example.gamigosjava.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,11 +18,12 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.WriteBatch;
 
 public class NotificationsActivity extends BaseActivity {
 
     private static final String TAG = "NotificationsActivity";
-
+    private Button btnClearAll;
     private NotificationsAdapter adapter;
 
     @Override
@@ -36,7 +39,67 @@ public class NotificationsActivity extends BaseActivity {
         adapter = new NotificationsAdapter(this::handleNotificationClick);
         rv.setAdapter(adapter);
 
+        btnClearAll = findViewById(R.id.btnClearAllNotifications);
+        if (btnClearAll != null) {
+            btnClearAll.setOnClickListener(v -> showClearAllConfirmDialog());
+        }
+
         loadNotifications();
+    }
+
+    private void showClearAllConfirmDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Clear all notifications")
+                .setMessage("Are you sure you want to clear all notifications? This cannot be undone")
+                .setPositiveButton("Clear all", (dialog, which) -> clearAllNotifications())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void clearAllNotifications() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "No user logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //  Prevents spam-clicking
+        btnClearAll.setEnabled(false);
+
+        //  Clear notifications from database
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(user.getUid())
+                .collection("notifications")
+                .get()
+                .addOnSuccessListener(snap -> {
+                    if (snap.isEmpty()) {
+                        Toast.makeText(this, "No notifications to clear.", Toast.LENGTH_SHORT).show();
+                        btnClearAll.setEnabled(true);
+                        return;
+                    }
+
+                    WriteBatch batch = db.batch();
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        batch.delete(doc.getReference());
+                    }
+
+                    batch.commit()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Successfully cleared all notifications.", Toast.LENGTH_SHORT).show();
+                                btnClearAll.setEnabled(true);
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to clear notifications", e);
+                                Toast.makeText(this, "Failed to clear notifications.", Toast.LENGTH_SHORT).show();
+                                btnClearAll.setEnabled(true);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to query notifications", e);
+                    Toast.makeText(this, "Failed to query notifications.", Toast.LENGTH_SHORT).show();
+                    btnClearAll.setEnabled(true);
+                });
     }
 
     private void loadNotifications() {
@@ -66,6 +129,9 @@ public class NotificationsActivity extends BaseActivity {
                         list.add(n);
                     }
                     adapter.setItems(list);
+                    //  Disable clear all button if list is empty.
+                    btnClearAll.setEnabled(!list.isEmpty());
+                    btnClearAll.setAlpha(list.isEmpty() ? 0.4f : 1f);
                 });
     }
 
