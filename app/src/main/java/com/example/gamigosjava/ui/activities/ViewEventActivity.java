@@ -149,6 +149,7 @@ public class ViewEventActivity extends BaseActivity {
                 updateEvent();
                 uploadUserMatchMetrics();
                 endEvent.setEnabled(false);
+                startEvent.setEnabled(true);
             });
         }
 
