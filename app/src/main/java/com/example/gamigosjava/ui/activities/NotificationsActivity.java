@@ -56,6 +56,32 @@ public class NotificationsActivity extends BaseActivity {
                 .show();
     }
 
+    private void deleteNotification(AppNotificationModel notif) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.w(TAG, "User is null; cannot delete notification");
+            return;
+        }
+
+        String notifId = notif.getId();
+        if (notifId == null || notifId.isEmpty()) {
+            Log.w(TAG, "Notification has no id; cannot delete");
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(user.getUid())
+                .collection("notifications")
+                .document(notifId)
+                .delete()
+                .addOnSuccessListener(aVoid ->
+                        Log.d(TAG, "Notification deleted: " + notifId))
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to delete notification: " + notifId, e));
+    }
+
+
     private void clearAllNotifications() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -160,6 +186,8 @@ public class NotificationsActivity extends BaseActivity {
                 Log.i(TAG, "Unknown notification type: " + type);
                 break;
         }
+
+        deleteNotification(notif);
     }
 
     private void openEventFromNotification(AppNotificationModel notif) {
