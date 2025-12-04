@@ -24,6 +24,9 @@ public class NotificationsActivity extends BaseActivity {
 
     private static final String TAG = "NotificationsActivity";
     private Button btnClearAll;
+    private Button btnSelectMode;
+    private Button btnDeleteSelected;
+    private Button btnCancelSelection;
     private NotificationsAdapter adapter;
 
     @Override
@@ -39,13 +42,121 @@ public class NotificationsActivity extends BaseActivity {
         adapter = new NotificationsAdapter(this::handleNotificationClick);
         rv.setAdapter(adapter);
 
+        //  Button wiring
         btnClearAll = findViewById(R.id.btnClearAllNotifications);
+        btnSelectMode = findViewById(R.id.btnSelectMode);
+        btnDeleteSelected = findViewById(R.id.btnDeleteSelected);
+        btnCancelSelection = findViewById(R.id.btnCancelSelection);
+
         if (btnClearAll != null) {
             btnClearAll.setOnClickListener(v -> showClearAllConfirmDialog());
         }
 
+        if (btnSelectMode != null) {
+            btnSelectMode.setOnClickListener(v -> enterSelectionMode());
+        }
+
+        if (btnDeleteSelected != null) {
+            btnDeleteSelected.setOnClickListener(v -> showDeleteSelectedConfirmDialog());
+        }
+
+        if (btnCancelSelection != null) {
+            btnCancelSelection.setOnClickListener(v -> exitSelectionMode());
+        }
+
+        // listen to selection count from adapter to enable/disable delete button
+        adapter.setOnSelectionChangedListener(count -> {
+            if (btnDeleteSelected != null) {
+                boolean enabled = count > 0;
+                btnDeleteSelected.setEnabled(enabled);
+                btnDeleteSelected.setAlpha(enabled ? 1f : 0.4f);
+            }
+        });
+
         loadNotifications();
     }
+
+    private void enterSelectionMode() {
+        adapter.setSelectionMode(true);
+
+        // Hide stuff that only makes sense in normal mode
+        if (btnClearAll != null) {
+            btnClearAll.setVisibility(Button.GONE);
+        }
+        if (btnSelectMode != null) {
+            btnSelectMode.setVisibility(Button.GONE);
+        }
+
+        // Show selection controls
+        if (btnDeleteSelected != null) {
+            btnDeleteSelected.setVisibility(Button.VISIBLE);
+            btnDeleteSelected.setEnabled(false);
+            btnDeleteSelected.setAlpha(0.4f);
+        }
+        if (btnCancelSelection != null) {
+            btnCancelSelection.setVisibility(Button.VISIBLE);
+        }
+    }
+
+    private void exitSelectionMode() {
+        adapter.setSelectionMode(false);  // clears selections internally
+
+        // Show normal mode buttons
+        if (btnClearAll != null) {
+            btnClearAll.setVisibility(Button.VISIBLE);
+        }
+        if (btnSelectMode != null) {
+            btnSelectMode.setVisibility(Button.VISIBLE);
+        }
+
+        // Hide selection controls
+        if (btnDeleteSelected != null) {
+            btnDeleteSelected.setVisibility(Button.GONE);
+        }
+        if (btnCancelSelection != null) {
+            btnCancelSelection.setVisibility(Button.GONE);
+        }
+    }
+
+    private void showDeleteSelectedConfirmDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Delete selected")
+                .setMessage("Are you sure you want to delete the selected notifications?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteSelectedNotifications())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void deleteSelectedNotifications() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        java.util.List<AppNotificationModel> selected = adapter.getSelectedItems();
+        if (selected.isEmpty()) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        WriteBatch batch = db.batch();
+
+        for (AppNotificationModel notif : selected) {
+            if (notif.getId() == null || notif.getId().isEmpty()) continue;
+            batch.delete(db.collection("users")
+                    .document(user.getUid())
+                    .collection("notifications")
+                    .document(notif.getId()));
+        }
+
+        batch.commit()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Deleted selected notifications", Toast.LENGTH_SHORT).show();
+                    exitSelectionMode();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to delete selected notifications", e);
+                    Toast.makeText(this, "Failed to delete selected notifications", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+
 
     private void showClearAllConfirmDialog() {
         new androidx.appcompat.app.AlertDialog.Builder(this)
