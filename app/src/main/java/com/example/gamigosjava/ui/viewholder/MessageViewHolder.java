@@ -10,9 +10,11 @@ import com.example.gamigosjava.R;
 
 public class MessageViewHolder extends RecyclerView.ViewHolder {
     public final TextView body;
+    public final TextView senderName;
 
     public MessageViewHolder(@NonNull View itemView) {
         super(itemView);
         body = itemView.findViewById(R.id.tvBody);
+        senderName = itemView.findViewById(R.id.tvSenderName);
     }
 }

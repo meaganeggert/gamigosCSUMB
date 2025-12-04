@@ -70,10 +70,6 @@ public class MessagesFragment extends Fragment {
         ImageButton menu = v.findViewById(R.id.btnMessageMenu);
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new MessagesListAdapter(FirebaseAuth.getInstance().getUid());
-        rv.setAdapter(adapter);
-
-        vm = new ViewModelProvider(this).get(ChatViewModel.class);
 
         Bundle args = getArguments();
         if (args != null) {
@@ -82,6 +78,14 @@ public class MessagesFragment extends Fragment {
             isGroup = args.getBoolean(ARG_IS_GROUP, false);
         }
 
+        adapter = new MessagesListAdapter(FirebaseAuth.getInstance().getUid(), isGroup);
+        rv.setAdapter(adapter);
+
+        if (isGroup && convoId != null) {
+            loadParticipantNames(convoId);
+        }
+
+        vm = new ViewModelProvider(this).get(ChatViewModel.class);
         vm.start(convoId, otherUid);
 
         vm.messages.observe(getViewLifecycleOwner(), list -> {
@@ -105,6 +109,47 @@ public class MessagesFragment extends Fragment {
 
         menu.setOnClickListener(this::showConversationMenu);
     }
+
+    private void loadParticipantNames(String convoId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("conversations")
+                .document(convoId)
+                .collection("participantsData")
+                .get()
+                .addOnSuccessListener(snap -> {
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        String uid = doc.getId(); // participant uid
+
+                        // For each participant, look up their user profile
+                        db.collection("users")
+                                .document(uid)
+                                .get()
+                                .addOnSuccessListener(userDoc -> {
+                                    if (!userDoc.exists()) {
+                                        adapter.setSenderName(uid, "Unknown");
+                                        return;
+                                    }
+
+                                    // Adjust these field names to match your users collection
+                                    String name = userDoc.getString("displayName");
+                                    if (name == null || name.trim().isEmpty()) {
+                                        name = userDoc.getString("username");
+                                    }
+                                    if (name == null || name.trim().isEmpty()) {
+                                        name = "Unknown";
+                                    }
+
+                                    adapter.setSenderName(uid, name);
+                                })
+                                .addOnFailureListener(e ->
+                                        Log.w("MessagesFragment", "Failed to load user " + uid, e));
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Log.w("MessagesFragment", "Failed to load participant ids", e));
+    }
+
+
 
     private void showConversationMenu(View anchor) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
