@@ -51,4 +51,8 @@
     <string name="group_photo_selected">Group photo selected</string>
     <string name="start_direct_message">Start direct message</string>
     <string name="start_group_chat">Start group chat</string>
+    <string name="clear_all">Clear all</string>
+    <string name="select">Select</string>
+    <string name="delete_selected">Delete selected</string>
+    <string name="cancel">Cancel</string>
 </resources>

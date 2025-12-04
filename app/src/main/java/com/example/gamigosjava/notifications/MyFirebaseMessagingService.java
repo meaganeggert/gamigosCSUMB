@@ -17,6 +17,9 @@ import com.example.gamigosjava.R;
 import com.example.gamigosjava.ui.activities.FriendsLanding;
 import com.example.gamigosjava.ui.activities.MessagesActivity;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -99,6 +102,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             bodyText = "An event you’re in was cancelled";
         }
 
+        //  Save to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("eventId", eventId);
+        extras.put("eventTitle", eventTitle);
+        extras.put("hostName", hostName);
+
+        saveNotificationToFirestore(
+                "event_deleted",
+                titleText,
+                bodyText,
+                extras
+        );
+
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
         intent.putExtra("selectedEventId", eventId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -134,7 +150,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify(notificationId, builder.build());
     }
 
-
     private void showEventRescheduledNotification(Map<String, String> data) {
         String eventId = data.get("eventId");
         String eventTitle = data.get("eventTitle");
@@ -167,6 +182,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } else {
             bodyText = "An event you’re invited to was rescheduled" + whenText;
         }
+
+        //  Save to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("eventId", eventId);
+        extras.put("eventTitle", eventTitle);
+        extras.put("hostName", hostName);
+        extras.put("scheduledAt", newScheduledAtStr);
+
+        saveNotificationToFirestore(
+                "event_rescheduled",
+                titleText,
+                bodyText,
+                extras
+        );
 
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
         intent.putExtra("selectedEventId", eventId);
@@ -223,6 +252,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             bodyText = "An event you’re in has ended";
         }
 
+        //  Save to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("eventId", eventId);
+        extras.put("eventTitle", eventTitle);
+        extras.put("hostName", hostName);
+
+        saveNotificationToFirestore(
+                "event_ended",
+                titleText,
+                bodyText,
+                extras
+        );
+
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
         intent.putExtra("selectedEventId", eventId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -258,6 +300,40 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify(notificationId, builder.build());
     }
 
+    private void saveNotificationToFirestore(
+            String type,
+            String title,
+            String body,
+            Map<String, Object> extraFields
+    ) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Log.w(TAG, "Cannot save notification, user is null");
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection("users")
+                .document(user.getUid())
+                .collection("notifications")
+                .document();  // auto ID
+
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("type", type);
+        data.put("title", title);
+        data.put("body", body);
+        data.put("timestamp", System.currentTimeMillis());
+
+        if (extraFields != null) {
+            data.putAll(extraFields);
+        }
+
+        docRef.set(data)
+                .addOnSuccessListener(unused ->
+                        Log.d(TAG, "Saved notification doc " + docRef.getId()))
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed saving notification doc", e));
+    }
 
     private void showEventStartedNotification(Map<String, String> data) {
         String eventId = data.get("eventId");
@@ -277,6 +353,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } else {
             bodyText = "An event you're invited to is starting now";
         }
+
+        //  Save to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("eventId", eventId);
+        extras.put("eventTitle", eventTitle);
+        extras.put("hostName", hostName);
+
+        saveNotificationToFirestore(
+                "event_started",
+                titleText,
+                bodyText,
+                extras
+        );
 
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
         intent.putExtra("selectedEventId", eventId);
@@ -313,7 +402,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify(notificationId, builder.build());
     }
 
-
     private void showEventInviteNotification(Map<String, String> data) {
         String eventId = data.get("eventId");
         String eventTitle = data.get("eventTitle");
@@ -333,6 +421,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } else {
             bodyText = "You received an event invite";
         }
+
+        //  Save to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("eventId", eventId);
+        extras.put("eventTitle", eventTitle);
+        extras.put("hostName", hostName);
+        extras.put("scheduledAt", scheduledAtStr);
+
+        saveNotificationToFirestore(
+                "event_invite",
+                titleText,
+                bodyText,
+                extras
+        );
 
         // === Existing invite notification ===
         Intent intent = new Intent(this, com.example.gamigosjava.ui.activities.ViewEventActivity.class);
@@ -369,7 +471,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         int notificationId = (int) (System.currentTimeMillis() & 0xfffffff);
         manager.notify(notificationId, builder.build());
 
-        // === NEW: schedule "event starting" alarm ===
+        // === "Event starting" alarm scheduling (unchanged) ===
         if (scheduledAtStr != null) {
             try {
                 long scheduledAtMillis = Long.parseLong(scheduledAtStr);
@@ -389,7 +491,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             }
         }
     }
-
 
     private void showMessageNotification(Map<String, String> data) {
         String conversationId = data.get("conversationId");
@@ -438,14 +539,29 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+        //  Save notification to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("conversationId", conversationId);
+        extras.put("isGroup", isGroup);
+        extras.put("groupTitle", groupTitle);
+        extras.put("otherUid", otherUid);
+        extras.put("senderName", senderName);
+
+        String bodyText = isGroup && senderName != null
+                ? senderName + ": " + messagePreview
+                : messagePreview;
+
+        saveNotificationToFirestore(
+                "message",
+                title,
+                bodyText,
+                extras
+        );
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
                 .setSmallIcon(R.drawable.outline_mark_email_unread_24)
                 .setContentTitle(title)
-                .setContentText(
-                        isGroup && senderName != null
-                                ? senderName + ": " + messagePreview
-                                : messagePreview
-                )
+                .setContentText(bodyText)
                 .setAutoCancel(true)
                 .setSound(soundUri)
                 .setContentIntent(pendingIntent)
@@ -479,10 +595,24 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+        String bodyText = fromName + " sent you a friend request";
+
+        //  Save notification to Firestore
+        Map<String, Object> extras = new java.util.HashMap<>();
+        extras.put("fromUserId", fromUserId);
+        extras.put("fromName", fromName);
+
+        saveNotificationToFirestore(
+                "friend_request",
+                "New friend request",
+                bodyText,
+                extras
+        );
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_FRIEND_REQUESTS)
                 .setSmallIcon(R.drawable.outline_person_add_24)
                 .setContentTitle("New friend request")
-                .setContentText(fromName + " sent you a friend request")
+                .setContentText(bodyText)
                 .setAutoCancel(true)
                 .setSound(soundUri)
                 .setContentIntent(pendingIntent)

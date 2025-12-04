@@ -9,11 +9,15 @@ import com.example.gamigosjava.data.model.ActivityItem;
 
 // Firebase
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.notifications.NotificationTokenManager;
 import com.example.gamigosjava.ui.adapter.FeedAdapter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 // Credential Manager (AndroidX)
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -45,6 +49,7 @@ public class LandingActivity extends BaseActivity {
         setTopTitle("Gamigos");
 
         checkAndRequestNotificationPermission();
+        saveFCMToken();
 
         feedRecycler = findViewById(R.id.recyclerViewFeed);
         defaultEmptyText = findViewById(R.id.emptyText);
@@ -54,6 +59,18 @@ public class LandingActivity extends BaseActivity {
         feedRecycler.setAdapter(feedAdapter);
 
         loadFeed();
+    }
+
+    private void saveFCMToken() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            FirebaseMessaging.getInstance()
+                    .getToken()
+                    .addOnSuccessListener(token -> {
+                        NotificationTokenManager.saveTokenForCurrentUser(token);
+                        Log.d("TOKEN_DEBUG", "LandingActivity refresh token: " + token);
+                    });
+        }
     }
 
     private void loadFeed() {
