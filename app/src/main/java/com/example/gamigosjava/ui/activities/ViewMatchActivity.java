@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -81,7 +82,11 @@ public class ViewMatchActivity extends BaseActivity {
     private ScoresAdapter scoresAdapter;
     public Button saveButton, startMatch, endMatch, addPlayer;
     private EditText customPlayerInput;
-    private Spinner inviteeDropDown;
+    private Spinner inviteeDropDown, winRuleDropdown;
+
+    private List<String> winRuleList = new ArrayList<>();
+    private ArrayAdapter<String> winRuleAdapter;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -127,11 +132,21 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Sets the UI element variables for the match form.
     public void addMatchForm(@IdRes int containerId) {
+        matchFormContainerHandle = findViewById(containerId);
+
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
 
-        matchFormContainerHandle = findViewById(containerId);
+        winRuleList.add("Highest Score");
+        winRuleList.add("Lowest Score");
+        winRuleList.add("Custom");
+
+        winRuleAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_dropdown_item,
+                winRuleList
+        );
+        winRuleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         inviteeAdapter = new ArrayAdapter<>(
                 this,
@@ -205,9 +220,42 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
+        winRuleDropdown = matchFormContainerHandle.findViewById(R.id.dropdown_winRule);
+        winRuleDropdown.setAdapter(winRuleAdapter);
+        winRuleDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String selected = winRuleDropdown.getSelectedItem().toString().toLowerCase();
+                TextView scoreLabel = findViewById(R.id.textView_playerScoreLabel);
+                TextView placementLabel = findViewById(R.id.textView_playerPlacementLabel);
+
+                if (selected.contains("highest")) {
+                    matchItem.winRule = "highest";
+                    scoreLabel.setVisibility(TextView.VISIBLE);
+                    placementLabel.setVisibility(TextView.GONE);
+                } else if (selected.contains("lowest")) {
+                    matchItem.winRule = "lowest";
+                    scoreLabel.setVisibility(TextView.VISIBLE);
+                    placementLabel.setVisibility(TextView.GONE);
+                } else {
+                    matchItem.winRule = "custom";
+                    scoreLabel.setVisibility(TextView.GONE);
+                    placementLabel.setVisibility(TextView.VISIBLE);
+                }
+
+                // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
+                scoresAdapter.winRule = matchItem.winRule;
+                scoresAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         inviteeDropDown = findViewById(R.id.dropdown_invitees);
         inviteeDropDown.setAdapter(inviteeAdapter);
-
         customPlayerInput = findViewById(R.id.editText_customPlayer);
 
         Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
@@ -778,8 +826,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
         matchItem.updatedAt = Timestamp.now();
-//        matchItem.endedAt = Timestamp.now();
-        // Timestamps will have been set by the showDateTime interface.
+        // winRule will have been set by the spinner view
 
         // Connect values from the match object to the hashmap to be uploaded.
         HashMap<String, Object> match = new HashMap<>();
@@ -790,6 +837,7 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("endedAt", matchItem.endedAt);
         match.put("imageUrl", matchItem.imageUrl);
         match.put("updatedAt",  matchItem.updatedAt);
+        match.put("winRule", matchItem.winRule);
 
         if (game.id != null) {
             match.put("gameRef", db.collection("games").document(game.id));
@@ -803,7 +851,7 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("hostId", matchItem.hostId);
 
 
-        // Update the match
+        // Update the existing match
         if (!matchId.isEmpty()) {
             db.collection("matches").document(matchItem.id).set(match)
                     .addOnSuccessListener(v -> {
@@ -811,7 +859,7 @@ public class ViewMatchActivity extends BaseActivity {
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
@@ -826,7 +874,7 @@ public class ViewMatchActivity extends BaseActivity {
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id, matchItem.winRule);
 
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
@@ -917,7 +965,6 @@ public class ViewMatchActivity extends BaseActivity {
     private void getMatchDetails(String matchId) {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
-//            matchItem.startedAt = Timestamp.now();
             getFriends();
             return;
         }
@@ -940,6 +987,7 @@ public class ViewMatchActivity extends BaseActivity {
             String eventIdResult = snap.getString("eventId");
             String rulesVariantResult = snap.getString("rules_variant");
             String hostId = snap.getString("hostId");
+            String winRule = snap.getString("winRule");
 
             if (id != null) matchItem.id = id;
             if (endedAt != null) matchItem.endedAt = endedAt;
@@ -949,6 +997,7 @@ public class ViewMatchActivity extends BaseActivity {
             if (eventIdResult != null) matchItem.eventId = eventIdResult;
             if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
             if (hostId != null) matchItem.hostId = hostId;
+            if (winRule != null) matchItem.winRule = winRule;
 
             setMatchDetails(matchItem);
 
@@ -963,6 +1012,18 @@ public class ViewMatchActivity extends BaseActivity {
             startMatch.setEnabled(false);
             if (match.endedAt == null) endMatch.setEnabled(true);
         }
+
+        int winRuleIndex = -1;
+        for (int i = 0; i < winRuleAdapter.getCount(); i++) {
+            String s = winRuleAdapter.getItem(i);
+            if (s.toLowerCase().contains(matchItem.winRule)) {
+                winRuleIndex = i;
+                break;
+            }
+        }
+
+        if (winRuleIndex != -1) winRuleDropdown.setSelection(winRuleIndex);
+
 
 
         View matchForm = matchFormContainerHandle.getChildAt(0);

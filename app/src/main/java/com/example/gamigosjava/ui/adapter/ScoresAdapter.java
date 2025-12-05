@@ -9,8 +9,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +28,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,6 +36,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     private final static String TAG = "ScoresAdapter";
     public List<Player> playerList = new ArrayList<>();
     private Context context;
+    public String winRule = "highest";
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
@@ -47,8 +51,6 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             playerPlacement = itemView.findViewById(R.id.editTextNumber_playerPlacement);
             removePlayer = itemView.findViewById(R.id.button_removePlayer);
         }
-
-
     }
 
     @NonNull
@@ -67,7 +69,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
 
         holder.playerName.setText(player.friend.displayName != null ? player.friend.displayName : "Unknown");
 
-
+        // set player score
         holder.playerScore.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable editable) {
@@ -91,6 +93,8 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         });
         holder.playerScore.setText(player.score.toString());
 
+        // set player placement
+        holder.playerPlacement.setVisibility(EditText.GONE);
         holder.playerPlacement.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable editable) {
@@ -136,6 +140,13 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
 
         });
 
+        if (winRule.equals("custom")) {
+            holder.playerPlacement.setVisibility(EditText.VISIBLE);
+            holder.playerScore.setVisibility(EditText.GONE);
+        } else {
+            holder.playerPlacement.setVisibility(EditText.GONE);
+            holder.playerScore.setVisibility(EditText.VISIBLE);
+        }
     }
 
     @Override
@@ -157,10 +168,30 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         return playerList.get(i);
     }
 
-    public void uploadPlayerScores(FirebaseFirestore db, FirebaseUser currentUser, String matchId) {
+    public void uploadPlayerScores(FirebaseFirestore db, FirebaseUser currentUser, String matchId, String winRule) {
         if (currentUser == null) {
             Log.d(TAG, "User Not Signed in. Cannot upload player scores.");
             return;
+        }
+
+        if (winRule == null || winRule.isEmpty()) {
+            return;
+        }
+        switch (winRule) {
+            case ("highest"):
+                playerList.sort((p1, p2) -> Integer.compare(p2.score, p1.score));
+                break;
+            case ("lowest"):
+                playerList.sort((p1, p2) -> Integer.compare(p1.score, p2.score));
+                break;
+            case ("custom"):
+                playerList.sort((p1, p2) -> Integer.compare(p1.placement, p2.placement));
+                break;
+        }
+
+        // With users sorted based on preferred placement rules, we can now just set the placements as the sorted order.10
+        for (int i = 0; i < playerList.size(); i++) {
+            playerList.get(i).placement = i + 1;
         }
 
         CollectionReference playersCol = db.collection("matches").document(matchId).collection("players");

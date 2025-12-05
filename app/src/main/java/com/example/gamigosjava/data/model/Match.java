@@ -18,4 +18,5 @@ public class Match {
     public DocumentReference gameRef;
     public CollectionReference playersRef;
     public String hostId;
+    public String winRule;
 }
