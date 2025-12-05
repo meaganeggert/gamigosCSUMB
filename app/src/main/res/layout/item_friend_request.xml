@@ -4,6 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginVertical="3dp"
+    android:background="@color/neutraltan"
     android:padding="8dp">
 
     <!-- optional avatar, you can remove this -->
@@ -22,10 +24,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/requesting_user"
+        android:gravity="center_vertical"
         android:textSize="16sp"
+        android:fontFamily="@font/jetbrains_mono"
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toEndOf="@id/ivAvatar"
         app:layout_constraintTop_toTopOf="@id/ivAvatar"
+        app:layout_constraintBottom_toBottomOf="@id/ivAvatar"
         app:layout_constraintEnd_toStartOf="@id/btnAccept" />
 
     <Button
@@ -33,6 +38,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/accept"
+        android:textColor="@color/lightgrey"
+        android:backgroundTint="@color/green"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
         app:layout_constraintEnd_toStartOf="@id/btnDecline"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginEnd="8dp" />
@@ -42,6 +51,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/decline"
+        android:textColor="@color/lightgrey"
+        android:backgroundTint="@color/brown"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

@@ -2,6 +2,7 @@ package com.example.gamigosjava.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -17,9 +18,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +31,7 @@ import java.util.Map;
 
 public class FriendsLanding extends BaseActivity {
     public static final String EXTRA_FOCUS_REQUEST_UID = "EXTRA_FOCUS_REQUEST_UID";
+    private static final String TAG = "FriendsLanding";
     private FirebaseUser currentUser;
     private FirebaseFirestore db;
     private TextView tvRequestsHeader;
@@ -337,6 +341,12 @@ public class FriendsLanding extends BaseActivity {
                             currentUser.getPhotoUrl() != null ? currentUser.getPhotoUrl().toString() : null);
                     theirFriendData.put("createdAt", com.google.firebase.Timestamp.now());
 
+                    // Save names of people involved
+                    String myName = currentUser.getDisplayName();
+                    Log.d(TAG, "My Name: " + myName + " Their Name: " + otherName);
+
+                    addFriendshipAsActivity(batch, myUid, myName, otherUid, otherName);
+
                     batch.set(myFriendRef, myFriendData);
                     batch.set(theirFriendRef, theirFriendData);
                     batch.delete(myIncomingRef);
@@ -344,6 +354,26 @@ public class FriendsLanding extends BaseActivity {
 
                     batch.commit();
                 });
+    }
+
+    private void addFriendshipAsActivity(WriteBatch batch, String friendOneID, String friendOneName, String friendTwoID, String friendTwoName) {
+        Log.i(TAG, "AddFriendshipFunction called");
+        // Find the right activity doc
+        DocumentReference activity_ref = db.collection("activities")
+                .document();
+
+        // Store necessary data
+        Map<String, Object> newActivity = new HashMap<>();
+        newActivity.put("type", "FRIEND_ADDED");
+        newActivity.put("targetId", friendTwoID);
+        newActivity.put("targetName", friendTwoName);
+        newActivity.put("actorId", friendOneID);
+        newActivity.put("actorName", friendOneName);
+        newActivity.put("visibility", "friends");
+        newActivity.put("message", friendOneName.split(" ")[0] + " and " + friendTwoName.split(" ")[0] + " are now friends.");
+        newActivity.put("createdAt", FieldValue.serverTimestamp());
+
+        batch.set(activity_ref, newActivity);
     }
 
     private void declineRequest(String otherUid) {

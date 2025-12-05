@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class LandingActivity extends BaseActivity {
@@ -70,7 +71,7 @@ public class LandingActivity extends BaseActivity {
         if (feedListener != null) feedListener.remove();
 
         feedListener = db.collection("activities")
-                .whereEqualTo("type", "ACHIEVEMENT_EARNED")
+                .whereIn("type", Arrays.asList("ACHIEVEMENT_EARNED", "EVENT_CREATED", "FRIEND_ADDED"))
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {

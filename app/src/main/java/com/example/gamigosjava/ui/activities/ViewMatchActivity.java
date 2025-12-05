@@ -534,6 +534,7 @@ public class ViewMatchActivity extends BaseActivity {
     // Function is called in getInvites if there is no event tied to the match.
     private void getFriends() {
         if (currentUser == null) return;
+        if (!eventId.isEmpty()) return;
 
         db.collection("users")
                 .document(matchItem.hostId)

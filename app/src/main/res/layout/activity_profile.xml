@@ -3,7 +3,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/neutralbrown"
+    android:padding="8dp">
 
 
 <LinearLayout
@@ -13,6 +14,8 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/neutraltan"
+        android:padding="8dp"
     tools:context=".ui.activities.ProfileActivity">
 
         <!-- later you can add an ImageView for avatar -->
@@ -20,6 +23,9 @@
             android:id="@+id/tvProfileTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
             android:text="My Profile"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -30,25 +36,51 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:scaleType="centerCrop"
+            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="12dp"
             android:src="@android:drawable/ic_menu_camera"
             android:clickable="true"
             android:focusable="true"
             android:contentDescription="Profile Photo"/>
 
+        <TextView
+            android:id="@+id/tvEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:fontFamily="@font/jetbrains_mono"
+            android:hint="Email"
+            android:enabled="false"
+            android:layout_marginVertical="12dp" />
+
+        <TextView
+            android:id="@+id/tvDisplayName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="textStart"
+            android:text="Display Name:"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
+            android:textStyle="bold"
+            android:hint="Display name"/>
         <EditText
             android:id="@+id/etDisplayName"
             android:inputType="textPersonName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
             android:hint="Display name"
             android:layout_marginBottom="16dp" />
+
+
 
         <TextView
             android:id="@+id/tvPrivacyOptions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Privacy Options"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
             android:textStyle="bold" />
 
 
@@ -63,34 +95,35 @@
                 android:id="@+id/rbPublic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Public" />
+                android:text="Public"
+                android:fontFamily="@font/jetbrains_mono" />
 
             <RadioButton
                 android:id="@+id/rbFriends"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Friends only" />
+                android:text="Friends only"
+                android:fontFamily="@font/jetbrains_mono" />
 
             <RadioButton
                 android:id="@+id/rbPrivate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Private" />
+                android:text="Private"
+                android:fontFamily="@font/jetbrains_mono" />
         </RadioGroup>
 
 
-        <TextView
-            android:id="@+id/tvEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Email"
-            android:enabled="false"
-            android:layout_marginTop="12dp" />
+
 
         <Button
             android:id="@+id/btnSaveProfile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/darkblue"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
             android:text="Save"
             android:layout_marginTop="20dp"
             />
@@ -100,6 +133,7 @@
             android:id="@+id/button_test"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:backgroundTint="@color/yellow"
             android:text="BGG API Test"
             android:fontFamily="serif-monospace"
@@ -114,16 +148,18 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/button_firebaseTest"
             app:layout_constraintTop_toTopOf="@+id/button_firebaseTest"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0"
+            android:visibility="gone"/>
 
         <!-- Button to test Firebase -->
         <Button
             android:id="@+id/button_firebaseTest"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:backgroundTint="@color/yellow"
             android:text="Firebase Test"
-            android:fontFamily="serif-monospace"
+            android:fontFamily="@font/jetbrains_mono"
             android:maxLines="1"
             android:textColor="@color/darkblue"
             app:autoSizeMaxTextSize="24sp"
@@ -134,28 +170,30 @@
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             tools:layout_editor_absoluteY="547dp"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="gone"/>
 
         <!-- Log out button -->
         <Button
             android:id="@+id/button_logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:backgroundTint="@color/yellow"
             android:text="Log Out"
-            android:fontFamily="serif-monospace"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
             android:maxLines="1"
             android:textColor="@color/darkblue"
             app:autoSizeMaxTextSize="24sp"
             app:autoSizeMinTextSize="10sp"
             app:autoSizeStepGranularity="1sp"
             app:autoSizeTextType="uniform"
+            android:layout_marginBottom="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.871" />
+            app:layout_constraintTop_toBottomOf="@id/btnSaveProfile" />
 
     </LinearLayout>
 

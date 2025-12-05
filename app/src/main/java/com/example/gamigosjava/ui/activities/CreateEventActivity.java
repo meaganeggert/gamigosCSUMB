@@ -29,6 +29,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -41,12 +42,11 @@ import java.util.Map;
 public class CreateEventActivity extends BaseActivity {
     String TAG = "Create Event";
     private FirebaseFirestore db;
-    private FirebaseAuth auth;
     private FirebaseUser currentUser;
 
 
     // Values used for uploading/validation
-    private Calendar calendar = Calendar.getInstance();
+    private final Calendar calendar = Calendar.getInstance();
     private Event eventItem;
     private Date eventStart; // May not be useful at the moment
     private TextView eventStartText;
@@ -60,7 +60,7 @@ public class CreateEventActivity extends BaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        auth = FirebaseAuth.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
 
@@ -78,7 +78,6 @@ public class CreateEventActivity extends BaseActivity {
         );
         friendAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        // Important to make these two calls after the adapters have been set.
         getFriends();
 
         super.onCreate(savedInstanceState);
@@ -97,9 +96,7 @@ public class CreateEventActivity extends BaseActivity {
         // Finish and upload event details
         View createEventButton = findViewById(R.id.button_createEvent);
         if (createEventButton != null) {
-            createEventButton.setOnClickListener(v -> {
-                uploadAllForms();
-            });
+            createEventButton.setOnClickListener(v -> uploadAllForms());
         } else {
             Log.e(TAG, "Create Event Button not found");
         }
@@ -227,6 +224,12 @@ public class CreateEventActivity extends BaseActivity {
                     Toast.makeText(this, "Event uploaded successfully.", Toast.LENGTH_SHORT).show();
                     uploadFriendInvites();
 //                    uploadMatches();
+                    addEventAsFeedActivity(eventItem.id, eventItem.title, currentUser.getUid(), currentUser.getDisplayName(), eventItem.visibility);
+                    //  Schedule local "event starting" alarm
+                    if (eventItem.scheduledAt != null) {
+                        long triggerAtMillis = eventItem.scheduledAt.toDate().getTime();
+                        scheduleEventStartAlarm(eventItem.id, eventItem.title, currentUser.getDisplayName(), triggerAtMillis);
+                    }
                     finish();
 
                 })
@@ -235,6 +238,28 @@ public class CreateEventActivity extends BaseActivity {
                     Log.e(TAG, "Failed to save event: " + e.getMessage());
                     Toast.makeText(this, "Failed to save event.", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void addEventAsFeedActivity(String eventId, String eventName, String userId, String userName, String eventVisibility) {
+
+        // Find the right activity doc
+        DocumentReference activity_ref = db.collection("activities")
+                .document();
+
+        // Store necessary data
+        Map<String, Object> newActivity = new HashMap<>();
+        newActivity.put("type", "EVENT_CREATED");
+        newActivity.put("targetId", eventId);
+        newActivity.put("targetName", eventName);
+        newActivity.put("actorId", userId);
+        newActivity.put("actorName", userName);
+        newActivity.put("visibility", eventVisibility);
+        newActivity.put("message", userName.split(" ")[0] + " created " + eventName);
+        newActivity.put("createdAt", FieldValue.serverTimestamp());
+
+        activity_ref.set(newActivity)
+                .addOnSuccessListener(v-> Log.d(TAG, "Event created as an activity for feed display"))
+                .addOnFailureListener(e-> Log.e(TAG, "Failed to add event as an activity."));
     }
 
     // upload friend invites to database
@@ -269,16 +294,17 @@ public class CreateEventActivity extends BaseActivity {
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
 
-            inviteRef.set(invite).addOnSuccessListener(v -> {
-                        Log.d(TAG, "Successfully uploaded friend invites");
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.d(TAG, "Failed to upload friend invite: " + e.getMessage());
-                    });
+            //  Fields for notifications
+            invite.put("eventTitle", eventItem.title);
+            invite.put("eventId", eventItem.id);
+            invite.put("hostId", currentUser.getUid());
+            invite.put("hostName", currentUser.getDisplayName());
+            invite.put("scheduledAt", eventItem.scheduledAt);
+
+            inviteRef.set(invite).addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invites"))
+                    .addOnFailureListener(e -> Log.d(TAG, "Failed to upload friend invite: " + e.getMessage()));
         }
     }
-
-
 
     // This gets the users friends from the database and loads it into an array adapter to be used
     // in the dropdown of friends to invite.
@@ -310,9 +336,7 @@ public class CreateEventActivity extends BaseActivity {
                     }
                     friendAdapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to load friends: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
 
