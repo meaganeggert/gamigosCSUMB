@@ -783,6 +783,8 @@ public class ViewEventActivity extends BaseActivity {
         Button schedule = eventContainer.findViewById(R.id.button_selectSchedule);
         Button addInvitee = eventContainer.findViewById(R.id.button_addFriend);
         Button removeInvitee = eventContainer.findViewById(R.id.button_removeFriend);
+        Spinner visibility = eventContainer.findViewById(R.id.dropdown_visibility);
+        LinearLayout inviteeLayout = eventContainer.findViewById(R.id.linearLayout_friend);
 
         // Set visibility for UI elements the host is meant to change.
         if (isHost) {
@@ -796,16 +798,25 @@ public class ViewEventActivity extends BaseActivity {
             schedule.setVisibility(Button.GONE);
             addInvitee.setVisibility(Button.GONE);
             removeInvitee.setVisibility(Button.GONE);
+            visibility.setEnabled(false);
 
+            inviteeLayout.setOnHierarchyChangeListener(new ViewGroup.OnHierarchyChangeListener() {
+                @Override
+                public void onChildViewAdded(View view, View view1) {
+                    view1.setEnabled(false);
+                }
+
+                @Override
+                public void onChildViewRemoved(View view, View view1) {}
+            });
+
+            // UI elements oustide the event form fragment.
             addGameButton.setVisibility(Button.GONE);
             photos.setVisibility(Button.GONE);
             cancelChanges.setText("Back");
-
-            for (int i = 0; i < recyclerView.getChildCount(); i++) {
-                Button deleteMatchBtn = recyclerView.getChildAt(i).findViewById(R.id.button_deleteMatch);
-                deleteMatchBtn.setEnabled(false);
-            }
         }
+
+        matchAdapter.setIsHost(isHost);
     }
 
 
