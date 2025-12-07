@@ -53,18 +53,17 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class ViewEventActivity extends BaseActivity {
     private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
@@ -79,18 +78,12 @@ public class ViewEventActivity extends BaseActivity {
     private String eventId;
     private List<Friend> friendList;
     private List<String> visibilityList;
-
     private Date eventStart;
-
     private final Calendar calendar = Calendar.getInstance();
-
     private Event eventItem;
-
     ViewGroup eventContainer;
-
     List<Match> matches;
     List<MatchSummary> matchSummaryList;
-
     CollectionReference matchCollectionRef;
     List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
@@ -98,6 +91,7 @@ public class ViewEventActivity extends BaseActivity {
     Button startEvent, endEvent, deleteEvent, updateEventButton;
     List<Image> images;
     ImageAdapter imageAdapter;
+    private Set<String> originalInviteeUids = new HashSet<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -162,6 +156,7 @@ public class ViewEventActivity extends BaseActivity {
                 updateEvent();
                 uploadUserMatchMetrics();
                 endEvent.setEnabled(false);
+                startEvent.setEnabled(true);
             });
         }
 
@@ -335,8 +330,8 @@ public class ViewEventActivity extends BaseActivity {
                         );
                     }
 
-                    //  Only rewrite invitees when event is still planned
-                    if ("planned".equals(eventItem.status) && inviteesChanged) {
+                    //  Only rewrite invitees when event is still planned AND the set actually changed
+                    if ("planned".equals(eventItem.status) && haveInviteesActuallyChanged()) {
                         CollectionReference invitees = db.collection("events")
                                 .document(eventItem.id)
                                 .collection("invitees");
@@ -354,38 +349,58 @@ public class ViewEventActivity extends BaseActivity {
     }
 
 
+                        FirestoreUtils.deleteCollection(db, invitees, 10)
+                                .addOnSuccessListener(unused -> uploadFriendInvites())
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Failed to refresh invitees: " + e.getMessage()));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to update the event: " + e.getMessage());
+                    Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void uploadFriendInvites() {
         List<Friend> friendsInvited = new ArrayList<>();
         LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
 
-        // Filters out repeated invites.
+        // Collect unique invitees from the spinners
         for (int i = 0; i < friendSection.getChildCount(); i++) {
             Spinner friendSpinner = (Spinner) friendSection.getChildAt(i);
             Friend friendItem = (Friend) friendSpinner.getSelectedItem();
 
-            if (!friendsInvited.contains(friendItem)) {
+            if (friendItem != null && !friendsInvited.contains(friendItem)) {
                 friendsInvited.add(friendItem);
             }
         }
 
-        // Uploads friend invites to the database one by one.
-        for (int i = 0; i < friendsInvited.size(); i++) {
-            Friend friendItem = friendsInvited.get(i);
+        if (currentUser == null) {
+            Log.w(TAG, "uploadFriendInvites: currentUser is null");
+            return;
+        }
 
+        for (Friend friendItem : friendsInvited) {
             DocumentReference inviteRef = db.collection("events")
                     .document(eventItem.id)
                     .collection("invitees")
-                    .document(friendItem.id);
+                    .document(friendItem.id);  // Stable per-friend doc ID
 
             Map<String, Object> invite = new HashMap<>();
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
+            invite.put("eventId", eventItem.id);
+            invite.put("eventTitle", eventItem.title);
+            invite.put("hostName", currentUser.getDisplayName());
+            invite.put("hostId", currentUser.getUid());
+            invite.put("scheduledAt", eventItem.scheduledAt); // Firestore Timestamp
 
-            inviteRef.set(invite).addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invites"))
+            inviteRef.set(invite)
+                    .addOnSuccessListener(v -> Log.d(TAG, "Successfully uploaded friend invite for " + friendItem.displayName))
                     .addOnFailureListener(e -> Log.d(TAG, "Failed to upload friend invite: " + e.getMessage()));
         }
-
     }
+
 
     private void getMatches(String eventId) {
         if (currentUser == null) {
@@ -804,6 +819,8 @@ public class ViewEventActivity extends BaseActivity {
                 deleteMatchBtn.setEnabled(false);
             }
         }
+        //  Clear out any existing invitees
+        originalInviteeUids.clear();
 
         CollectionReference inviteRef = db.collection("events")
                 .document(eventId)
@@ -818,9 +835,20 @@ public class ViewEventActivity extends BaseActivity {
 
             LinearLayout inviteLayout = eventContainer.findViewById(R.id.linearLayout_friend);
             for (DocumentSnapshot snap: snaps) {
-                Objects.requireNonNull(snap.getDocumentReference("userRef")).get().addOnSuccessListener(s -> {
-                    setFriendDropdown(inviteLayout);
-                    Spinner friendDropdown = (Spinner) inviteLayout.getChildAt(inviteLayout.getChildCount() - 1);
+                DocumentReference userRef = snap.getDocumentReference("userRef");
+                if (userRef == null) {
+                    Log.w(TAG, "Invite doc without userRef");
+                    continue;
+                }
+
+                // This is the invitee's user UID (users/{uid})
+                String inviteeUid = userRef.getId();
+                originalInviteeUids.add(inviteeUid);
+
+                userRef.get().addOnSuccessListener(s -> {
+                    setFriendDropdown(inviteLayout, false);
+                    Spinner friendDropdown =
+                            (Spinner) inviteLayout.getChildAt(inviteLayout.getChildCount() - 1);
 
                     Friend f = new Friend();
                     f.id = s.getId();
@@ -829,27 +857,48 @@ public class ViewEventActivity extends BaseActivity {
 
                     boolean friendInList = false;
                     for (int i = 0; i < friendList.size(); i++) {
-                        if (friendList.get(i).id.equals(f.id)) {
+                        if (friendList.get(i).friendUId.equals(f.friendUId)) { // compare by uid
                             friendDropdown.setSelection(i);
                             friendInList = true;
                             break;
                         }
                     }
 
-                    if (!friendInList)  {
+                    if (!friendInList) {
                         friendList.add(f);
                         friendAdapter.notifyDataSetChanged();
                         friendDropdown.setSelection(friendList.indexOf(f));
                     }
-                }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
+                }).addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
             }
             isPopulatingInvitees = false;
 
         }).addOnFailureListener(e -> {
             Log.e(TAG, "Failed to get friend invite list: " + e.getMessage());
             isPopulatingInvitees = false;
-        });
+      });
+
     }
+
+    private boolean haveInviteesActuallyChanged() {
+        LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
+        Set<String> currentInviteeUids = new HashSet<>();
+
+        if (friendSection != null) {
+            for (int i = 0; i < friendSection.getChildCount(); i++) {
+                Spinner friendSpinner = (Spinner) friendSection.getChildAt(i);
+                Friend friendItem = (Friend) friendSpinner.getSelectedItem();
+                if (friendItem != null && friendItem.friendUId != null) {
+                    currentInviteeUids.add(friendItem.friendUId);
+                }
+            }
+        }
+
+        // If the sets differ, then the invitees have changed.
+        return !currentInviteeUids.equals(originalInviteeUids);
+    }
+
 
     // Get current users friend list.
     private void getFriends() {
@@ -928,8 +977,8 @@ public class ViewEventActivity extends BaseActivity {
         datePicker.show();
     }
 
-    // Adds a dropdown to a linear layout, displaying a selction of the users friends.
-    private void setFriendDropdown(LinearLayout layout) {
+    // Adds a dropdown to a linear layout, displaying a selection of the user's friends.
+    private void setFriendDropdown(LinearLayout layout, boolean trackChanges) {
         Spinner newSpinner = new Spinner(this);
         newSpinner.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -940,26 +989,34 @@ public class ViewEventActivity extends BaseActivity {
 
         newSpinner.setAdapter(friendAdapter);
 
-        // Any selection change marks invitees as dirty
-        newSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(android.widget.AdapterView<?> parent,
-                                       View view,
-                                       int position,
-                                       long id) {
-                if (!isPopulatingInvitees) {
-                    inviteesChanged = true;
-                }
-            }
+        if (trackChanges) {
+            // ignore the very first onItemSelected (initial population)
+            final boolean[] firstCall = { true };
 
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parent) {
-                // do nothing
-            }
-        });
+            newSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(android.widget.AdapterView<?> parent,
+                                           View view,
+                                           int position,
+                                           long id) {
+                    if (firstCall[0]) {
+                        firstCall[0] = false;  // initial programmatic selection, ignore
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                    // do nothing
+                }
+            });
+        } else {
+            // No listener needed – this path is now optional
+            newSpinner.setOnItemSelectedListener(null);
+        }
 
         layout.addView(newSpinner);
     }
+
 
 
     // Sets the specified dropdown's selection by passing in a list.
@@ -1003,7 +1060,7 @@ public class ViewEventActivity extends BaseActivity {
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, CHANNEL_EVENT_STATUS)
-                        .setSmallIcon(R.drawable.ic_event_24)  // use whatever icon you like
+                        .setSmallIcon(R.drawable.ic_event_24)
                         .setContentTitle(title)
                         .setContentText(body)
                         .setStyle(new NotificationCompat.BigTextStyle().bigText(body))

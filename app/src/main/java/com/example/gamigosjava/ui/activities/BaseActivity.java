@@ -112,6 +112,11 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_notifications && !(this instanceof com.example.gamigosjava.ui.activities.NotificationsActivity)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.NotificationsActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             } else if (id == R.id.nav_logout) {
                 // Sign Out of Firebase
                 FirebaseAuth.getInstance().signOut();
@@ -206,6 +211,36 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Replace the hamburger with a simple back arrow that behaves like the native Android back button.
+     */
+    protected void enableToolbarBackArrow() {
+        // Lock the drawer closed so swiping from the edge doesn’t open it
+        if (drawer != null) {
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        }
+
+        // Disable the hamburger behavior
+        if (drawerToggle != null) {
+            drawerToggle.setDrawerIndicatorEnabled(false);
+            drawer.removeDrawerListener(drawerToggle);
+        }
+
+        // Show the back arrow in the toolbar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(
+                    ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_white_24)
+            );
+        }
+
+        // Clicking the arrow just goes "back" (finishes this Activity) [Same as back button press]
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        }
+    }
+
     private static final int REQ_POST_NOTIFICATIONS = 2001;
     private static final String PREFS_NAME = "gamigos_prefs";
     private static final String KEY_NOTIF_SETTINGS_DIALOG_SHOWN = "notif_settings_dialog_shown";
@@ -253,6 +288,78 @@ public abstract class BaseActivity extends AppCompatActivity {
                     prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
                 })
                 .show();
+//     }
+
+//     private void openNotificationSettings() {
+//         Intent intent;
+
+//         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//             intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//                     .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+//         } else {
+//             intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                     .setData(Uri.parse("package:" + getPackageName()));
+//         }
+
+//         startActivity(intent);
+//     }
+
+//     protected void scheduleEventStartAlarm(
+//             String eventId,
+//             String eventTitle,
+//             String hostName,
+//             long triggerAtMillis
+//     ) {
+//         if (eventId == null) return;
+
+//         Intent alarmIntent = new Intent(this, EventStartReceiver.class);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_ID, eventId);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_TITLE, eventTitle);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_HOST_NAME, hostName);
+
+//         int requestCode = eventId.hashCode();
+
+//         PendingIntent pendingIntent = PendingIntent.getBroadcast(
+//                 this,
+//                 requestCode,
+//                 alarmIntent,
+//                 Build.VERSION.SDK_INT >= 31
+//                         ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+//                         : PendingIntent.FLAG_UPDATE_CURRENT
+//         );
+
+//         android.app.AlarmManager alarmManager =
+//                 (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//         if (alarmManager == null) return;
+
+//         long now = System.currentTimeMillis();
+//         if (triggerAtMillis <= now) {
+//             // Don't schedule alarms in the past
+//             return;
+//         }
+
+//         // Inexact window (5 minutes) – avoids exact-alarm permission
+//         long windowLength = 5L * 60L * 1000L;
+
+//         if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+//             alarmManager.setWindow(
+//                     android.app.AlarmManager.RTC_WAKEUP,
+//                     triggerAtMillis,
+//                     windowLength,
+//                     pendingIntent
+//             );
+//         } else {
+//             alarmManager.set(
+//                     android.app.AlarmManager.RTC_WAKEUP,
+//                     triggerAtMillis,
+//                     pendingIntent
+//             );
+//         }
+
+//         Log.d("EventAlarm", "Scheduled event-start alarm for " + eventId +
+//                 " at " + triggerAtMillis);
+//     }
+
     }
 
     private void openNotificationSettings() {

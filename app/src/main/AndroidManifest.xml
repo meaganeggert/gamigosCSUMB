@@ -33,19 +33,14 @@
             android:name=".ui.activities.QuickPlayActivity"
             android:exported="false" />
 
-        <service
-            android:name=".notifications.MyFirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
         <activity
             android:name=".ui.activities.ImageUploadActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.ViewMatchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.NotificationsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.ViewEventActivity"
