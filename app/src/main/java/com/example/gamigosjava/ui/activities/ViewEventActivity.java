@@ -348,19 +348,6 @@ public class ViewEventActivity extends BaseActivity {
                 });
     }
 
-
-                        FirestoreUtils.deleteCollection(db, invitees, 10)
-                                .addOnSuccessListener(unused -> uploadFriendInvites())
-                                .addOnFailureListener(e ->
-                                        Log.e(TAG, "Failed to refresh invitees: " + e.getMessage()));
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to update the event: " + e.getMessage());
-                    Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
-                });
-    }
-
     private void uploadFriendInvites() {
         List<Friend> friendsInvited = new ArrayList<>();
         LinearLayout friendSection = findViewById(R.id.linearLayout_friend);
@@ -758,7 +745,7 @@ public class ViewEventActivity extends BaseActivity {
             if (addFriend != null) {
                 addFriend.setOnClickListener(v -> {
                     if (!friendList.isEmpty() && friendLayout.getChildCount() < friendList.size()) {
-                        setFriendDropdown(friendLayout);
+                        setFriendDropdown(friendLayout, true);
                         inviteesChanged = true;
                     } else {
                         Toast.makeText(this, "No friend to add.", Toast.LENGTH_SHORT).show();

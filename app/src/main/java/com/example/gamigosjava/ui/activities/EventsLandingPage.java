@@ -175,7 +175,7 @@ public class EventsLandingPage extends BaseActivity {
         recyclerViewPast.setAdapter(eventAdapterPast);
 
         // Changes to load events with attendees
-        eventsRepo.loadAllEventDetails(false, 2)
+        eventsRepo.loadAllEventDetails(false, 10)
                 .addOnSuccessListener( events -> {
                     eventAdapterPast.setItems(events);
                     Log.i(TAG, "Past events loaded successfully");
