@@ -288,6 +288,78 @@ public abstract class BaseActivity extends AppCompatActivity {
                     prefs.edit().putBoolean(KEY_NOTIF_SETTINGS_DIALOG_SHOWN, true).apply();
                 })
                 .show();
+//     }
+
+//     private void openNotificationSettings() {
+//         Intent intent;
+
+//         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//             intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//                     .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+//         } else {
+//             intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                     .setData(Uri.parse("package:" + getPackageName()));
+//         }
+
+//         startActivity(intent);
+//     }
+
+//     protected void scheduleEventStartAlarm(
+//             String eventId,
+//             String eventTitle,
+//             String hostName,
+//             long triggerAtMillis
+//     ) {
+//         if (eventId == null) return;
+
+//         Intent alarmIntent = new Intent(this, EventStartReceiver.class);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_ID, eventId);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_EVENT_TITLE, eventTitle);
+//         alarmIntent.putExtra(EventStartReceiver.EXTRA_HOST_NAME, hostName);
+
+//         int requestCode = eventId.hashCode();
+
+//         PendingIntent pendingIntent = PendingIntent.getBroadcast(
+//                 this,
+//                 requestCode,
+//                 alarmIntent,
+//                 Build.VERSION.SDK_INT >= 31
+//                         ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+//                         : PendingIntent.FLAG_UPDATE_CURRENT
+//         );
+
+//         android.app.AlarmManager alarmManager =
+//                 (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//         if (alarmManager == null) return;
+
+//         long now = System.currentTimeMillis();
+//         if (triggerAtMillis <= now) {
+//             // Don't schedule alarms in the past
+//             return;
+//         }
+
+//         // Inexact window (5 minutes) – avoids exact-alarm permission
+//         long windowLength = 5L * 60L * 1000L;
+
+//         if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+//             alarmManager.setWindow(
+//                     android.app.AlarmManager.RTC_WAKEUP,
+//                     triggerAtMillis,
+//                     windowLength,
+//                     pendingIntent
+//             );
+//         } else {
+//             alarmManager.set(
+//                     android.app.AlarmManager.RTC_WAKEUP,
+//                     triggerAtMillis,
+//                     pendingIntent
+//             );
+//         }
+
+//         Log.d("EventAlarm", "Scheduled event-start alarm for " + eventId +
+//                 " at " + triggerAtMillis);
+//     }
+
     }
 
     private void openNotificationSettings() {

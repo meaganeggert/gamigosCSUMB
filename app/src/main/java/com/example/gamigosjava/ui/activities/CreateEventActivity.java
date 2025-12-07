@@ -276,6 +276,8 @@ public class CreateEventActivity extends BaseActivity {
                 friendsInvited.add(friendItem);
             }
         }
+        Friend host = new Friend(currentUser.getUid(), currentUser.getUid(), currentUser.getDisplayName());
+        friendsInvited.add(host);
 
         // Uploads friend invites to the database one by one.
         for (int i = 0; i < friendsInvited.size(); i++) {
@@ -287,6 +289,8 @@ public class CreateEventActivity extends BaseActivity {
                     .document(friendItem.id);
 
             Map<String, Object> invite = new HashMap<>();
+            if (friendItem.id.equals(eventItem.hostId)) invite.put("status", "host");
+            else invite.put("status", "invited");
             invite.put("status", "invited");
             invite.put("userRef", db.collection("users").document(friendItem.friendUId));
 

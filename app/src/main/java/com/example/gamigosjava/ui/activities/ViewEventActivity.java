@@ -28,6 +28,7 @@ import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,11 +36,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
+import com.example.gamigosjava.data.model.Image;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
+import com.example.gamigosjava.data.model.UserGameMetric;
+import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.adapter.ImageAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,13 +62,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class ViewEventActivity extends BaseActivity {
     private static final String CHANNEL_EVENT_STATUS = "channel_event_status";
     private final String TAG = "View Event";
+    private boolean inviteesChanged = false;
+    private boolean isPopulatingInvitees = false;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
+
     private RecyclerView recyclerView;
     private ArrayAdapter<Friend> friendAdapter;
     private String eventId;
@@ -78,7 +87,10 @@ public class ViewEventActivity extends BaseActivity {
     CollectionReference matchCollectionRef;
     List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
-    Button startEvent, endEvent;
+
+    Button startEvent, endEvent, deleteEvent, updateEventButton;
+    List<Image> images;
+    ImageAdapter imageAdapter;
     private Set<String> originalInviteeUids = new HashSet<>();
 
     @Override
@@ -94,10 +106,13 @@ public class ViewEventActivity extends BaseActivity {
 
         matches = new ArrayList<>();
         matchSummaryList = new ArrayList<>();
+        images = new ArrayList<>();
 
         eventId = getIntent().getStringExtra("selectedEventId");
+        Log.d(TAG, "Event ID: " + eventId);
 
         getMatches(eventId);
+        getEventImages();
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -145,9 +160,9 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button saveChanges = findViewById(R.id.button_saveEvent);
-        if (saveChanges != null) {
-            saveChanges.setOnClickListener(v -> {
+        updateEventButton = findViewById(R.id.button_saveEvent);
+        if (updateEventButton != null) {
+            updateEventButton.setOnClickListener(v -> {
                 if (eventItem.id == null) {
                     Toast.makeText(this, "Event hasn't loaded yet.", Toast.LENGTH_SHORT).show();
                     return;
@@ -171,7 +186,7 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button deleteEvent = findViewById(R.id.button_deleteEvent);
+        deleteEvent = findViewById(R.id.button_deleteEvent);
         if (deleteEvent != null) {
             deleteEvent.setOnClickListener(v -> {
                 if (eventItem.id == null) {
@@ -230,6 +245,50 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
+        Button photos = findViewById(R.id.button_eventPhotos);
+        if(photos != null) {
+            photos.setOnClickListener(v -> {
+                Intent intent = new Intent(ViewEventActivity.this, ImageUploadActivity.class);
+                intent.putExtra("selectedEventId", eventId);
+                startActivity(intent);
+            });
+        }
+
+        RecyclerView imagesView = findViewById(R.id.recyclerViewEventImages);
+        imagesView.setLayoutManager(new GridLayoutManager(this, 3));
+        imageAdapter = new ImageAdapter();
+        imageAdapter.setItems(images);
+        imagesView.setAdapter(imageAdapter);
+
+        recyclerView = findViewById(R.id.recyclerViewMatchGame);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        matchAdapter = new MatchAdapter();
+        recyclerView.setAdapter(matchAdapter);
+
+    }
+
+    private void getEventImages() {
+        if (currentUser == null) return;
+
+        db.collection("events")
+                .document(eventId)
+                .collection("images")
+                .addSnapshotListener((snaps, e) -> {
+                    if (snaps.isEmpty()) return;
+
+                    images.clear();
+                    for (DocumentSnapshot docSnap: snaps) {
+                        Image existingImage = new Image();
+                        existingImage.imageId = docSnap.getId();
+                        existingImage.authorId = docSnap.getString("authorId");
+                        existingImage.imageUrl = docSnap.getString("photoUrl");
+                        existingImage.uploadedAt = docSnap.getTimestamp("uploadedAt");
+                        existingImage.eventId = docSnap.getString("eventId");
+                        Log.d("IMAGE", "Adding image: " + existingImage.imageUrl);
+                        images.add(existingImage);
+                        imageAdapter.setItems(images);
+                    }
+                });
     }
 
     private void getUserInput() {
@@ -276,6 +335,19 @@ public class ViewEventActivity extends BaseActivity {
                         CollectionReference invitees = db.collection("events")
                                 .document(eventItem.id)
                                 .collection("invitees");
+
+                        FirestoreUtils.deleteCollection(db, invitees, 10)
+                                .addOnSuccessListener(unused -> uploadFriendInvites())
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Failed to refresh invitees: " + e.getMessage()));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to update the event: " + e.getMessage());
+                    Toast.makeText(this, "Failed to update the event.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
 
                         FirestoreUtils.deleteCollection(db, invitees, 10)
                                 .addOnSuccessListener(unused -> uploadFriendInvites())
@@ -361,6 +433,7 @@ public class ViewEventActivity extends BaseActivity {
                         matchResult.notes = matchSnap.getString("notes");
                         matchResult.rulesVariant = matchSnap.getString("rules_variant");
                         matchResult.startedAt = matchSnap.getTimestamp("startedAt");
+                        matchResult.endedAt = matchSnap.getTimestamp("endedAt");
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
                         assert matchResult.gameRef != null;
                         matchResult.gameId = matchResult.gameRef.getId();
@@ -382,6 +455,7 @@ public class ViewEventActivity extends BaseActivity {
     private void uploadUserMatchMetrics() {
         matches.sort(Comparator.comparing(m -> m.startedAt));
 
+        // Get user reference from players involved in each match.
         for (Match m: matches) {
             m.playersRef.get().addOnSuccessListener(snaps -> {
                 if (snaps.isEmpty()) {
@@ -399,57 +473,144 @@ public class ViewEventActivity extends BaseActivity {
                     matchResults.add(user);
                 }
 
+                // Update each users metrics
                 for (Player p: matchResults) {
+                    if (p.friend.id == null || p.friend.id.isEmpty()) continue;
+
+                    DocumentReference gamesPlayedRef = db.collection("users")
+                            .document(p.friend.id)
+                            .collection("metrics")
+                            .document("games_played");
+
+                    // Update the user's games_played count
+                    gamesPlayedRef.get().addOnSuccessListener(snap -> {
+                        Integer gamesPlayed = 1;
+                        HashMap<String, Object> gamesPlayedHash = new HashMap<>();
+
+                        if (!snap.exists()) {
+                            gamesPlayedHash.put("count", gamesPlayed);
+                            gamesPlayedRef.set(gamesPlayedHash).addOnSuccessListener(v -> {
+                                Log.d(TAG, "Successfully updated user games_played count.");
+                            }).addOnFailureListener(e -> {
+                                Log.e(TAG, "Failed to update user games_played count: " + e.getMessage());
+                            });
+
+                            return;
+                        }
+
+                        gamesPlayedHash.put("count", snap.get("count", Integer.class) + gamesPlayed);
+                        gamesPlayedRef.set(gamesPlayedHash);
+                    });
+
+
+                    // Update the user's game_metrics
                     CollectionReference userMetrics = db
                             .collection("users")
                             .document(p.friend.id)
-                            .collection("gameMetrics");
+                            .collection("metrics")
+                            .document("games_played")
+                            .collection("game_metrics");
 
                     DocumentReference gameMetric = userMetrics.document(m.gameId);
 
                     gameMetric.get().addOnSuccessListener(snap -> {
                         HashMap<String, Object> metricHash = new HashMap<>();
 
-                        int win = 0;
-                        int loss = 0;
-                        int winStreak = 0;
-                        int lossStreak = 0;
-                        int timesPlayed = 0;
-                        Timestamp firstTimePlayed = m.startedAt;
-                        Timestamp lastTimePlayed = m.startedAt;
-
+                        UserGameMetric result = new UserGameMetric();
+                        // Set default values for user match results.
                         if (p.placement == 1) {
-                            win++;
-                            winStreak++;
+                            result.timesWon++;
+                            result.winStreak++;
+                            result.bestWinStreak++;
+                            result.averageWinStreak++;
+                            result.winningStreakCount++;
                         } else {
-                            loss++;
-                            lossStreak++;
+                            result.timesLost++;
+                            result.lossStreak++;
+                            result.worstLosingStreak++;
                         }
-                        timesPlayed++;
 
+                        result.bestScore = p.score;
+                        result.worstScore = p.score;
+                        result.averageScore = p.score;
+                        result.scoreTotal = p.score;
+
+                        result.timesPlayed++;
+                        result.firstTimePlayed = m.startedAt;
+                        result.lastTimePlayed = m.endedAt;
+
+                        // If user has played before, get user data from database to update
                         if (snap.exists()) {
-                            win = win + snap.get("wins", Integer.class);
-                            loss = loss + snap.get("losses", Integer.class);
-                            timesPlayed = timesPlayed + snap.get("times_played", Integer.class);
-                            firstTimePlayed = snap.getTimestamp("first_time_played");
+                            result.timesPlayed = result.timesPlayed + snap.get("times_played", Integer.class);
+                            result.firstTimePlayed = snap.getTimestamp("first_time_played");
 
-                            // If user won, set the loss streak to 0 and increment the current win streak.
-                            // If user lost, set the win streak to 0 and increment the current loss streak.
-                            if (winStreak > lossStreak) {
-                                winStreak = winStreak + snap.get("win_streak", Integer.class);
-                            } else {
-                                lossStreak = lossStreak + snap.get("loss_streak", Integer.class);
+                            // Score related ===========================
+                            result.scoreTotal = p.score +  snap.get("score_total", Integer.class);
+                            result.bestScore = snap.get("best_score", Integer.class);
+                            result.worstScore = snap.get("worst_score", Integer.class);
+                            result.averageScore = result.scoreTotal / result.timesPlayed;
+
+                            if (p.score > result.bestScore) result.bestScore = p.score;
+                            if (p.score < result.worstScore) result.worstScore = p.score;
+
+
+                            // Win/Loss related ===========================
+                            result.timesWon = result.timesWon + snap.get("times_won", Integer.class);
+                            result.timesLost = result.timesLost + snap.get("times_lost", Integer.class);
+                            result.bestWinStreak = snap.get("best_win_streak", Integer.class);
+                            result.winningStreakCount = snap.get("win_streak_count", Integer.class);
+                            result.averageWinStreak = snap.get("average_win_streak", Integer.class);
+                            result.worstLosingStreak = snap.get("worst_losing_streak", Integer.class);
+
+                            // If user won, keep the loss streak set to 0 and update win streak info.
+                            if (result.winStreak > result.lossStreak) {
+                                Integer existingStreak = snap.get("win_streak", Integer.class);
+
+                                if (existingStreak > 0) {   // Already on win streak
+                                    result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                                } else {                    // New win streak
+                                    result.winningStreakCount++;
+                                    result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                                }
+                                result.winStreak = result.winStreak + existingStreak;
+
+                                if (result.winStreak > result.bestWinStreak) result.bestWinStreak = result.winStreak;
+                            }
+
+                            // If user lost, keep the win streak set to 0 and update loss streak info.
+                            else {
+                                Integer existingLosingStreak = snap.get("loss_streak", Integer.class);
+
+                                result.lossStreak = result.lossStreak + existingLosingStreak;
+                                if (result.lossStreak > result.worstLosingStreak) result.worstLosingStreak = result.lossStreak;
                             }
                         }
 
+                        // Reference to game details
                         metricHash.put("game_ref", m.gameRef);
-                        metricHash.put("wins", win);
-                        metricHash.put("losses", loss);
-                        metricHash.put("win_streak", winStreak);
-                        metricHash.put("loss_streak", lossStreak);
-                        metricHash.put("times_played", timesPlayed);
-                        metricHash.put("first_time_played", firstTimePlayed);
-                        metricHash.put("last_time_played", lastTimePlayed);
+
+                        // Win results
+                        metricHash.put("times_won", result.timesWon);
+                        metricHash.put("win_streak", result.winStreak);
+                        metricHash.put("best_win_streak", result.bestWinStreak);
+                        metricHash.put("average_win_streak", result.averageWinStreak);
+                        metricHash.put("win_streak_count", result.winningStreakCount);
+
+                        // Loss results
+                        metricHash.put("times_lost", result.timesLost);
+                        metricHash.put("loss_streak", result.lossStreak);
+                        metricHash.put("worst_losing_streak", result.worstLosingStreak);
+
+                        // Score results
+                        metricHash.put("best_score", result.bestScore);
+                        metricHash.put("worst_score", result.worstScore);
+                        metricHash.put("average_score", result.averageScore);
+                        metricHash.put("score_total", result.scoreTotal);
+
+                        // Timestamp results
+                        metricHash.put("times_played", result.timesPlayed);
+                        metricHash.put("first_time_played", result.firstTimePlayed);
+                        metricHash.put("last_time_played", result.lastTimePlayed);
 
                         gameMetric.set(metricHash).addOnSuccessListener(v -> Log.d(TAG, "Successfully updated user game metrics.")).addOnFailureListener(e -> Log.e(TAG, "Failed to update user game metrics: " + e.getMessage()));
                     }).addOnFailureListener(e -> Log.e(TAG, "Failed to find user game metrics: " + e.getMessage()));
@@ -597,7 +758,8 @@ public class ViewEventActivity extends BaseActivity {
             if (addFriend != null) {
                 addFriend.setOnClickListener(v -> {
                     if (!friendList.isEmpty() && friendLayout.getChildCount() < friendList.size()) {
-                        setFriendDropdown(friendLayout, true);
+                        setFriendDropdown(friendLayout);
+                        inviteesChanged = true;
                     } else {
                         Toast.makeText(this, "No friend to add.", Toast.LENGTH_SHORT).show();
                     }
@@ -612,6 +774,7 @@ public class ViewEventActivity extends BaseActivity {
                 removeFriend.setOnClickListener(v -> {
                     if (friendLayout.getChildCount() > 0) {
                         removeDropdown(friendLayout);
+                        inviteesChanged = true;
                     } else {
                         Toast.makeText(this, "No friend to remove.", Toast.LENGTH_SHORT).show();
                     }
@@ -636,6 +799,26 @@ public class ViewEventActivity extends BaseActivity {
         schedule.setText(event.scheduledAt.toDate().toString());
         visibility.setSelection(visibilityList.indexOf(event.visibility));
 
+        isPopulatingInvitees = true;
+
+        if (currentUser.getUid().equals(event.hostId)) {
+            startEvent.setVisibility(Button.VISIBLE);
+            endEvent.setVisibility(Button.VISIBLE);
+            deleteEvent.setVisibility(Button.VISIBLE);
+            updateEventButton.setVisibility(Button.VISIBLE);
+        }
+
+        if (event.status.equals("past")) {
+            startEvent.setEnabled(false);
+            endEvent.setEnabled(false);
+            deleteEvent.setEnabled(false);
+            updateEventButton.setEnabled(false);
+
+            for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                Button deleteMatchBtn = recyclerView.getChildAt(i).findViewById(R.id.button_deleteMatch);
+                deleteMatchBtn.setEnabled(false);
+            }
+        }
         //  Clear out any existing invitees
         originalInviteeUids.clear();
 
@@ -646,6 +829,7 @@ public class ViewEventActivity extends BaseActivity {
         inviteRef.get().addOnSuccessListener(snaps -> {
             if (snaps.isEmpty()) {
                 Log.d(TAG, "No invitees found.");
+                isPopulatingInvitees = false;
                 return;
             }
 
@@ -688,8 +872,12 @@ public class ViewEventActivity extends BaseActivity {
                 }).addOnFailureListener(e ->
                         Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
             }
+            isPopulatingInvitees = false;
 
-        }).addOnFailureListener(e -> Log.e(TAG, "Failed to get friend invite list: " + e.getMessage()));
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get friend invite list: " + e.getMessage());
+            isPopulatingInvitees = false;
+      });
 
     }
 

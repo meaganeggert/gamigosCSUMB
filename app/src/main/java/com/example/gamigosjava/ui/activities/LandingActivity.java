@@ -1,8 +1,10 @@
 package com.example.gamigosjava.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.gamigosjava.data.model.ActivityItem;
@@ -59,6 +61,14 @@ public class LandingActivity extends BaseActivity {
         feedRecycler.setAdapter(feedAdapter);
 
         loadFeed();
+
+        Button quickGame = findViewById(R.id.buttonQuickGame);
+        if (quickGame != null) {
+            quickGame.setOnClickListener(v -> {
+                Intent intent = new Intent(LandingActivity.this, GetAllQuickPlayActivity.class);
+                startActivity(intent);
+            });
+        }
     }
 
     private void saveFCMToken() {

@@ -27,6 +27,16 @@
             </intent-filter>
         </service>
         <activity
+            android:name=".ui.activities.GetAllQuickPlayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.QuickPlayActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activities.ImageUploadActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.ViewMatchActivity"
             android:exported="false" />
         <activity

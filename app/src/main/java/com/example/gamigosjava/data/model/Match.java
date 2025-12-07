@@ -14,6 +14,9 @@ public class Match {
     public String imageUrl;
     public Timestamp startedAt;
     public Timestamp endedAt;
+    public Timestamp updatedAt;
     public DocumentReference gameRef;
     public CollectionReference playersRef;
+    public String hostId;
+    public String winRule;
 }

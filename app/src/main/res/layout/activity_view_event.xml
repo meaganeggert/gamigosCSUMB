@@ -29,7 +29,8 @@
                 android:layout_height="wrap_content"
                 android:text="Start Event"
                 android:layout_gravity="center_horizontal"
-                android:layout_margin="3dp"/>
+                android:layout_margin="3dp"
+                android:visibility="gone"/>
             <Button
                 android:id="@+id/button_endEvent"
                 android:layout_width="wrap_content"
@@ -37,7 +38,8 @@
                 android:text="End Event"
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="3dp"
-                android:enabled="false"/>
+                android:enabled="false"
+                android:visibility="gone"/>
         </LinearLayout>
 
 
@@ -93,6 +95,39 @@
                 android:layout_gravity="center_horizontal"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="360dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Photos"
+                android:textSize="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"/>
+
+            <Button
+                android:id="@+id/button_eventPhotos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Photos"
+                android:layout_gravity="right"/>
+        </LinearLayout>
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewEventImages"
+            android:background="#EEEEEE"
+            android:layout_width="360dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="8dp"
+            tools:listitem="@layout/image_item"
+            android:layout_gravity="center_horizontal"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -113,7 +148,8 @@
                 android:layout_width="155dp"
                 android:layout_height="wrap_content"
                 android:text="Save Changes"
-                android:layout_gravity="center_horizontal"/>
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"/>
 
         </LinearLayout>
 
@@ -124,7 +160,8 @@
             android:text="Delete Event"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="20dp"
-            android:backgroundTint="@color/biometric_error_color"/>
+            android:backgroundTint="@color/biometric_error_color"
+            android:visibility="gone"/>
 
     </LinearLayout>
 

@@ -150,6 +150,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify(notificationId, builder.build());
     }
 
+
     private void showEventRescheduledNotification(Map<String, String> data) {
         String eventId = data.get("eventId");
         String eventTitle = data.get("eventTitle");
@@ -539,6 +540,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+//         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_MESSAGES)
+//                 .setSmallIcon(R.drawable.outline_mark_email_unread_24)
+//                 .setContentTitle(title)
+//                 .setContentText(
+//                         isGroup && senderName != null
+//                                 ? senderName + ": " + messagePreview
+//                                 : messagePreview
+//                 )
+          
+          
         //  Save notification to Firestore
         Map<String, Object> extras = new java.util.HashMap<>();
         extras.put("conversationId", conversationId);
@@ -595,6 +606,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+//         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_FRIEND_REQUESTS)
+//                 .setSmallIcon(R.drawable.outline_person_add_24)
+//                 .setContentTitle("New friend request")
+//                 .setContentText(fromName + " sent you a friend request")
+      
         String bodyText = fromName + " sent you a friend request";
 
         //  Save notification to Firestore

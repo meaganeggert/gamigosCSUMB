@@ -73,12 +73,51 @@
         android:inputType="textMultiLine"/>
 
 
+<!--    Allows user to select how a players get ranked (highest/lowest score or custom placements)-->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Player"
+        android:text="Placements Determined By"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
+    <Spinner
+        android:id="@+id/dropdown_winRule"
+        android:layout_width="330dp"
+        android:layout_height="40dp"
+        android:background="@android:drawable/btn_dropdown"
+        android:spinnerMode="dropdown"
+        android:layout_gravity="center_vertical"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Player"
+            android:textSize="12dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Invitee/Custom"
+            android:textSize="12dp"
+            android:layout_gravity="center_vertical"/>
+        <Switch
+            android:id="@+id/switch_customPlayerToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"/>
+    </LinearLayout>
+
+
     <LinearLayout
         android:layout_width="330dp"
         android:layout_height="wrap_content"
@@ -91,6 +130,13 @@
             android:background="@android:drawable/btn_dropdown"
             android:spinnerMode="dropdown"
             android:layout_gravity="center_vertical"/>
+        <EditText
+            android:id="@+id/editText_customPlayer"
+            android:layout_width="275dp"
+            android:layout_height="40dp"
+            android:hint="Name..."
+            android:layout_gravity="center_vertical"
+            android:visibility="gone"/>
 
         <Button
             android:id="@+id/button_addPlayer"
@@ -112,12 +158,14 @@
             android:text="Player"
             android:layout_gravity="center_vertical"/>
         <TextView
+            android:id="@+id/textView_playerPlacementLabel"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:text="#"
             android:layout_gravity="center_vertical"/>
         <TextView
+            android:id="@+id/textView_playerScoreLabel"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"

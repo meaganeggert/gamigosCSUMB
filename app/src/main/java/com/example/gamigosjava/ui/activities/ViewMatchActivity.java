@@ -5,15 +5,19 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,12 +28,14 @@ import com.example.gamigosjava.data.api.BGGMappers;
 import com.example.gamigosjava.data.api.BGGService;
 import com.example.gamigosjava.data.api.BGG_API;
 import com.example.gamigosjava.data.model.BGGItem;
+import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
+import com.example.gamigosjava.data.model.UserGameMetric;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
@@ -57,18 +63,16 @@ public class ViewMatchActivity extends BaseActivity {
     private FirebaseUser currentUser;
 
     LinearLayout matchFormContainerHandle;
-    private ArrayAdapter<GameSummary> userGameAdapter;
-    private ArrayAdapter<GameSummary> apiGameAdapter;
-    private List<GameSummary> userGameList;
-    private List<GameSummary> apiGameList;
+    private ArrayAdapter<GameSummary> userGameAdapter, apiGameAdapter;
+    private List<GameSummary> userGameList, apiGameList;
     private Match matchItem;
 
     // to be used if we are not updated a match and instead are creating a new one.
-    private String eventId;
-    private String matchId;
+    private String eventId, matchId;
+    private Event eventItem;
 
 
-
+    private Friend hostUser;
     private List<Friend> inviteeList = new ArrayList<>();
     private ArrayAdapter inviteeAdapter;
 
@@ -76,23 +80,37 @@ public class ViewMatchActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ScoresAdapter scoresAdapter;
+    public Button saveButton, startMatch, endMatch, addPlayer;
+    private EditText customPlayerInput;
+    private Spinner inviteeDropDown, winRuleDropdown;
+
+    private List<String> winRuleList = new ArrayList<>();
+    private ArrayAdapter<String> winRuleAdapter;
 
 
-    // TODO: get match info.
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_view_match);
         setTopTitle("Game");
 
+        api = BGGService.getInstance();
+        auth = FirebaseAuth.getInstance();
+        currentUser = auth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
+
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
+        matchItem = new Match();
+        matchItem.hostId = currentUser.getUid();
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
-        addMatchForm();
-        getMatchDetails(matchId);
+        addMatchForm(R.id.matchFormContainer);
 
-        Button saveButton = findViewById(R.id.button_saveMatch);
+        getMatchDetails(matchId);
+        getEventDetails(eventId);
+
+        saveButton = findViewById(R.id.button_saveMatch);
         if (saveButton != null) {
             saveButton.setOnClickListener(v -> {
                 uploadGameInfo();
@@ -112,16 +130,23 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
-    private void addMatchForm() {
-        api = BGGService.getInstance();
-        auth = FirebaseAuth.getInstance();
-        currentUser = auth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
+    // Sets the UI element variables for the match form.
+    public void addMatchForm(@IdRes int containerId) {
+        matchFormContainerHandle = findViewById(containerId);
 
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
 
+        winRuleList.add("Highest Score");
+        winRuleList.add("Lowest Score");
+        winRuleList.add("Custom");
+
+        winRuleAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_dropdown_item,
+                winRuleList
+        );
+        winRuleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         inviteeAdapter = new ArrayAdapter<>(
                 this,
@@ -130,7 +155,6 @@ public class ViewMatchActivity extends BaseActivity {
         );
         inviteeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        matchFormContainerHandle = findViewById(R.id.matchFormContainer);
         userGameAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -196,21 +220,80 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
-        Spinner inviteeDropDown = findViewById(R.id.dropdown_invitees);
+        winRuleDropdown = matchFormContainerHandle.findViewById(R.id.dropdown_winRule);
+        winRuleDropdown.setAdapter(winRuleAdapter);
+        winRuleDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String selected = winRuleDropdown.getSelectedItem().toString().toLowerCase();
+                TextView scoreLabel = findViewById(R.id.textView_playerScoreLabel);
+                TextView placementLabel = findViewById(R.id.textView_playerPlacementLabel);
+
+                if (selected.contains("highest")) {
+                    matchItem.winRule = "highest";
+                    scoreLabel.setVisibility(TextView.VISIBLE);
+                    placementLabel.setVisibility(TextView.GONE);
+                } else if (selected.contains("lowest")) {
+                    matchItem.winRule = "lowest";
+                    scoreLabel.setVisibility(TextView.VISIBLE);
+                    placementLabel.setVisibility(TextView.GONE);
+                } else {
+                    matchItem.winRule = "custom";
+                    scoreLabel.setVisibility(TextView.GONE);
+                    placementLabel.setVisibility(TextView.VISIBLE);
+                }
+
+                // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
+                scoresAdapter.winRule = matchItem.winRule;
+                scoresAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        inviteeDropDown = findViewById(R.id.dropdown_invitees);
         inviteeDropDown.setAdapter(inviteeAdapter);
-        Button addPlayer = findViewById(R.id.button_addPlayer);
+        customPlayerInput = findViewById(R.id.editText_customPlayer);
+
+        Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
+        if (playerTypeToggle != null) {
+            playerTypeToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    inviteeDropDown.setVisibility(Spinner.GONE);
+                    customPlayerInput.setVisibility(Button.VISIBLE);
+                    addPlayerFromText();
+                } else {
+                    inviteeDropDown.setVisibility(Spinner.VISIBLE);
+                    customPlayerInput.setVisibility(Button.GONE);
+                    addPlayerFromSpinner();
+                }
+            });
+        }
+
+        addPlayer = findViewById(R.id.button_addPlayer);
+        addPlayerFromSpinner();
+
+    }
+
+    // Adds a user as a player for the match to track scores using a dropdown of invitees.
+    private void addPlayerFromSpinner() {
         if (addPlayer != null) {
             addPlayer.setOnClickListener(v -> {
                 Player newPlayer = new Player();
                 newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
 
-                if (newPlayer.friend == null) {
-                    return;
-                }
+                if (newPlayer.friend == null) return;
+                if (newPlayer.friend.id == null) return;
 
                 boolean inList = false;
                 for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    if (scoresAdapter.playerList.get(i).friend.id.equals(newPlayer.friend.id)) {
+                    Player player = scoresAdapter.playerList.get(i);
+                    if (player.friend.id == null) continue;
+
+                    if (player.friend.id.equals(newPlayer.friend.id)) {
                         inList = true;
                         break;
                     }
@@ -224,25 +307,52 @@ public class ViewMatchActivity extends BaseActivity {
                 scoresAdapter.notifyDataSetChanged();
             });
         }
+    }
 
-        matchItem = new Match();
+    // Adds a non-user as a player for the match to track scores using a text input.
+    private void addPlayerFromText() {
+        if (addPlayer != null) {
+            addPlayer.setOnClickListener(v -> {
+                String customName = customPlayerInput.getText().toString();
+                if (customName.isEmpty()) return;
 
+                Player newPlayer = new Player();
+                newPlayer.friend = new Friend();
+                newPlayer.friend.displayName = customName;
+
+                boolean inList = false;
+                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
+                    if (scoresAdapter.playerList.get(i).friend.displayName.equals(newPlayer.friend.displayName)) {
+                        inList = true;
+                        break;
+                    }
+                }
+                if (inList) {
+                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                scoresAdapter.playerList.add(newPlayer);
+                scoresAdapter.notifyDataSetChanged();
+            });
+        }
     }
 
 
-
+    // Gets previously established players for the current match if there are any.
     private void getPlayers() {
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (matchId.isEmpty()) {
+        if (matchId.isEmpty() || matchId == null) {
             Log.d(TAG, "Cannot get players, no match Id selected.");
             return;
         }
 
         CollectionReference playerRefs = db.collection("matches").document(matchId).collection("players");
+        matchItem.playersRef = playerRefs;
 
         playerRefs.get().addOnSuccessListener(snaps -> {
             if (snaps.isEmpty()) {
@@ -250,11 +360,29 @@ public class ViewMatchActivity extends BaseActivity {
                 return;
             }
 
+            // Get all players listed in the match
             for (DocumentSnapshot doc: snaps) {
                 String playerId = doc.getString("userId");
+                String displayName = doc.getString("displayName");
                 Integer score = doc.get("score", Integer.class);
                 Integer placement = doc.get("placement", Integer.class);
 
+                Log.d(TAG, "Got Player " + displayName);
+
+                // Get non user-players in the match
+                if (playerId ==  null && displayName != null) {
+                    Friend friend = new Friend();
+                    friend.id = playerId;
+                    friend.displayName = displayName;
+                    friend.friendUId = playerId;
+
+                    Player knownPlayer = new Player(friend, score, placement);
+                    scoresAdapter.playerList.add(knownPlayer);
+                    scoresAdapter.notifyDataSetChanged();
+                    continue;
+                }
+
+                // Get user players in the match
                 DocumentReference playerRef = db.collection("users").document(playerId);
                 playerRef.get().onSuccessTask(docSnap -> {
                     Friend friend = new Friend();
@@ -274,7 +402,70 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
+    // If the match is tied to an event, get the event info.
+    private void getEventDetails(String eventId) {
+        if (currentUser == null) {
+            Log.e(TAG, "Failed to get event details: User is not logged in.");
+            return;
+        }
+
+        if (eventId.isEmpty()) return;
+
+        DocumentReference eventRef = db.collection("events")
+                .document(eventId);
+
+        eventRef.get().addOnSuccessListener(snap -> {
+            if (snap == null) {
+                Log.e(TAG, "Event " + eventId + " not found.");
+                return;
+            }
+
+            eventItem = new Event();
+            eventItem.id = snap.getId();
+            eventItem.createdAt = snap.getTimestamp("createdAt");
+            eventItem.endedAt = snap.getTimestamp("endedAt");
+            eventItem.scheduledAt = snap.getTimestamp("scheduledAt");
+            eventItem.title = snap.getString("title");
+            eventItem.visibility = snap.getString("visibility");
+            eventItem.status = snap.getString("status");
+            eventItem.hostId = snap.getString("hostId");
+            eventItem.notes = snap.getString("notes");
+
+            if(eventItem.status.equals("past")) {
+                saveButton.setEnabled(false);
+            }
+
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage());
+        });
+    }
+
+    // Get the host of the event/match to include as a possible player and show/hide certain buttons
     private void getHost() {
+        // Search match for host id.
+        if (eventId.isEmpty() || eventId == null) {
+            db.collection("users").document(matchItem.hostId).get().addOnSuccessListener(s -> {
+                if (!s.exists()) return;
+
+                Friend host = new Friend();
+                host.id = s.getId();
+                host.displayName = s.getString("displayName");
+                host.friendUId = s.getString("uid");
+
+                Log.d(TAG, "HOST NAME: " + host.displayName);
+
+                hostUser = host;
+                inviteeList.add(host);
+                inviteeAdapter.notifyDataSetChanged();
+
+                enableHostOptions();
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to get host info: " + e.getMessage());
+            });
+            return;
+        }
+
+        // Search event for host.
         db.collection("events").document(eventId).get().addOnSuccessListener(snap -> {
             if (snap.exists()) {
                 db.collection("users").document(snap.getString("hostId")).get().addOnSuccessListener(s -> {
@@ -286,11 +477,12 @@ public class ViewMatchActivity extends BaseActivity {
                     host.friendUId = s.getString("uid");
 
                     Log.d(TAG, "HOST NAME: " + host.displayName);
-                    Log.d(TAG, "HOST ID: " + host.id);
-                    Log.d(TAG, "HOST UID: " + host.friendUId);
 
+                    hostUser = host;
                     inviteeList.add(host);
                     inviteeAdapter.notifyDataSetChanged();
+
+                    enableHostOptions();
                 }).addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to get host info: " + e.getMessage());
                 });
@@ -300,7 +492,90 @@ public class ViewMatchActivity extends BaseActivity {
         });
 
     }
+
+    // Set visibility for certain features based on whether or not the current user is host.
+    public void enableHostOptions() {
+        if (!currentUser.getUid().equals(hostUser.id)) {
+            return;
+        }
+
+        // Set match buttons available to host.
+        startMatch = findViewById(R.id.button_startMatch);
+        endMatch = findViewById(R.id.button_endMatch);
+
+        if (startMatch != null) {
+            startMatch.setVisibility(Button.VISIBLE);
+            startMatch.setOnClickListener(v -> {
+                matchItem.startedAt = Timestamp.now();
+                endMatch.setEnabled(true);
+                startMatch.setEnabled(false);
+                if (!matchId.isEmpty()) uploadMatch();
+            });
+        }
+        if (endMatch != null) {
+            endMatch.setVisibility(Button.VISIBLE);
+            endMatch.setOnClickListener(v -> {
+                matchItem.endedAt = Timestamp.now();
+                endMatch.setEnabled(false);
+
+                // assuming the game is a quickplay match.
+                if (eventId.isEmpty() && !matchId.isEmpty()) {
+                    uploadUserMatchMetrics();
+                }
+                if (!matchId.isEmpty()) uploadMatch();
+
+
+                finish();
+            });
+        }
+    }
+
+    // Get the host's friends list to use as the invitee list for possible players if there is no event
+    // Function is called in getInvites if there is no event tied to the match.
+    private void getFriends() {
+        if (currentUser == null) return;
+        if (!eventId.isEmpty()) return;
+
+        db.collection("users")
+                .document(matchItem.hostId)
+                .collection("friends")
+                .get()
+                .addOnSuccessListener(snaps -> {
+                    if (snaps.isEmpty()) return;
+
+                    for (DocumentSnapshot docSnap: snaps) {
+                        String id = docSnap.getId();
+                        String friendUid = docSnap.getString("uid");
+                        String displayName = docSnap.getString("displayName");
+
+                        Friend f = new Friend(id, friendUid, displayName);
+                        boolean inFriendList = false;
+                        for (int i = 0; i < inviteeList.size(); i++) {
+                            if (inviteeList.get(i).id.equals(f.id)) {
+                                inFriendList = true;
+                                break;
+                            }
+                        }
+
+                        if (!inFriendList) {
+                            Log.d(TAG, "Added invitee to list");
+                            inviteeList.add(f);
+                            inviteeAdapter.notifyDataSetChanged();
+
+                        }
+                    }
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to get user friends: " + e.getMessage());
+                });
+    }
+
+    // Get invited players from the event to list as possible players of the match.
     private void getInvitees() {
+        if (eventId.isEmpty() || eventId == null) {
+            getHost();
+            getFriends();
+            return;
+        }
 
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
@@ -356,10 +631,8 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
 
-
-
-
-
+    // Get list games the current user (not host) has to play in the match.
+    // Also calls function applyKnownUserGames to avoid including duplicates
     private void getGames() {
         if (currentUser == null) {
             Toast.makeText(this, "User is not logged in.", Toast.LENGTH_SHORT).show();
@@ -416,6 +689,7 @@ public class ViewMatchActivity extends BaseActivity {
         userGameAdapter.notifyDataSetChanged();
     }
 
+    // Adds games found from the current user's collections without any duplicates
     private void applyKnownUserGames(QuerySnapshot snap) {
         if (snap.isEmpty()) {
             Log.d("TAG", "Game Snap list was null");
@@ -458,6 +732,8 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    // Makes a BGG api call to get a list games the user wants to search for.
+    // Calls the function fetchThingDetails
     private void fetchGamesForQuery(String query) {
         api.search(query, "boardgame").enqueue(new Callback<SearchResponse>() {
             @Override public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> resp) {
@@ -489,6 +765,7 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
+    // Makes a BGG api call to get a game's details based on its id.
     private void fetchThingDetails(String idsCsv) {
         api.thing(idsCsv, 0).enqueue(new Callback<ThingResponse>() {
             @Override public void onResponse(Call<ThingResponse> call, Response<ThingResponse> resp) {
@@ -520,6 +797,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Uploads the match to firebase.
     // eventId, notes, rules variant, imageUrl, startedAt, endedAt, and a reference to the game played.
+    // Calls functions uploadUserGamesHosted, uploadUserGamesPlayed
     private void uploadMatch() {
         if (currentUser == null) {
             Log.e(TAG, "Must be logged in.");
@@ -548,7 +826,8 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.rulesVariant = ruleChangeValue.getText().toString();
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
-        // Timestamps will have been set by the showDateTime interface.
+        matchItem.updatedAt = Timestamp.now();
+        // winRule will have been set by the spinner view
 
         // Connect values from the match object to the hashmap to be uploaded.
         HashMap<String, Object> match = new HashMap<>();
@@ -558,6 +837,8 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("startedAt", matchItem.startedAt);
         match.put("endedAt", matchItem.endedAt);
         match.put("imageUrl", matchItem.imageUrl);
+        match.put("updatedAt",  matchItem.updatedAt);
+        match.put("winRule", matchItem.winRule);
 
         if (game.id != null) {
             match.put("gameRef", db.collection("games").document(game.id));
@@ -565,8 +846,13 @@ public class ViewMatchActivity extends BaseActivity {
             match.put("gameRef", game.id);
         }
 
+        if (matchItem.hostId == null || matchItem.hostId.isEmpty()) {
+            matchItem.hostId = currentUser.getUid();
+        }
+        match.put("hostId", matchItem.hostId);
 
-        // Update the match
+
+        // Update the existing match
         if (!matchId.isEmpty()) {
             db.collection("matches").document(matchItem.id).set(match)
                     .addOnSuccessListener(v -> {
@@ -574,14 +860,13 @@ public class ViewMatchActivity extends BaseActivity {
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId);
-                        finish();
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
         } else {
             // Upload the new match and add a reference to it in the event subcollection "matches"
-            match.replace("startedAt", Timestamp.now());
+//            match.replace("startedAt", Timestamp.now());
             db.collection("matches").add(match)
                     .addOnSuccessListener(documentReference -> {
                         matchItem.id = documentReference.getId();
@@ -590,21 +875,24 @@ public class ViewMatchActivity extends BaseActivity {
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id);
+                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id, matchItem.winRule);
 
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
-                        eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));
-                        db.collection("events")
-                                .document(eventId)
-                                .collection("matches")
-                                .document(matchItem.id)
-                                .set(eventMatchHash).addOnSuccessListener(v -> {
-                                    Log.d(TAG, "Successfully connected match " + matchItem.id + " to event " + matchItem.eventId + ".");
-                                }).addOnFailureListener(e -> {
-                                    Log.e(TAG, "Failed to connect match " + matchItem.id + " to event " + matchItem.eventId + ": " + e.getMessage());
-                                });
 
+                        // Match is tied to an event
+                        if (!eventId.equals("")) {
+                            eventMatchHash.put("matchRef", db.collection("matches").document(matchItem.id));
+                            db.collection("events")
+                                    .document(eventId)
+                                    .collection("matches")
+                                    .document(matchItem.id)
+                                    .set(eventMatchHash).addOnSuccessListener(v -> {
+                                        Log.d(TAG, "Successfully connected match " + matchItem.id + " to event " + matchItem.eventId + ".");
+                                    }).addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to connect match " + matchItem.id + " to event " + matchItem.eventId + ": " + e.getMessage());
+                                    });
+                        }
                         finish();
                     })
                     .addOnFailureListener(e -> {
@@ -614,6 +902,7 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    // Uploads the current board game reference as a quick way to find what BGG games the user has hosted for future matches.
     private void uploadUserGamesHosted(String uid, GameSummary gameSummary) {
         if (gameSummary.id == null) return;
 
@@ -633,6 +922,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Uploads the current board game reference as a quick way to find what BGG games the user has played for future matches.
     private void uploadUserGamesPlayed(String uid, GameSummary gameSummary) {
         if (gameSummary.id == null) return;
 
@@ -671,9 +961,12 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
+    // Gets the current match details previously saved.
+    // Calls the function setMatchDetails
     private void getMatchDetails(String matchId) {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
+            getFriends();
             return;
         }
 
@@ -686,14 +979,26 @@ public class ViewMatchActivity extends BaseActivity {
                 return;
             }
 
-            matchItem.id = snap.getId();
-            matchItem.endedAt = snap.getTimestamp("endedAt");
-            matchItem.gameId = snap.getId();
-            matchItem.gameRef = snap.getDocumentReference("gameRef");
-            matchItem.startedAt = snap.getTimestamp("startedAt");
-            matchItem.notes = snap.getString("notes");
-            matchItem.eventId = snap.getString("eventId");
-            matchItem.rulesVariant = snap.getString("rules_variant");
+            String id = snap.getId();
+            Timestamp endedAt = snap.getTimestamp("endedAt");
+//            matchItem.gameId = snap.getId();
+            DocumentReference gameRef = snap.getDocumentReference("gameRef");
+            Timestamp startedAt = snap.getTimestamp("startedAt");
+            String notes = snap.getString("notes");
+            String eventIdResult = snap.getString("eventId");
+            String rulesVariantResult = snap.getString("rules_variant");
+            String hostId = snap.getString("hostId");
+            String winRule = snap.getString("winRule");
+
+            if (id != null) matchItem.id = id;
+            if (endedAt != null) matchItem.endedAt = endedAt;
+            if (gameRef != null) matchItem.gameRef = gameRef;
+            if (startedAt != null) matchItem.startedAt = startedAt;
+            if (notes != null) matchItem.notes = notes;
+            if (eventIdResult != null) matchItem.eventId = eventIdResult;
+            if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
+            if (hostId != null) matchItem.hostId = hostId;
+            if (winRule != null) matchItem.winRule = winRule;
 
             setMatchDetails(matchItem);
 
@@ -702,7 +1007,26 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
+    // Applies the previously saved match details to the match form
     private void setMatchDetails(Match match) {
+        if (match.startedAt != null) {
+            startMatch.setEnabled(false);
+            if (match.endedAt == null) endMatch.setEnabled(true);
+        }
+
+        int winRuleIndex = -1;
+        for (int i = 0; i < winRuleAdapter.getCount(); i++) {
+            String s = winRuleAdapter.getItem(i);
+            if (s.toLowerCase().contains(matchItem.winRule)) {
+                winRuleIndex = i;
+                break;
+            }
+        }
+
+        if (winRuleIndex != -1) winRuleDropdown.setSelection(winRuleIndex);
+
+
+
         View matchForm = matchFormContainerHandle.getChildAt(0);
         TextView ruleChanges = matchForm.findViewById(R.id.editTextTextMultiLine_rules);
         TextView notes = matchForm.findViewById(R.id.editTextTextMultiLine_notes);
@@ -749,7 +1073,8 @@ public class ViewMatchActivity extends BaseActivity {
         });
     }
 
-    private void uploadGameInfo() {
+    // Uploads the game details to the database to be used as a cache before making calls to the BGG API.
+    public void uploadGameInfo() {
         View matchForm = matchFormContainerHandle.getChildAt(0);
         Spinner gameName = matchForm.findViewById(R.id.dropdown_gameName);
         GameSummary gameSummary = (GameSummary) gameName.getSelectedItem();
@@ -772,10 +1097,198 @@ public class ViewMatchActivity extends BaseActivity {
         gameRef.set(gameHash).addOnSuccessListener(v -> {
                     Log.d(TAG, "Successfully updated board game database element: " + gameSummary.id);
                     uploadMatch();
+                    finish();
                 })
                 .addOnFailureListener(e -> {
                     Log.d(TAG, "Failed to update board game database element " + gameSummary.id + ": " + e.getMessage());
                 });
+    }
+
+    public Match getMatchItem() {
+        return matchItem;
+    }
+
+    public void setMatchStart(Timestamp start) {
+        matchItem.startedAt = start;
+    }
+
+    public void setMatchEnd(Timestamp end) {
+        matchItem.endedAt = end;
+    }
+
+    // Updates the user metric for the board game played. This can be for things to track such as
+    // times won, lost, best winning streak, etc.
+    private void uploadUserMatchMetrics() {
+        // Get user reference from players involved in each match.
+        Match m = getMatchItem();
+        m.playersRef.get().addOnSuccessListener(snaps -> {
+            if (snaps.isEmpty()) {
+                Log.d(TAG, "No players in match " + m.id);
+                return;
+            }
+
+            List<Player> matchResults = new ArrayList<>();
+            for (DocumentSnapshot player: snaps) {
+                Player user = new Player();
+                user.friend.id = player.getString("userId");
+                user.placement = player.get("placement", Integer.class);
+                user.score = player.get("score", Integer.class);
+
+                matchResults.add(user);
+            }
+
+            // Update each users metrics
+            for (Player p: matchResults) {
+                if (p.friend.id == null || p.friend.id.isEmpty()) return;
+
+                DocumentReference gamesPlayedRef = db.collection("users")
+                        .document(p.friend.id)
+                        .collection("metrics")
+                        .document("games_played");
+
+                // Update the user's games_played count
+                gamesPlayedRef.get().addOnSuccessListener(snap -> {
+                    Integer gamesPlayed = 1;
+                    HashMap<String, Object> gamesPlayedHash = new HashMap<>();
+
+                    if (!snap.exists()) {
+                        gamesPlayedHash.put("count", gamesPlayed);
+                        gamesPlayedRef.set(gamesPlayedHash).addOnSuccessListener(v -> {
+                            Log.d(TAG, "Successfully updated user games_played count.");
+                        }).addOnFailureListener(e -> {
+                            Log.e(TAG, "Failed to update user games_played count: " + e.getMessage());
+                        });
+
+                        return;
+                    }
+
+                    gamesPlayedHash.put("count", snap.get("count", Integer.class) + gamesPlayed);
+                    gamesPlayedRef.set(gamesPlayedHash);
+                });
+
+
+                // Update the user's game_metrics
+                CollectionReference userMetrics = db
+                        .collection("users")
+                        .document(p.friend.id)
+                        .collection("metrics")
+                        .document("games_played")
+                        .collection("game_metrics");
+
+                DocumentReference gameMetric = userMetrics.document(m.gameId);
+
+                gameMetric.get().addOnSuccessListener(snap -> {
+                    HashMap<String, Object> metricHash = new HashMap<>();
+
+                    UserGameMetric result = new UserGameMetric();
+                    // Set default values for user match results.
+                    if (p.placement == 1) {
+                        result.timesWon++;
+                        result.winStreak++;
+                        result.bestWinStreak++;
+                        result.averageWinStreak++;
+                        result.winningStreakCount++;
+                    } else {
+                        result.timesLost++;
+                        result.lossStreak++;
+                        result.worstLosingStreak++;
+                    }
+
+                    result.bestScore = p.score;
+                    result.worstScore = p.score;
+                    result.averageScore = p.score;
+                    result.scoreTotal = p.score;
+
+                    result.timesPlayed++;
+                    result.firstTimePlayed = m.startedAt;
+                    result.lastTimePlayed = m.endedAt;
+
+                    // If user has played before, get user data from database to update
+                    if (snap.exists()) {
+                        result.timesPlayed = result.timesPlayed + snap.get("times_played", Integer.class);
+                        result.firstTimePlayed = snap.getTimestamp("first_time_played");
+
+                        // Score related ===========================
+                        result.scoreTotal = p.score +  snap.get("score_total", Integer.class);
+                        result.bestScore = snap.get("best_score", Integer.class);
+                        result.worstScore = snap.get("worst_score", Integer.class);
+                        result.averageScore = result.scoreTotal / result.timesPlayed;
+
+                        if (p.score > result.bestScore) result.bestScore = p.score;
+                        if (p.score < result.worstScore) result.worstScore = p.score;
+
+
+                        // Win/Loss related ===========================
+                        result.timesWon = result.timesWon + snap.get("times_won", Integer.class);
+                        result.timesLost = result.timesLost + snap.get("times_lost", Integer.class);
+                        result.bestWinStreak = snap.get("best_win_streak", Integer.class);
+                        result.winningStreakCount = snap.get("win_streak_count", Integer.class);
+                        result.averageWinStreak = snap.get("average_win_streak", Integer.class);
+                        result.worstLosingStreak = snap.get("worst_losing_streak", Integer.class);
+
+                        // If user won, keep the loss streak set to 0 and update win streak info.
+                        if (result.winStreak > result.lossStreak) {
+                            Integer existingStreak = snap.get("win_streak", Integer.class);
+
+                            if (existingStreak > 0) {   // Already on win streak
+                                result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                            } else {                    // New win streak
+                                result.winningStreakCount++;
+                                result.averageWinStreak = result.timesWon / result.winningStreakCount;
+                            }
+                            result.winStreak = result.winStreak + existingStreak;
+
+                            if (result.winStreak > result.bestWinStreak) result.bestWinStreak = result.winStreak;
+                        }
+
+                        // If user lost, keep the win streak set to 0 and update loss streak info.
+                        else {
+                            Integer existingLosingStreak = snap.get("loss_streak", Integer.class);
+
+                            result.lossStreak = result.lossStreak + existingLosingStreak;
+                            if (result.lossStreak > result.worstLosingStreak) result.worstLosingStreak = result.lossStreak;
+                        }
+                    }
+
+                    // Reference to game details
+                    metricHash.put("game_ref", m.gameRef);
+
+                    // Win results
+                    metricHash.put("times_won", result.timesWon);
+                    metricHash.put("win_streak", result.winStreak);
+                    metricHash.put("best_win_streak", result.bestWinStreak);
+                    metricHash.put("average_win_streak", result.averageWinStreak);
+                    metricHash.put("win_streak_count", result.winningStreakCount);
+
+                    // Loss results
+                    metricHash.put("times_lost", result.timesLost);
+                    metricHash.put("loss_streak", result.lossStreak);
+                    metricHash.put("worst_losing_streak", result.worstLosingStreak);
+
+                    // Score results
+                    metricHash.put("best_score", result.bestScore);
+                    metricHash.put("worst_score", result.worstScore);
+                    metricHash.put("average_score", result.averageScore);
+                    metricHash.put("score_total", result.scoreTotal);
+
+                    // Timestamp results
+                    metricHash.put("times_played", result.timesPlayed);
+                    metricHash.put("first_time_played", result.firstTimePlayed);
+                    metricHash.put("last_time_played", result.lastTimePlayed);
+
+                    gameMetric.set(metricHash).addOnSuccessListener(v -> {
+                        Log.d(TAG, "Successfully updated user game metrics.");
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
+                    });
+                }).addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
+                });
+
+
+            }
+        });
+
     }
 }
 
