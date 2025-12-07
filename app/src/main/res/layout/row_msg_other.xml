@@ -3,7 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="start"
+    android:orientation="vertical"
     android:padding="8dp">
+
+    <!-- Sender name (for group chats) -->
+    <TextView
+        android:id="@+id/tvSenderName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="2dp"
+        android:visibility="gone" />
+
+    <!-- Message bubble -->
     <TextView
         android:id="@+id/tvBody"
         android:layout_width="wrap_content"
@@ -12,5 +27,6 @@
         android:fontFamily="@font/jetbrains_mono"
         android:padding="10dp"
         android:textSize="24sp"
-        android:layout_margin="6dp"/>
+        android:layout_margin="6dp" />
+
 </LinearLayout>
