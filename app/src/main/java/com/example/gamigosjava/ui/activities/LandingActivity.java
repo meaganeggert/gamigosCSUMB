@@ -139,7 +139,7 @@ public class LandingActivity extends BaseActivity {
 
                     allFeedList.clear();
 
-                    List<ActivityItem> feedList = new ArrayList<>();
+//                    List<ActivityItem> feedList = new ArrayList<>();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         ActivityItem feedItem = doc.toObject(ActivityItem.class);
                         if (feedItem != null) {
