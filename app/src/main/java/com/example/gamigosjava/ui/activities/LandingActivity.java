@@ -32,6 +32,13 @@ import java.util.List;
 public class LandingActivity extends BaseActivity {
     private static final String TAG = "LandingActivity";
 
+    private enum FeedFilter {
+        ALL,
+        EVENTS,
+        ACHIEVEMENTS,
+        GAMES
+    }
+
     private RecyclerView feedRecycler;
     private TextView defaultEmptyText;
     private FeedAdapter feedAdapter;
@@ -39,6 +46,10 @@ public class LandingActivity extends BaseActivity {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private ListenerRegistration feedListener; // Will allow for real-time feed updates
+
+    // List of ALL feed items from Firestore so we don't have to continuously query
+    private final List<ActivityItem> allFeedList = new ArrayList<>();
+    private FeedFilter selectedFilter = FeedFilter.ALL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +66,30 @@ public class LandingActivity extends BaseActivity {
 
         feedRecycler = findViewById(R.id.recyclerViewFeed);
         defaultEmptyText = findViewById(R.id.emptyText);
+
+        // Find buttons for feed filtering
+        Button allFeedFilter = findViewById(R.id.buttonAll);
+        Button eventFeedFilter = findViewById(R.id.buttonEvents);
+        Button achieveFeedFilter = findViewById(R.id.buttonAchievements);
+        Button matchFeedFilter = findViewById(R.id.buttonGames);
+
+        // Set button listeners
+        allFeedFilter.setOnClickListener( l -> {
+            selectedFilter = FeedFilter.ALL;
+            applyFilter();
+        });
+        eventFeedFilter.setOnClickListener( l -> {
+            selectedFilter = FeedFilter.EVENTS;
+            applyFilter();
+        });
+        achieveFeedFilter.setOnClickListener( l -> {
+            selectedFilter = FeedFilter.ACHIEVEMENTS;
+            applyFilter();
+        });
+        matchFeedFilter.setOnClickListener( l -> {
+            selectedFilter = FeedFilter.GAMES;
+            applyFilter();
+        });
 
         feedRecycler.setLayoutManager(new LinearLayoutManager(this));
         feedAdapter = new FeedAdapter();
@@ -102,27 +137,62 @@ public class LandingActivity extends BaseActivity {
 
                     if (queryDocumentSnapshots == null) return;
 
+                    allFeedList.clear();
+
                     List<ActivityItem> feedList = new ArrayList<>();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         ActivityItem feedItem = doc.toObject(ActivityItem.class);
                         if (feedItem != null) {
                             feedItem.setId(doc.getId());
-                            feedList.add(feedItem);
+                            allFeedList.add(feedItem);
                         }
                     }
 
-                    feedAdapter.setItems(feedList);
-
-                    // If there are no items to display, show the filler text
-                    // If there ARE items to display, hide the filler text
-                    if (feedList.isEmpty()) {
-                        defaultEmptyText.setVisibility(View.VISIBLE);
-                        feedRecycler.setVisibility(View.GONE);
-                    } else {
-                        defaultEmptyText.setVisibility(View.GONE);
-                        feedRecycler.setVisibility(View.VISIBLE);
-                    }
+                    applyFilter();
+//                    feedAdapter.setItems(feedList);
                 });
+    }
+
+    private void applyFilter() {
+        List<ActivityItem> filteredFeedList = new ArrayList<>();
+
+        for (ActivityItem item : allFeedList) {
+            String type = item.getType();
+
+            switch (selectedFilter) {
+                case ALL:
+                    filteredFeedList.add(item);
+                    break;
+                case EVENTS:
+                    if ("EVENT_CREATED".equals(type)) {
+                        filteredFeedList.add(item);
+                    }
+                    break;
+                case ACHIEVEMENTS:
+                    if ("ACHIEVEMENT_EARNED".equals(type)) {
+                        filteredFeedList.add(item);
+                    }
+                    break;
+                case GAMES:
+                    if ("GAMES_WON".equals(type)) {
+                        filteredFeedList.add(item);
+                    }
+                    break;
+            }
+        }
+
+        // Send the filtered feed list to the adapter
+        feedAdapter.setItems(filteredFeedList);
+
+        // If there are no items to display, show the filler text
+        // If there ARE items to display, hide the filler text
+        if (filteredFeedList.isEmpty()) {
+            defaultEmptyText.setVisibility(View.VISIBLE);
+            feedRecycler.setVisibility(View.GONE);
+        } else {
+            defaultEmptyText.setVisibility(View.GONE);
+            feedRecycler.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
