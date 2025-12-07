@@ -30,6 +30,9 @@
             android:name=".ui.activities.ViewMatchActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.activities.NotificationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.ViewEventActivity"
             android:exported="false" />
         <activity

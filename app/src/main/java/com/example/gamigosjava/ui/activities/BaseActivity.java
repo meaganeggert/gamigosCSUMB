@@ -112,6 +112,11 @@ public abstract class BaseActivity extends AppCompatActivity {
                 overridePendingTransition(0,0);
                 finish();
                 return true;
+            } else if (id == R.id.nav_notifications && !(this instanceof com.example.gamigosjava.ui.activities.NotificationsActivity)) {
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.NotificationsActivity.class));
+                overridePendingTransition(0,0);
+                finish();
+                return true;
             } else if (id == R.id.nav_logout) {
                 // Sign Out of Firebase
                 FirebaseAuth.getInstance().signOut();
