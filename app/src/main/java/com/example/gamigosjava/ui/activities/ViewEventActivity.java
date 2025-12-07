@@ -88,10 +88,11 @@ public class ViewEventActivity extends BaseActivity {
     List<DocumentReference> matchDocumentRefList = new ArrayList<>();
     private MatchAdapter matchAdapter;
 
-    Button startEvent, endEvent, deleteEvent, updateEventButton;
+    Button startEvent, endEvent, deleteEvent, updateEventButton, cancelChanges, addGameButton, photos;
     List<Image> images;
     ImageAdapter imageAdapter;
     private Set<String> originalInviteeUids = new HashSet<>();
+    boolean isHost = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -174,7 +175,7 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button cancelChanges = findViewById(R.id.button_cancelEventChanges);
+        cancelChanges = findViewById(R.id.button_cancelEventChanges);
         if (cancelChanges != null) {
             cancelChanges.setOnClickListener(v -> {
                 if (eventItem.id == null) {
@@ -234,7 +235,7 @@ public class ViewEventActivity extends BaseActivity {
             }
         });
 
-        Button addGameButton = findViewById(R.id.button_addMatch);
+        addGameButton = findViewById(R.id.button_addMatch);
         if(addGameButton != null) {
             addGameButton.setOnClickListener(v -> {
                 String selectedMatchId = "";
@@ -245,7 +246,7 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
-        Button photos = findViewById(R.id.button_eventPhotos);
+        photos = findViewById(R.id.button_eventPhotos);
         if(photos != null) {
             photos.setOnClickListener(v -> {
                 Intent intent = new Intent(ViewEventActivity.this, ImageUploadActivity.class);
@@ -774,6 +775,40 @@ public class ViewEventActivity extends BaseActivity {
         }
     }
 
+
+    private void setHostUIElements() {
+        // Event Form Fragment UI Elements
+        EditText title = eventContainer.findViewById(R.id.editText_eventTitle);
+        EditText notes = eventContainer.findViewById(R.id.editTextTextMultiLine_eventNotes);
+        Button schedule = eventContainer.findViewById(R.id.button_selectSchedule);
+        Button addInvitee = eventContainer.findViewById(R.id.button_addFriend);
+        Button removeInvitee = eventContainer.findViewById(R.id.button_removeFriend);
+
+        // Set visibility for UI elements the host is meant to change.
+        if (isHost) {
+            startEvent.setVisibility(Button.VISIBLE);
+            endEvent.setVisibility(Button.VISIBLE);
+            deleteEvent.setVisibility(Button.VISIBLE);
+            updateEventButton.setVisibility(Button.VISIBLE);
+        } else { // Disable/Remove UI elements for non-hosts
+            title.setEnabled(false);
+            notes.setEnabled(false);
+            schedule.setVisibility(Button.GONE);
+            addInvitee.setVisibility(Button.GONE);
+            removeInvitee.setVisibility(Button.GONE);
+
+            addGameButton.setVisibility(Button.GONE);
+            photos.setVisibility(Button.GONE);
+            cancelChanges.setText("Back");
+
+            for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                Button deleteMatchBtn = recyclerView.getChildAt(i).findViewById(R.id.button_deleteMatch);
+                deleteMatchBtn.setEnabled(false);
+            }
+        }
+    }
+
+
     // Set the event forms UI values to reflect the passed in event.
     private void setEventForm(Event event) {
         EditText title = eventContainer.findViewById(R.id.editText_eventTitle);
@@ -788,12 +823,9 @@ public class ViewEventActivity extends BaseActivity {
 
         isPopulatingInvitees = true;
 
-        if (currentUser.getUid().equals(event.hostId)) {
-            startEvent.setVisibility(Button.VISIBLE);
-            endEvent.setVisibility(Button.VISIBLE);
-            deleteEvent.setVisibility(Button.VISIBLE);
-            updateEventButton.setVisibility(Button.VISIBLE);
-        }
+        if (currentUser.getUid().equals(event.hostId)) isHost = true;
+
+        setHostUIElements();
 
         if (event.status.equals("past")) {
             startEvent.setEnabled(false);
