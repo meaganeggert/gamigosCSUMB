@@ -31,6 +31,7 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
 
     private final List<MatchSummary> matches = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    public boolean isHost = true;
 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -74,6 +75,9 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
         } else {
             holder.image.setImageResource(R.drawable.ic_launcher_background);
         }
+
+        if (isHost) holder.deleteMatchButton.setVisibility(Button.VISIBLE);
+        else holder.deleteMatchButton.setVisibility(Button.GONE);
 
         holder.deleteMatchButton.setOnClickListener(v -> {
             Context context = v.getContext();
@@ -135,5 +139,10 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
     public MatchSummary getItemAt(int i) {
         if (i > matches.size()-1) return null;
         return matches.get(i);
+    }
+
+    public void setIsHost(boolean isHost) {
+        this.isHost = isHost;
+        notifyDataSetChanged();
     }
 }

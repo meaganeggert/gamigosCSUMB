@@ -276,8 +276,6 @@ public class CreateEventActivity extends BaseActivity {
                 friendsInvited.add(friendItem);
             }
         }
-        Friend host = new Friend(currentUser.getUid(), currentUser.getUid(), currentUser.getDisplayName());
-        friendsInvited.add(host);
 
         // Uploads friend invites to the database one by one.
         for (int i = 0; i < friendsInvited.size(); i++) {

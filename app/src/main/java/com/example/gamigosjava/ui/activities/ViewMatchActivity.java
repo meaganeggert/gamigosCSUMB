@@ -496,6 +496,16 @@ public class ViewMatchActivity extends BaseActivity {
     // Set visibility for certain features based on whether or not the current user is host.
     public void enableHostOptions() {
         if (!currentUser.getUid().equals(hostUser.id)) {
+            EditText ruleChanges = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_rules);
+            EditText notes = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_notes);
+            Spinner game = matchFormContainerHandle.findViewById(R.id.dropdown_gameName);
+            Spinner winRule = matchFormContainerHandle.findViewById(R.id.dropdown_winRule);
+
+            ruleChanges.setEnabled(false);
+            notes.setEnabled(false);
+            game.setEnabled(false);
+            winRule.setEnabled(false);
+
             return;
         }
 
