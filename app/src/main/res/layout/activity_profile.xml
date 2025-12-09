@@ -63,11 +63,12 @@
             android:letterSpacing="0.05"
             android:textStyle="bold"
             android:hint="Display name"/>
-        <EditText
+
+    <EditText
             android:id="@+id/etDisplayName"
             android:inputType="textPersonName"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:fontFamily="@font/jetbrains_mono"
             android:hint="Display name"
             android:layout_marginBottom="16dp" />
