@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:padding="8dp"
     android:layout_width="match_parent"
@@ -13,6 +15,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
+        android:layout_gravity="center_vertical"
         android:background="#AAA"
         android:src="@drawable/gamigos_die"/>
 
@@ -24,29 +27,140 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/textTitle"
-            android:text="Game Title"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:id="@+id/matchTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginVertical="1dp"
+            android:fontFamily="@font/oswald_light"
+            android:letterSpacing="0.05"
+            android:maxLines="1"
+            android:paddingVertical="2dp"
+            android:text="Spirit Title"
+            android:includeFontPadding="true"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            app:autoSizeMaxTextSize="28sp"
+            app:autoSizeMinTextSize="18sp"
+            android:ellipsize="end"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform" />
+
+        <!--    Horizontal Rule -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/darkblue"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            />
 
         <TextView
-            android:id="@+id/textPlayers"
-            android:text="Players: 2–4"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:id="@+id/textPlaytimeTitle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/jetbrains_mono_thin"
+            android:text="Time Played:"
+            android:textColor="@color/darkblue"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/textPlaytime"
-            android:text="Playtime: 45 min"
-            android:textColor="#000000"
+            android:text="00:00:00"
+            android:textColor="@color/darkblue"
+            android:fontFamily="@font/jetbrains_mono_thin"
             android:textSize="14sp"
+            android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
+        <!--    Horizontal Rule -->
+        <View
+            android:id="@+id/activeHR"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/yellow"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            />
+
+        <TextView
+            android:id="@+id/playersAttendingTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Players:"
+            android:textColor="@color/darkblue"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="@font/jetbrains_mono_thin"
+            android:textSize="14sp"
+            />
+
+        <TextView
+            android:id="@+id/textAttendees"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Player A, Player B, Player C"
+            android:textColor="@color/darkblue"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="@font/jetbrains_mono_thin"
+            android:textSize="14sp"
+            />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/attendeeRecycler"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/small_avatar_image"
+            tools:itemCount="3"
+            />
+
+        <!--    Horizontal Rule -->
+        <View
+            android:id="@+id/wideHR"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/yellow"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            />
+
+<!--        Show Winner -->
+        <TextView
+            android:id="@+id/matchWinnerTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="Winner:"
+            android:textColor="@color/darkblue"
+            android:layout_gravity="center_horizontal"
+            android:textAlignment="center"
+            android:fontFamily="@font/jetbrains_mono_thin"
+            android:textSize="14sp"
+            />
+
+<!--        Winner Image -->
+        <com.google.android.material.imageview.ShapeableImageView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/winnerImage"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="4dp"
+            android:scaleType="centerCrop"
+            android:layout_gravity="center"
+            android:clipToOutline="true"
+            app:shapeAppearanceOverlay="@style/CircularImage"
+            android:src="@drawable/ic_person_24" />
+
     </LinearLayout>
 
     <Button

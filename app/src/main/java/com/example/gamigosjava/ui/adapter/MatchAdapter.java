@@ -42,8 +42,8 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             image = itemView.findViewById(R.id.imageGame);
-            title = itemView.findViewById(R.id.textTitle);
-            players = itemView.findViewById(R.id.textPlayers);
+            title = itemView.findViewById(R.id.matchTitle);
+            players = itemView.findViewById(R.id.textAttendees);
             playtime = itemView.findViewById(R.id.textPlaytime);
             deleteMatchButton = itemView.findViewById(R.id.button_deleteMatch);
         }
