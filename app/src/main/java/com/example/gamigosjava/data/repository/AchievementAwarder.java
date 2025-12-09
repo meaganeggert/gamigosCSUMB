@@ -142,6 +142,7 @@ public final class AchievementAwarder {
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
                 String achievementName = docSnap.getString("name");
                 String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
+                String actorImageUrl = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("photoUrl") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -173,7 +174,7 @@ public final class AchievementAwarder {
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
 
-                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName, actorImageUrl);
 
                     newlyEarned.add(
                             achievementName != null ? achievementName : achievementID
@@ -193,6 +194,7 @@ public final class AchievementAwarder {
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
                 String achievementName = docSnap.getString("name");
                 String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
+                String actorImageUrl = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("photoUrl") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -221,7 +223,7 @@ public final class AchievementAwarder {
                     updates.put("earnedAt", FieldValue.serverTimestamp());
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
-                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName, actorImageUrl);
 
                     newlyEarned.add(
                             achievementName != null ? achievementName : achievementID
@@ -241,6 +243,7 @@ public final class AchievementAwarder {
                 long goal = docSnap.contains("goal") ? docSnap.getLong("goal") : 1L;
                 String achievementName = docSnap.getString("name");
                 String userName = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("displayName") : "Unknown";
+                String actorImageUrl = (userInfo_snap != null && userInfo_snap.exists()) ? userInfo_snap.getString("photoUrl") : "Unknown";
 
                 boolean shouldAward = false;
                 long metricValue = 0L;
@@ -269,7 +272,7 @@ public final class AchievementAwarder {
                     updates.put("earnedAt", FieldValue.serverTimestamp());
 
                     batch.set(userAchievement_ref, updates, SetOptions.merge());
-                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName);
+                    addAchievementAsFeedActivity(batch, userId, achievementID, achievementName, userName, actorImageUrl);
 
                     newlyEarned.add(
                             achievementName != null ? achievementName : achievementID
@@ -285,7 +288,7 @@ public final class AchievementAwarder {
         });
     }
 
-    private void addAchievementAsFeedActivity(WriteBatch batch, String userId, String achievementId, String achievementName, String userName) {
+    private void addAchievementAsFeedActivity(WriteBatch batch, String userId, String achievementId, String achievementName, String userName, String userPhotoUrl) {
         // Find the right activity doc
         DocumentReference activity_ref = db.collection("activities")
                 .document();
@@ -297,6 +300,7 @@ public final class AchievementAwarder {
         newActivity.put("targetName", achievementName);
         newActivity.put("actorId", userId);
         newActivity.put("actorName", userName);
+        newActivity.put("actorImage", userPhotoUrl);
         newActivity.put("visibility", "friends");
         newActivity.put("message", userName.split(" ")[0] + " earned " + achievementName);
         newActivity.put("createdAt", FieldValue.serverTimestamp());

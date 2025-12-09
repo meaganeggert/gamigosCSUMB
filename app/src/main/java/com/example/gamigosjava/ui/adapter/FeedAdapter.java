@@ -15,8 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.ActivityItem;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldValue;
+import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
 import java.time.LocalDate;
@@ -49,6 +51,18 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
     @Override
     public void onBindViewHolder(@NonNull FeedViewHolder holder, int position) {
         ActivityItem item = feedItems.get(position);
+
+        String avatarUrl = item.getActorImage();
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            Picasso.get()
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_person_24)
+                    .error(R.drawable.ic_person_24)
+                    .into(holder.avatar);
+        } else {
+            Log.d(TAG, "Actor Avatar not found");
+            holder.avatar.setImageResource(R.drawable.ic_person_24);
+        }
 
         if (item.getType().equals("ACHIEVEMENT_EARNED")) {
             // Construct message
@@ -100,6 +114,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             holder.textTitle.setText(message);
             holder.textDescript.setVisibility(GONE);
+            holder.avatar.setVisibility(GONE);
 
             // Temporary Timestamp
             Timestamp whenCreated = item.getCreatedAt();
@@ -145,6 +160,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
     static class FeedViewHolder extends RecyclerView.ViewHolder {
         ImageView imageIcon;
+        ShapeableImageView avatar;
         TextView textTitle;
         TextView textDescript;
         TextView textTimestamp;
@@ -155,6 +171,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             textTitle = itemView.findViewById(R.id.feed_title);
             textDescript = itemView.findViewById(R.id.feed_description);
             textTimestamp = itemView.findViewById(R.id.feed_time);
+            avatar = itemView.findViewById(R.id.feed_avatar);
         }
     }
 }

@@ -224,7 +224,7 @@ public class CreateEventActivity extends BaseActivity {
                     Toast.makeText(this, "Event uploaded successfully.", Toast.LENGTH_SHORT).show();
                     uploadFriendInvites();
 //                    uploadMatches();
-                    addEventAsFeedActivity(eventItem.id, eventItem.title, currentUser.getUid(), currentUser.getDisplayName(), eventItem.visibility);
+                    addEventAsFeedActivity(eventItem.id, eventItem.title, currentUser.getUid(), currentUser.getDisplayName(), String.valueOf(currentUser.getPhotoUrl()), eventItem.visibility);
                     //  Schedule local "event starting" alarm
                     if (eventItem.scheduledAt != null) {
                         long triggerAtMillis = eventItem.scheduledAt.toDate().getTime();
@@ -240,7 +240,7 @@ public class CreateEventActivity extends BaseActivity {
                 });
     }
 
-    private void addEventAsFeedActivity(String eventId, String eventName, String userId, String userName, String eventVisibility) {
+    private void addEventAsFeedActivity(String eventId, String eventName, String userId, String userName, String userPhotoUrl, String eventVisibility) {
 
         // Find the right activity doc
         DocumentReference activity_ref = db.collection("activities")
@@ -253,6 +253,7 @@ public class CreateEventActivity extends BaseActivity {
         newActivity.put("targetName", eventName);
         newActivity.put("actorId", userId);
         newActivity.put("actorName", userName);
+        newActivity.put("actorImage", userPhotoUrl);
         newActivity.put("visibility", eventVisibility);
         newActivity.put("message", userName.split(" ")[0] + " created " + eventName);
         newActivity.put("createdAt", FieldValue.serverTimestamp());

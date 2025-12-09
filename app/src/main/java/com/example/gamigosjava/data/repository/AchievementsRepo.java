@@ -45,6 +45,17 @@ public class AchievementsRepo {
             put("count", 0L);
         }});
 
+        // ensure login_count metric
+        requiredMetrics.put("login_count", new HashMap<String, Object>() {{
+            put("count", 0L);
+        }});
+
+        // ensure login_streak metric
+        requiredMetrics.put("login_streak", new HashMap<String, Object>() {{
+            put("current", 0L);
+            put("best", 0L);
+        }});
+
         // ensure friend_count metric
         requiredMetrics.put("friend_count", new HashMap<String, Object>() {{
             put("count", 0L);
@@ -135,24 +146,28 @@ public class AchievementsRepo {
             DocumentSnapshot streakSnap = t.get(loginStreakRef);
             // Retrieve last login date
             Timestamp lastUpdate = streakSnap.getTimestamp("updatedAt");
-            long currentStreak = streakSnap.exists() && streakSnap.contains("current") ? streakSnap.getLong("current") : 1L;
-            long bestStreak = streakSnap.exists() && streakSnap.contains("best") ? streakSnap.getLong("best") : 1L;
-            if (lastUpdate == null) {
-                lastUpdate = Timestamp.now();
-            }
-            LocalDate lastLoginDay = lastUpdate.toDate()
-                    .toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+            Long currentStreak = streakSnap.getLong("current");
+            Long bestStreak = streakSnap.getLong("best");
 
-            boolean sameDay = today.isEqual(lastLoginDay);
-            boolean nextDay = today.equals(lastLoginDay.plusDays(1));
+            if (currentStreak == null) currentStreak = 0L;
+            if (bestStreak == null) bestStreak = 0L;
+
+            LocalDate lastLoginDay = null;
+            if (lastUpdate != null) {
+                lastLoginDay = lastUpdate.toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+            }
+
+            boolean sameDay = lastLoginDay != null && today.isEqual(lastLoginDay);
+            boolean nextDay = lastLoginDay != null &&  today.equals(lastLoginDay.plusDays(1));
             Log.i(TAG, "SameDay: " + sameDay + " NextDay: " + nextDay);
 
             if (nextDay) {
                 currentStreak += 1;
             } else if ( !sameDay ){
-                currentStreak = 1; // Not the first time, not part of a streak
+                currentStreak = 1L; // Not the first time, not part of a streak
             }
 
             // Update the longest streak if the new streak is better
