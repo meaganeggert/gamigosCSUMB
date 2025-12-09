@@ -15,10 +15,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GamigosJava"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.activities.MatchLandingActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".notifications.EventStartReceiver"
-            android:exported="false"
-        />
+            android:exported="false" />
+
         <service
             android:name=".notifications.MyFirebaseMessagingService"
             android:exported="false">
@@ -26,13 +30,13 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".ui.activities.GetAllQuickPlayActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.QuickPlayActivity"
             android:exported="false" />
-
         <activity
             android:name=".ui.activities.ImageUploadActivity"
             android:exported="false" />
@@ -47,12 +51,10 @@
             android:exported="false" />
         <activity
             android:name=".ui.activities.NewConversationActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true"></activity>
         <activity
             android:name=".ui.activities.ConversationsActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true"></activity>
         <activity
             android:name=".ui.activities.MessagesActivity"
             android:exported="false" />
@@ -99,6 +101,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activities.FirebaseTestActivity" />
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="default_channel" />

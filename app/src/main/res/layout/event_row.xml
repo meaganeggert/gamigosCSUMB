@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="100dp"
-    android:background="@color/neutraltan">
+    android:background="@drawable/bubble_feed">
 
     <ImageView
         android:id="@+id/imageEvent"

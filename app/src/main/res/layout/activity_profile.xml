@@ -173,6 +173,25 @@
             app:layout_constraintBottom_toBottomOf="parent"
             android:visibility="gone"/>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonQuickGame"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/yellow"
+        android:fontFamily="@font/jetbrains_mono"
+        android:maxLines="1"
+        android:text="Quick Game"
+        android:textColor="@color/darkblue"
+        app:autoSizeMaxTextSize="18sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        app:cornerRadius="10dp"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
         <!-- Log out button -->
         <Button
             android:id="@+id/button_logout"

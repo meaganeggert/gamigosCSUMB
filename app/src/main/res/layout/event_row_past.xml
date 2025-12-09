@@ -8,7 +8,7 @@
     android:layout_height="wrap_content"
     android:layout_marginVertical="3dp"
     android:minHeight="100dp"
-    android:background="@color/neutraltan">
+    android:background="@drawable/bubble_feed">
 
 <!--    Hide image in past events display -->
     <ImageView

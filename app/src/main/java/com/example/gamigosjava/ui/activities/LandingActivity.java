@@ -96,14 +96,6 @@ public class LandingActivity extends BaseActivity {
         feedRecycler.setAdapter(feedAdapter);
 
         loadFeed();
-
-        Button quickGame = findViewById(R.id.buttonQuickGame);
-        if (quickGame != null) {
-            quickGame.setOnClickListener(v -> {
-                Intent intent = new Intent(LandingActivity.this, GetAllQuickPlayActivity.class);
-                startActivity(intent);
-            });
-        }
     }
 
     private void saveFCMToken() {

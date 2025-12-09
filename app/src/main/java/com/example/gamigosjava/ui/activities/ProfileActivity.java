@@ -101,6 +101,14 @@ public class ProfileActivity extends BaseActivity {
         } else {
             Toast.makeText(this, "BGG test button not found", Toast.LENGTH_SHORT).show();
         }
+
+        Button quickGame = findViewById(R.id.buttonQuickGame);
+        if (quickGame != null) {
+            quickGame.setOnClickListener(v -> {
+                Intent intent = new Intent(this, GetAllQuickPlayActivity.class);
+                startActivity(intent);
+            });
+        }
     }
 
     private void uploadPhotoToStorage(Uri imageUri) {

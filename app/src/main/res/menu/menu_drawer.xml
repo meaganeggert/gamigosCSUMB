@@ -15,6 +15,11 @@
         android:icon="@drawable/ic_event_24" />
 
     <item
+        android:id="@+id/nav_games"
+        android:title="Games"
+        android:icon="@drawable/die_outline" />
+
+    <item
         android:id="@+id/nav_friends"
         android:title="Friends"
         android:icon="@drawable/ic_friends_24" />
