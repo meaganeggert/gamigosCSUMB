@@ -119,11 +119,15 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
                 holder.image.setImageResource(R.drawable.ic_launcher_background);
             }
             holder.image.setVisibility(VISIBLE);
+            holder.gamesPlayed.setVisibility(GONE);
+            holder.matchViewRecycler.setVisibility(GONE);
 
         } else {
             holder.image.setVisibility(GONE);
             holder.playtime.setText(event.timeElapsed);
             holder.playtime.setVisibility(VISIBLE);
+            holder.gamesPlayed.setVisibility(GONE);
+            holder.matchViewRecycler.setVisibility(VISIBLE);
         }
     }
 
