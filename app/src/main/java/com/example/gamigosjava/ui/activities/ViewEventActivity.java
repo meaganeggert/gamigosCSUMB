@@ -872,6 +872,26 @@ public class ViewEventActivity extends BaseActivity {
                     continue;
                 }
 
+                // Used for rsvp and checking invitee status
+                currentInvitee = new Invitee();
+                currentInvitee.eventId = snap.getString("eventId");
+                currentInvitee.eventTitle = snap.getString("eventTitle");
+                currentInvitee.hostId = snap.getString("hostId");
+                currentInvitee.hostName = snap.getString("hostName");
+                currentInvitee.status = snap.getString("status");
+                currentInvitee.scheduledAt = snap.getTimestamp("scheduledAt");
+
+                String status = snap.getString("status");
+                // Skip the declined user
+                if (status.equals("declined")) {
+                    // Current user is the declined user, bring the user to the previous page.
+                    if (snap.getId().equals(currentUser.getUid())) {
+                        Toast.makeText(this, "You declined this match.", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                    continue;
+                }
+
                 // This is the invitee's user UID (users/{uid})
                 String inviteeUid = userRef.getId();
                 originalInviteeUids.add(inviteeUid);
@@ -901,13 +921,6 @@ public class ViewEventActivity extends BaseActivity {
                         friendDropdown.setSelection(friendList.indexOf(f));
                     }
 
-                    currentInvitee = new Invitee();
-                    currentInvitee.eventId = snap.getString("eventId");
-                    currentInvitee.eventTitle = snap.getString("eventTitle");
-                    currentInvitee.hostId = snap.getString("hostId");
-                    currentInvitee.hostName = snap.getString("hostName");
-                    currentInvitee.status = snap.getString("status");
-                    currentInvitee.scheduledAt = snap.getTimestamp("scheduledAt");
                     currentInvitee.userRef = userRef;
                     currentInvitee.userInfo = f;
 
