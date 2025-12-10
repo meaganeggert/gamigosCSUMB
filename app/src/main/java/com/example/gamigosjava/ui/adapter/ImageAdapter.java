@@ -61,7 +61,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
         }
 
         holder.image.setOnClickListener(v -> {
-            View dialogView = View.inflate(v.getContext(), R.layout.image_dialog, null);
+            View dialogView = View.inflate(v.getContext(), R.layout.dialog_image, null);
 
             AlertDialog dialogImage = new AlertDialog.Builder(v.getContext())
                     .setView(dialogView)

@@ -102,11 +102,15 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
                             DocumentReference matchDoc = db.collection("matches")
                                     .document(match.id);
 
-                            FirestoreUtils.deleteCollection(db, matchDoc.collection("players"), 10);
-                            matchDoc.delete().onSuccessTask(matchVoid -> {
-                                Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
+                            // Delete match results, then delete the match.
+                            FirestoreUtils.deleteCollection(db, matchDoc.collection("players"), 10).onSuccessTask(v -> {
+                                Toast.makeText(context, "Deleted match score results.", Toast.LENGTH_SHORT).show();
+                                matchDoc.delete().onSuccessTask(matchVoid -> {
+                                    Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
                                     matches.remove(match);
                                     notifyDataSetChanged();
+                                    return null;
+                                });
                                 return null;
                             });
 
