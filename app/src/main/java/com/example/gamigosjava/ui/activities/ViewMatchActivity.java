@@ -17,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,12 +30,12 @@ import com.example.gamigosjava.data.model.BGGItem;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
+import com.example.gamigosjava.data.model.Invitee;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
-import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -80,13 +79,16 @@ public class ViewMatchActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ScoresAdapter scoresAdapter;
-    public Button saveButton, startMatch, endMatch, addPlayer;
+    public Button saveButton, startMatch, endMatch, addPlayer, cancelButton;
     private EditText customPlayerInput;
     private Spinner inviteeDropDown, winRuleDropdown;
+    Switch playerTypeToggle;
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
 
+    private Invitee currentInvitee;
+    private boolean isInvited = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -102,7 +104,8 @@ public class ViewMatchActivity extends BaseActivity {
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
         matchItem = new Match();
-        matchItem.hostId = currentUser.getUid();
+
+        currentInvitee = new Invitee();
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm(R.id.matchFormContainer);
@@ -119,7 +122,7 @@ public class ViewMatchActivity extends BaseActivity {
             Log.e(TAG, "Failed to find save match button.");
         }
 
-        Button cancelButton = findViewById(R.id.button_cancelMatch);
+        cancelButton = findViewById(R.id.button_cancelMatch);
         if (cancelButton != null) {
             cancelButton.setOnClickListener(v -> {
                 finish();
@@ -127,6 +130,9 @@ public class ViewMatchActivity extends BaseActivity {
         } else {
             Log.e(TAG, "Failed to find cancel match button.");
         }
+
+        startMatch = findViewById(R.id.button_startMatch);
+        endMatch = findViewById(R.id.button_endMatch);
 
     }
 
@@ -170,8 +176,6 @@ public class ViewMatchActivity extends BaseActivity {
         apiGameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         getGames();
-        getInvitees();
-
 
 
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
@@ -258,7 +262,7 @@ public class ViewMatchActivity extends BaseActivity {
         inviteeDropDown.setAdapter(inviteeAdapter);
         customPlayerInput = findViewById(R.id.editText_customPlayer);
 
-        Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
+        playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
         if (playerTypeToggle != null) {
             playerTypeToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
@@ -444,6 +448,17 @@ public class ViewMatchActivity extends BaseActivity {
     private void getHost() {
         // Search match for host id.
         if (eventId.isEmpty() || eventId == null) {
+
+            if (matchId.isEmpty()) {
+                matchItem.hostId = currentUser.getUid();
+
+                hostUser = new Friend();
+                hostUser.displayName = currentUser.getDisplayName();
+                hostUser.id = currentUser.getUid();
+                hostUser.friendUId = currentUser.getUid();
+                return;
+            }
+
             db.collection("users").document(matchItem.hostId).get().addOnSuccessListener(s -> {
                 if (!s.exists()) return;
 
@@ -458,7 +473,8 @@ public class ViewMatchActivity extends BaseActivity {
                 inviteeList.add(host);
                 inviteeAdapter.notifyDataSetChanged();
 
-                enableHostOptions();
+                Log.d(TAG, "Found Host: " + host.displayName + " Current User: " + currentUser.getDisplayName());
+                setUIElements();
             }).addOnFailureListener(e -> {
                 Log.e(TAG, "Failed to get host info: " + e.getMessage());
             });
@@ -482,7 +498,7 @@ public class ViewMatchActivity extends BaseActivity {
                     inviteeList.add(host);
                     inviteeAdapter.notifyDataSetChanged();
 
-                    enableHostOptions();
+                    setUIElements();
                 }).addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to get host info: " + e.getMessage());
                 });
@@ -493,8 +509,8 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
-    // Set visibility for certain features based on whether or not the current user is host.
-    public void enableHostOptions() {
+    // Set visibility for certain features based on whether or not the current user is host or even invited.
+    public void setUIElements() {
         if (!currentUser.getUid().equals(hostUser.id)) {
             EditText ruleChanges = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_rules);
             EditText notes = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_notes);
@@ -506,8 +522,28 @@ public class ViewMatchActivity extends BaseActivity {
             game.setEnabled(false);
             winRule.setEnabled(false);
 
+            if (!isInvited) {
+                saveButton.setVisibility(Button.GONE);
+                addPlayer.setEnabled(false);
+                inviteeDropDown.setEnabled(false);
+                customPlayerInput.setEnabled(false);
+                playerTypeToggle.setEnabled(false);
+                scoresAdapter.setEditable(false);
+                cancelButton.setText("Back");
+            } else {
+                saveButton.setVisibility(Button.VISIBLE);
+                addPlayer.setEnabled(true);
+                inviteeDropDown.setEnabled(true);
+                customPlayerInput.setEnabled(true);
+                playerTypeToggle.setEnabled(true);
+                scoresAdapter.setEditable(true);
+            }
+
             return;
         }
+
+        scoresAdapter.setEditable(true);
+
 
         // Set match buttons available to host.
         startMatch = findViewById(R.id.button_startMatch);
@@ -559,6 +595,12 @@ public class ViewMatchActivity extends BaseActivity {
                         String displayName = docSnap.getString("displayName");
 
                         Friend f = new Friend(id, friendUid, displayName);
+
+                        if (f.id != null & f.id.equals(currentUser.getUid())) {
+                            isInvited = true;
+                            setUIElements();
+                        }
+
                         boolean inFriendList = false;
                         for (int i = 0; i < inviteeList.size(); i++) {
                             if (inviteeList.get(i).id.equals(f.id)) {
@@ -581,18 +623,16 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Get invited players from the event to list as possible players of the match.
     private void getInvitees() {
-        if (eventId.isEmpty() || eventId == null) {
-            getHost();
-            getFriends();
-            return;
-        }
-
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        getHost();
+        if (eventId.isEmpty() || eventId == null) {
+            getFriends();
+            return;
+        }
+
 
         String uid = currentUser.getUid();
 
@@ -610,6 +650,12 @@ public class ViewMatchActivity extends BaseActivity {
                     }
 
                     for (DocumentSnapshot d : snap) {
+                        // If the user declined the invite, then bother getting
+                        // user info or adding as a possible player.
+                        String status = d.getString("status");
+                        if (!status.equals("accepted")) continue;
+
+                        // Get user info
                         DocumentReference inviteeRef = d.getDocumentReference("userRef");
                         inviteeRef.get().onSuccessTask(inviteeSnap -> {
                             String id = inviteeSnap.getId();
@@ -617,6 +663,12 @@ public class ViewMatchActivity extends BaseActivity {
                             String displayName = inviteeSnap.getString("displayName");
 
                             Friend f = new Friend(id, friendUid, displayName);
+
+                            if (f.id != null && f.id.equals(currentUser.getUid())) {
+                                isInvited = true;
+                                setUIElements();
+                            }
+
                             boolean inFriendList = false;
                             for (int i = 0; i < inviteeList.size(); i++) {
                                 if (inviteeList.get(i).id.equals(f.id)) {
@@ -1010,6 +1062,8 @@ public class ViewMatchActivity extends BaseActivity {
             if (hostId != null) matchItem.hostId = hostId;
             if (winRule != null) matchItem.winRule = winRule;
 
+            getHost();
+            getInvitees();
             setMatchDetails(matchItem);
 
         }).addOnFailureListener(e -> {

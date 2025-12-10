@@ -37,6 +37,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     public List<Player> playerList = new ArrayList<>();
     private Context context;
     public String winRule = "highest";
+    private boolean isEditable = false;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
@@ -147,6 +148,12 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             holder.playerPlacement.setVisibility(EditText.GONE);
             holder.playerScore.setVisibility(EditText.VISIBLE);
         }
+
+        if (!isEditable) {
+            holder.playerScore.setEnabled(false);
+            holder.playerPlacement.setEnabled(false);
+            holder.removePlayer.setVisibility(Button.INVISIBLE);
+        }
     }
 
     @Override
@@ -215,5 +222,10 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             return null;
         });
 
+    }
+
+    public void setEditable(boolean isEditable) {
+        this.isEditable = isEditable;
+        notifyDataSetChanged();
     }
 }
