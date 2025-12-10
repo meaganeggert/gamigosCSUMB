@@ -113,6 +113,8 @@ public class ViewEventActivity extends BaseActivity {
         eventId = getIntent().getStringExtra("selectedEventId");
         Log.d(TAG, "Event ID: " + eventId);
 
+        currentInvitee = new Invitee();
+
         getMatches(eventId);
         getEventImages();
 
@@ -777,7 +779,9 @@ public class ViewEventActivity extends BaseActivity {
     }
 
 
-    private void setHostUIElements() {
+    private void setUIElements() {
+
+
         // Event Form Fragment UI Elements
         EditText title = eventContainer.findViewById(R.id.editText_eventTitle);
         EditText notes = eventContainer.findViewById(R.id.editTextTextMultiLine_eventNotes);
@@ -793,7 +797,9 @@ public class ViewEventActivity extends BaseActivity {
             endEvent.setVisibility(Button.VISIBLE);
             deleteEvent.setVisibility(Button.VISIBLE);
             updateEventButton.setVisibility(Button.VISIBLE);
-        } else { // Disable/Remove UI elements for non-hosts
+            imageAdapter.setEditable(true);
+        }
+        else { // Disable/Remove UI elements for non-hosts
             title.setEnabled(false);
             notes.setEnabled(false);
             schedule.setVisibility(Button.GONE);
@@ -815,6 +821,11 @@ public class ViewEventActivity extends BaseActivity {
             addGameButton.setVisibility(Button.GONE);
             photos.setVisibility(Button.GONE);
             cancelChanges.setText("Back");
+            imageAdapter.setEditable(false);
+
+            // If there are no invitees, skip checking invitee status, otherwise, check and set if
+            // the user can delete a photo
+            if (currentInvitee.userRef != null && currentInvitee.status.equals("accepted")) imageAdapter.setEditable(true);
         }
 
         matchAdapter.setIsHost(isHost);
@@ -836,8 +847,7 @@ public class ViewEventActivity extends BaseActivity {
         isPopulatingInvitees = true;
 
         if (currentUser.getUid().equals(event.hostId)) isHost = true;
-
-        setHostUIElements();
+        setUIElements();
 
         if (event.status.equals("past")) {
             startEvent.setEnabled(false);
@@ -887,7 +897,6 @@ public class ViewEventActivity extends BaseActivity {
                     // Current user is the declined user, bring the user to the previous page.
                     if (snap.getId().equals(currentUser.getUid())) {
                         Toast.makeText(this, "You declined this match.", Toast.LENGTH_SHORT).show();
-                        finish();
                     }
                     continue;
                 }
@@ -926,6 +935,7 @@ public class ViewEventActivity extends BaseActivity {
 
                     if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
                         createRSVPDialog();
+                        setUIElements();
                     }
 
                 }).addOnFailureListener(e ->
@@ -968,7 +978,6 @@ public class ViewEventActivity extends BaseActivity {
                 currentInvitee.status = "declined";
                 updateInviteeStatus();
                 dialog.dismiss();
-                finish();
             });
 
         }
@@ -986,6 +995,8 @@ public class ViewEventActivity extends BaseActivity {
     }
 
     private void updateInviteeStatus() {
+        if (currentInvitee.status.equals("accepted")) imageAdapter.setEditable(true);
+
         DocumentReference inviteRef = db.collection("events")
                 .document(eventItem.id)
                 .collection("invitees")

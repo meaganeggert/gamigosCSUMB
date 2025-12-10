@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Image;
-import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.squareup.picasso.Picasso;
 
@@ -25,6 +24,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
     private static final String TAG = "Image Adapter";
     private final List<Image> images = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    boolean canEdit = false;
 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -112,6 +112,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
                 });
             }
 
+            if (canEdit) deleteImage.setVisibility(Button.VISIBLE);
+            else deleteImage.setVisibility(Button.GONE);
+
             dialogImage.show();
 
         });
@@ -149,5 +152,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder>{
             images.addAll(newImages);
         }
         notifyDataSetChanged(); // tells RecyclerView to refresh
+    }
+
+    public void setEditable(boolean canEdit) {
+        this.canEdit = canEdit;
+        notifyDataSetChanged();
     }
 }
