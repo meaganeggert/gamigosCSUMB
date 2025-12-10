@@ -106,6 +106,8 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem = new Match();
 
         currentInvitee = new Invitee();
+//        getHost();
+
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm(R.id.matchFormContainer);
@@ -1028,6 +1030,7 @@ public class ViewMatchActivity extends BaseActivity {
     private void getMatchDetails(String matchId) {
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
+            getHost();
             getFriends();
             return;
         }
