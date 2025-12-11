@@ -32,7 +32,7 @@
     <item
         android:id="@+id/nav_achievements"
         android:title="Achievements"
-        android:icon="@drawable/ic_trophy_24" />
+        android:icon="@drawable/achievement_24" />
 
     <item
         android:id="@+id/nav_notifications"
