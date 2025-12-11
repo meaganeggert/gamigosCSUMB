@@ -8,10 +8,12 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -306,6 +308,108 @@ public final class AchievementAwarder {
         newActivity.put("createdAt", FieldValue.serverTimestamp());
 
         batch.set(activity_ref, newActivity);
+    }
+
+    public Task<List<String>> awardGameSpecificAchievements(String userId, String gameId) {
+        // User Ref
+        DocumentReference user_Ref = db.collection("users").document(userId);
+
+        // Document Ref
+        DocumentReference perGameMetric_Ref = user_Ref
+                .collection("gameMetrics")
+                .document(gameId);
+
+//        DocumentReference perGameMetric_Ref = user_Ref
+//                .collection("metrics")
+//                .document("games_played")
+//                .collection("game_metrics")
+//                .document(gameId);
+
+        // Reads before writes
+        Task<DocumentSnapshot> gameMetric_Task = perGameMetric_Ref.get();
+        Task<QuerySnapshot> userEarnedAchievements_Task = user_Ref.collection("achievements").get();
+        Task<DocumentSnapshot> userInfo_Task = user_Ref.get();
+
+        // Find achievements for this game
+        Task<QuerySnapshot> perGameAchievements_Task = db.collection("achievements")
+                .whereEqualTo("type", "GAME_PLAY")
+                .whereEqualTo("gameId", gameId)
+                .whereEqualTo("isActive", true)
+                .get();
+
+        return Tasks.whenAllSuccess(
+                gameMetric_Task,
+                userEarnedAchievements_Task,
+                userInfo_Task,
+                perGameAchievements_Task
+        ).continueWithTask( task -> {
+            DocumentSnapshot gameMetric_Snap = gameMetric_Task.getResult();
+            QuerySnapshot userEarned_Snap = userEarnedAchievements_Task.getResult();
+            DocumentSnapshot userInfo_Snap = userInfo_Task.getResult();
+            QuerySnapshot perGameAchieve_Snap = perGameAchievements_Task.getResult();
+
+            long timesPlayed = 0L;
+
+            if (gameMetric_Snap != null && gameMetric_Snap.exists() && gameMetric_Snap.contains("times_played")) {
+                timesPlayed = gameMetric_Snap.getLong("times_played");
+            }
+
+            // Find already earned achievements
+            List<String> alreadyEarned = new ArrayList<>();
+            for (DocumentSnapshot doc : userEarned_Snap.getDocuments()) {
+                Boolean earned = doc.getBoolean("earned");
+                if (Boolean.TRUE.equals(earned)) {
+                    alreadyEarned.add(doc.getId());
+                }
+            }
+
+            WriteBatch batch = db.batch();
+            List<String> newlyEarned = new ArrayList<>();
+
+            String userName = (userInfo_Snap != null && userInfo_Snap.exists()) ? userInfo_Snap.getString("displayName") : "Unknown";
+            String userPhoto = (userInfo_Snap != null && userInfo_Snap.exists()) ? userInfo_Snap.getString("photoUrl") : "";
+
+            for (DocumentSnapshot doc_Snap : perGameAchieve_Snap.getDocuments()) {
+                String achievementId = doc_Snap.getId();
+                if (alreadyEarned.contains(achievementId)) continue; // If we already earned this, skip
+
+                String thisMetric = doc_Snap.getString("metric"); // the metric for this achievement
+                long thisGoal = doc_Snap.contains("goal") ? doc_Snap.getLong("goal") : 1L; // the goal for this achievement
+                String thisAchievementMessage = userName + doc_Snap.getString("description"); // the description for this achievement
+                String thisType = doc_Snap.getString("type"); // the type - currently only GAME_PLAY
+
+                long metricValue = 0L;
+                if ("times_played".equals(thisMetric)) {
+                    metricValue = timesPlayed;
+                }
+                // TODO: add option for GAME_STREAK
+
+                // For count-based achievements
+                boolean shouldAward = metricValue >= thisGoal;
+                // TODO: add functionality for GAME_STREAK
+
+                if (shouldAward) {
+                    DocumentReference userAchievement_Ref = user_Ref
+                            .collection("achievements")
+                            .document(achievementId);
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("earned", true);
+                    updates.put("earnedAt", FieldValue.serverTimestamp());
+
+                    batch.set(userAchievement_Ref, updates, SetOptions.merge());
+
+                    addAchievementAsFeedActivity(batch, userId, achievementId, thisAchievementMessage, userName, userPhoto);
+
+                    newlyEarned.add(thisAchievementMessage != null ? thisAchievementMessage : achievementId);
+                }
+            }
+            if (!newlyEarned.isEmpty()) {
+                return batch.commit().continueWith(x -> newlyEarned);
+            } else {
+                return Tasks.forResult(newlyEarned);
+            }
+        });
     }
 
 }

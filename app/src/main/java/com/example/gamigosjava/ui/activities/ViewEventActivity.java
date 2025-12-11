@@ -42,8 +42,10 @@ import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.UserGameMetric;
+import com.example.gamigosjava.data.repository.AchievementAwarder;
 import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.AchievementNotifier;
 import com.example.gamigosjava.ui.adapter.ImageAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
@@ -600,8 +602,32 @@ public class ViewEventActivity extends BaseActivity {
                         metricHash.put("first_time_played", result.firstTimePlayed);
                         metricHash.put("last_time_played", result.lastTimePlayed);
 
-                        gameMetric.set(metricHash).addOnSuccessListener(v -> Log.d(TAG, "Successfully updated user game metrics.")).addOnFailureListener(e -> Log.e(TAG, "Failed to update user game metrics: " + e.getMessage()));
-                    }).addOnFailureListener(e -> Log.e(TAG, "Failed to find user game metrics: " + e.getMessage()));
+                        gameMetric.set(metricHash)
+                                .addOnSuccessListener(v -> {
+                                    Log.d(TAG, "Successfully updated user game metrics.");
+
+                                    // Award game-specific achievements
+                                    AchievementAwarder awarder = new AchievementAwarder(db);
+                                    awarder.awardGameSpecificAchievements(p.friend.id, m.gameId)
+                                            .addOnSuccessListener(earned -> {
+                                                Log.i(TAG, "Game Specific Achievements Awarded");
+                                                if (earned != null && !earned.isEmpty()) {
+                                                    AchievementNotifier notifier = new AchievementNotifier(this, findViewById(R.id.main));
+                                                    for (String title : earned) {
+                                                        notifier.pickAchievementBanner(title, null);
+                                                    }
+                                                }
+                                            })
+                                            .addOnFailureListener( e-> {
+                                                Log.e(TAG, "Game Specific Achievements Flow FAILED.");
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
+                                });
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
+                    });
 
 
                 }
