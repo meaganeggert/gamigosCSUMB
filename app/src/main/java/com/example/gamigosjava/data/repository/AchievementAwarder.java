@@ -310,25 +310,47 @@ public final class AchievementAwarder {
         batch.set(activity_ref, newActivity);
     }
 
+    private void addGameAchievementAsFeedActivity(WriteBatch batch, String userId, String achievementId, String achievementName, String userName, String userPhotoUrl, String gameImageUrl) {
+        // Find the right activity doc
+        DocumentReference activity_ref = db.collection("activities")
+                .document();
+
+        // Store necessary data
+        Map<String, Object> newActivity = new HashMap<>();
+        newActivity.put("type", "GAME_ACHIEVEMENT_EARNED");
+        newActivity.put("targetId", achievementId);
+        newActivity.put("targetName", achievementName);
+        newActivity.put("targetImage", gameImageUrl);
+        newActivity.put("actorId", userId);
+        newActivity.put("actorName", userName);
+        newActivity.put("actorImage", userPhotoUrl);
+        newActivity.put("visibility", "friends");
+        newActivity.put("message", achievementName);
+        newActivity.put("createdAt", FieldValue.serverTimestamp());
+
+        batch.set(activity_ref, newActivity);
+    }
+
     public Task<List<String>> awardGameSpecificAchievements(String userId, String gameId) {
         // User Ref
         DocumentReference user_Ref = db.collection("users").document(userId);
 
-        // Document Ref
+        // Ref to Game Metrics
         DocumentReference perGameMetric_Ref = user_Ref
-                .collection("gameMetrics")
+                .collection("metrics")
+                .document("games_played")
+                .collection("game_metrics")
                 .document(gameId);
 
-//        DocumentReference perGameMetric_Ref = user_Ref
-//                .collection("metrics")
-//                .document("games_played")
-//                .collection("game_metrics")
-//                .document(gameId);
+        // Ref to Game Info
+        DocumentReference game_Ref = db.collection("games")
+                .document(gameId);
 
         // Reads before writes
         Task<DocumentSnapshot> gameMetric_Task = perGameMetric_Ref.get();
         Task<QuerySnapshot> userEarnedAchievements_Task = user_Ref.collection("achievements").get();
         Task<DocumentSnapshot> userInfo_Task = user_Ref.get();
+        Task<DocumentSnapshot> gameInfo_Task = game_Ref.get();
 
         // Find achievements for this game
         Task<QuerySnapshot> perGameAchievements_Task = db.collection("achievements")
@@ -341,11 +363,13 @@ public final class AchievementAwarder {
                 gameMetric_Task,
                 userEarnedAchievements_Task,
                 userInfo_Task,
+                gameInfo_Task,
                 perGameAchievements_Task
         ).continueWithTask( task -> {
             DocumentSnapshot gameMetric_Snap = gameMetric_Task.getResult();
             QuerySnapshot userEarned_Snap = userEarnedAchievements_Task.getResult();
             DocumentSnapshot userInfo_Snap = userInfo_Task.getResult();
+            DocumentSnapshot gameInfo_Snap = gameInfo_Task.getResult();
             QuerySnapshot perGameAchieve_Snap = perGameAchievements_Task.getResult();
 
             long timesPlayed = 0L;
@@ -369,13 +393,16 @@ public final class AchievementAwarder {
             String userName = (userInfo_Snap != null && userInfo_Snap.exists()) ? userInfo_Snap.getString("displayName") : "Unknown";
             String userPhoto = (userInfo_Snap != null && userInfo_Snap.exists()) ? userInfo_Snap.getString("photoUrl") : "";
 
+            // Game Photo
+            String gamePhoto = (gameInfo_Snap != null && gameInfo_Snap.exists()) ? gameInfo_Snap.getString("imageUrl") : "";
+
             for (DocumentSnapshot doc_Snap : perGameAchieve_Snap.getDocuments()) {
                 String achievementId = doc_Snap.getId();
                 if (alreadyEarned.contains(achievementId)) continue; // If we already earned this, skip
 
                 String thisMetric = doc_Snap.getString("metric"); // the metric for this achievement
                 long thisGoal = doc_Snap.contains("goal") ? doc_Snap.getLong("goal") : 1L; // the goal for this achievement
-                String thisAchievementMessage = userName + doc_Snap.getString("description"); // the description for this achievement
+                String thisAchievementMessage = doc_Snap.getString("description"); // the description for this achievement
                 String thisType = doc_Snap.getString("type"); // the type - currently only GAME_PLAY
 
                 long metricValue = 0L;
@@ -399,7 +426,7 @@ public final class AchievementAwarder {
 
                     batch.set(userAchievement_Ref, updates, SetOptions.merge());
 
-                    addAchievementAsFeedActivity(batch, userId, achievementId, thisAchievementMessage, userName, userPhoto);
+                    addGameAchievementAsFeedActivity(batch, userId, achievementId, thisAchievementMessage, userName, userPhoto, gamePhoto);
 
                     newlyEarned.add(thisAchievementMessage != null ? thisAchievementMessage : achievementId);
                 }

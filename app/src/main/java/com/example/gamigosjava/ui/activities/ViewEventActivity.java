@@ -706,7 +706,7 @@ public class ViewEventActivity extends BaseActivity {
             eventItem.notes = snap.getString("notes");
             setEventForm(eventItem);
 
-            if(eventItem.status.equals("active")) {
+            if("active".equals(eventItem.status)) {
                 startEvent.setEnabled(false);
                 endEvent.setEnabled(true);
             }
@@ -864,7 +864,7 @@ public class ViewEventActivity extends BaseActivity {
 
         setHostUIElements();
 
-        if (event.status.equals("past")) {
+        if ("past".equals(event.status)) {
             startEvent.setEnabled(false);
             endEvent.setEnabled(false);
             deleteEvent.setEnabled(false);

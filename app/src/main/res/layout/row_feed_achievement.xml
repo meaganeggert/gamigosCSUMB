@@ -7,6 +7,7 @@
     android:layout_marginVertical="3dp"
     android:background="@drawable/bubble_feed">
 
+<!--    Event Icon -->
     <ImageView
         android:id="@+id/feed_icon"
         android:layout_width="40dp"
@@ -17,6 +18,22 @@
         android:layout_gravity="center_vertical"
         android:src="@drawable/ic_trophy_24"
         app:tint="@color/orange"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/dividerHR" />
+
+    <!--    Board Game Image -->
+    <ImageView
+        android:id="@+id/feed_bg_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="centerCrop"
+        android:background="@color/neutraltan"
+        android:layout_marginStart="5dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/die_solid"
+        app:tint="@color/orange"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/dividerHR" />
@@ -108,5 +125,29 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dividerHR"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!--    Achievement Message -->
+    <TextView
+        android:id="@+id/feed_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X earned Y"
+        android:textColor="@color/darkblue"
+        android:layout_gravity="center_vertical"
+        android:textAlignment="center"
+        android:maxLines="1"
+        app:autoSizeMaxTextSize="20sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
+        android:lineHeight="22sp"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/feed_bg_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/dividerHR"
+        app:layout_constraintEnd_toStartOf="@id/feed_icon"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

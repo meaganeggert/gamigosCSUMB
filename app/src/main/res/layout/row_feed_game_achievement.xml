@@ -9,44 +9,44 @@
 
 <!--    Board Game Image -->
     <ImageView
-        android:id="@+id/feed_bg_image"
+        android:id="@+id/feed_icon"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:scaleType="centerCrop"
         android:background="@color/neutraltan"
         android:layout_marginStart="5dp"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/die_solid"
+        android:src="@drawable/achievement_24"
         app:tint="@color/orange"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/dividerHR" />
+        app:layout_constraintBottom_toTopOf="@id/dividerHR" />
 
 <!--    Achievements Icon -->
-    <ImageView
-        android:id="@+id/feed_icon"
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/feed_bg_image"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:scaleType="centerCrop"
         android:background="@color/neutraltan"
         android:layout_marginEnd="5dp"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/achievement_24"
-        app:tint="@color/orange"
+        android:src="@drawable/die_solid"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/dividerHR" />
+        app:shapeAppearanceOverlay="@style/CircularImage"
+        app:layout_constraintBottom_toTopOf="@id/dividerHR" />
 
 <!--    Achievement Message -->
     <TextView
         android:id="@+id/feed_message"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="X earned Y"
         android:textColor="@color/darkblue"
         android:layout_gravity="center_vertical"
         android:textAlignment="center"
-        android:maxLines="1"
+        android:maxLines="2"
         app:autoSizeMaxTextSize="20sp"
         app:autoSizeMinTextSize="10sp"
         app:autoSizeStepGranularity="1sp"
@@ -55,10 +55,11 @@
         android:letterSpacing="0.05"
         android:lineHeight="22sp"
         android:layout_marginTop="4dp"
-        app:layout_constraintStart_toEndOf="@id/feed_bg_image"
+        android:layout_marginHorizontal="3dp"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/dividerHR"
-        app:layout_constraintEnd_toStartOf="@id/feed_icon"/>
+        app:layout_constraintEnd_toStartOf="@id/feed_bg_image"/>
 
     <!--    Horizontal Rule -->
     <View
@@ -106,5 +107,49 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dividerHR"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+<!--    THESE ARE JUST HERE SO WE DON'T GET ERRORS WITH THE FEED ADAPTER-->
+    <TextView
+        android:id="@+id/feed_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X earned Y"
+        android:textColor="@color/darkblue"
+        android:layout_gravity="center_vertical"
+        android:textAlignment="center"
+        android:maxLines="1"
+        app:autoSizeMaxTextSize="20sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
+        android:lineHeight="22sp"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/feed_description"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/feed_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="By doing something crazy"
+        android:textColor="@color/darkblue"
+        android:layout_gravity="center_vertical"
+        android:textAlignment="center"
+        android:maxLines="1"
+        app:autoSizeMaxTextSize="12sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        android:visibility="gone"
+        android:fontFamily="@font/jetbrains_mono_thin"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
+        app:layout_constraintTop_toBottomOf="@id/feed_title"
+        app:layout_constraintBottom_toTopOf="@id/dividerHR"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
