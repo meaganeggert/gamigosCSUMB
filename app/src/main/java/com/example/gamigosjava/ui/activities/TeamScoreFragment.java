@@ -47,7 +47,7 @@ public class TeamScoreFragment extends Fragment {
     private String winRule;
     private Integer teamNumber;
 
-    private List<Player> players;
+    private List<Player> players = new ArrayList<>();
     public ScoresAdapter scoresAdapter;
 
     Context context;
@@ -60,7 +60,7 @@ public class TeamScoreFragment extends Fragment {
     private TextView placementLabel;
     private TextView scoreLabel;
 
-    private ArrayAdapter<Friend> inviteeAdapter;
+    public ArrayAdapter<Friend> inviteeAdapter;
     private List<Friend> inviteeList = new ArrayList<>();
 
 
@@ -117,7 +117,6 @@ public class TeamScoreFragment extends Fragment {
 
 
         playerScores.setLayoutManager(new LinearLayoutManager(context));
-        players = new ArrayList<>();
         scoresAdapter = new ScoresAdapter();
         scoresAdapter.setItems(players);
         playerScores.setAdapter(scoresAdapter);
@@ -236,6 +235,10 @@ public class TeamScoreFragment extends Fragment {
 
     public void setInviteeList(List<Friend> inviteeList) {
         this.inviteeList = inviteeList;
+
+        if (inviteeAdapter != null) {
+            inviteeAdapter.notifyDataSetChanged();
+        }
     }
 
     public void setTeamNumber(int teamNumber) {
@@ -252,5 +255,13 @@ public class TeamScoreFragment extends Fragment {
 
         scoresAdapter.winRule = winRule;
         scoresAdapter.notifyDataSetChanged();
+    }
+
+    public void setPlayerList(List<Player> playerList) {
+        this.players = playerList;
+
+        if (scoresAdapter != null) {
+            scoresAdapter.notifyDataSetChanged();
+        }
     }
 }

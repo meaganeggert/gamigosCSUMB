@@ -236,30 +236,33 @@ public class ViewMatchActivity extends BaseActivity {
                     matchItem.winRule = "highest";
                     scoreLabel.setVisibility(TextView.VISIBLE);
                     placementLabel.setVisibility(TextView.GONE);
+                    removeAllTeamFragments();
                 } else if (selected.contains("lowest")) {
                     matchItem.winRule = "lowest";
                     scoreLabel.setVisibility(TextView.VISIBLE);
                     placementLabel.setVisibility(TextView.GONE);
+                    removeAllTeamFragments();
                 } else if (selected.contains("cooperative")) {
                     matchItem.winRule = "cooperative";
                     scoreLabel.setVisibility(TextView.INVISIBLE);
                     placementLabel.setVisibility(TextView.INVISIBLE);
 
                     if (matchItem.teamCount != null) {
-                        for (int j = 0; j < matchItem.teamCount; j++) {
-                            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
-                            fragment.setInviteeList(inviteeList);
-                            fragment.setTeamNumber(i);
-
-                            teamFragmentList.add(fragment);
-                        }
-                        addManyTeamFragments(teamFragmentList);
+//                        for (int j = 0; j < matchItem.teamCount; j++) {
+//                            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+//                            fragment.setInviteeList(inviteeList);
+//                            fragment.setTeamNumber(i);
+//
+//                            teamFragmentList.add(fragment);
+//                        }
+                        addManyNewTeamFragments(matchItem.teamCount);
                     }
 
                 }else {
                     matchItem.winRule = "custom";
                     scoreLabel.setVisibility(TextView.GONE);
                     placementLabel.setVisibility(TextView.VISIBLE);
+                    removeAllTeamFragments();
                 }
 
                 // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
@@ -305,7 +308,7 @@ public class ViewMatchActivity extends BaseActivity {
         Button removeTeam = findViewById(R.id.button_removeTeam);
         if (removeTeam != null) {
             removeTeam.setOnClickListener(v -> {
-                removeTeamFragment();
+                removeLastTeamFragment();
             });
         }
 
@@ -318,10 +321,10 @@ public class ViewMatchActivity extends BaseActivity {
         for (int i = 0; i < size; i++) {
             TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
             fragment.setInviteeList(inviteeList);
+            fragment.setTeamNumber(i + 1);
+            fragment.setPlayerList(playerList);
 
             teamFragmentList.add(fragment);
-            fragment.setTeamNumber(teamFragmentList.size());
-
             fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
         }
 
@@ -358,7 +361,23 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.teamCount = teamFragmentList.size();
     }
 
-    private void removeTeamFragment() {
+    private void removeAllTeamFragments() {
+        if (teamFragmentList.isEmpty()) {
+            return;
+        }
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager()
+                .beginTransaction();
+
+        for (int i = 0; i < teamFragmentList.size(); i++) {
+            fragmentTransaction.remove(teamFragmentList.get(i));
+        }
+        fragmentTransaction.commit();
+
+//        teamFragmentList.clear();
+        matchItem.teamCount = teamFragmentList.size();
+    }
+    private void removeLastTeamFragment() {
         if (teamFragmentList.isEmpty()) {
             return;
         }
@@ -483,9 +502,10 @@ public class ViewMatchActivity extends BaseActivity {
                     scoresAdapter.notifyDataSetChanged();
                     playerList.add(knownPlayer);
 
-//                    for (TeamScoreFragment f: teamFragmentList) {
-//                        f.scoresAdapter.setItems(playerList);
-//                    }
+                    for (TeamScoreFragment f: teamFragmentList) {
+                        f.scoresAdapter.playerList.add(knownPlayer);
+                        f.scoresAdapter.notifyDataSetChanged();
+                    }
                     continue;
                 }
 
@@ -501,10 +521,10 @@ public class ViewMatchActivity extends BaseActivity {
                     scoresAdapter.playerList.add(knownPlayer);
                     scoresAdapter.notifyDataSetChanged();
                     playerList.add(knownPlayer);
-//                    for (TeamScoreFragment f: teamFragmentList) {
-//                        f.scoresAdapter.playerList.add(knownPlayer);
-//                        f.scoresAdapter.notifyDataSetChanged();
-//                    }
+                    for (TeamScoreFragment f: teamFragmentList) {
+                        f.scoresAdapter.playerList.add(knownPlayer);
+                        f.scoresAdapter.notifyDataSetChanged();
+                    }
                     return null;
                 });
             }
@@ -684,6 +704,9 @@ public class ViewMatchActivity extends BaseActivity {
                             inviteeList.add(f);
                             inviteeAdapter.notifyDataSetChanged();
 
+                            for (TeamScoreFragment frag: teamFragmentList) {
+                                frag.setInviteeList(inviteeList);
+                            }
                         }
                     }
                 }).addOnFailureListener(e -> {
@@ -741,6 +764,10 @@ public class ViewMatchActivity extends BaseActivity {
                                 Log.d(TAG, "Added invitee to list");
                                 inviteeList.add(f);
                                 inviteeAdapter.notifyDataSetChanged();
+
+                                for (TeamScoreFragment frag: teamFragmentList) {
+                                    frag.setInviteeList(inviteeList);
+                                }
 
                             }
                             return null;
