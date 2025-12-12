@@ -19,4 +19,5 @@ public class Match {
     public CollectionReference playersRef;
     public String hostId;
     public String winRule;
+    public Integer teamCount;
 }

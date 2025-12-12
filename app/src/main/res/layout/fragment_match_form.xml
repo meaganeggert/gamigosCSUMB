@@ -91,103 +91,122 @@
 
 <!--    Default Win Rule-->
     <LinearLayout
+        android:id="@+id/matchResultContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp"
-        android:layout_gravity="center_vertical">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add Player"
-            android:textSize="12dp"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"/>
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Player"
+                android:textSize="12dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Invitee/Custom"
+                android:textSize="12dp"
+                android:layout_gravity="center_vertical"/>
+            <Switch
+                android:id="@+id/switch_customPlayerToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="330dp"
             android:layout_height="wrap_content"
-            android:text="Invitee/Custom"
-            android:textSize="12dp"
-            android:layout_gravity="center_vertical"/>
-        <Switch
-            android:id="@+id/switch_customPlayerToggle"
-            android:layout_width="wrap_content"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/dropdown_invitees"
+                android:layout_width="275dp"
+                android:layout_height="40dp"
+                android:background="@android:drawable/btn_dropdown"
+                android:spinnerMode="dropdown"
+                android:layout_gravity="center_vertical"/>
+            <EditText
+                android:id="@+id/editText_customPlayer"
+                android:layout_width="275dp"
+                android:layout_height="40dp"
+                android:hint="Name..."
+                android:layout_gravity="center_vertical"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/button_addPlayer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"/>
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="Player"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:id="@+id/textView_playerPlacementLabel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="#"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:id="@+id/textView_playerScoreLabel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Score"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Remove"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewPlayerScores"
+            android:background="#EEEEEE"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="6dp"
+            tools:listitem="@layout/row_player"
+            android:layout_gravity="center_horizontal"/>
     </LinearLayout>
 
-
-    <LinearLayout
-        android:layout_width="330dp"
+    <Button
+        android:id="@+id/button_addTeam"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:text="Add Team"/>
 
-        <Spinner
-            android:id="@+id/dropdown_invitees"
-            android:layout_width="275dp"
-            android:layout_height="40dp"
-            android:background="@android:drawable/btn_dropdown"
-            android:spinnerMode="dropdown"
-            android:layout_gravity="center_vertical"/>
-        <EditText
-            android:id="@+id/editText_customPlayer"
-            android:layout_width="275dp"
-            android:layout_height="40dp"
-            android:hint="Name..."
-            android:layout_gravity="center_vertical"
-            android:visibility="gone"/>
-
-        <Button
-            android:id="@+id/button_addPlayer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/button_removeTeam"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="2"
-            android:layout_height="wrap_content"
-            android:text="Player"
-            android:layout_gravity="center_vertical"/>
-        <TextView
-            android:id="@+id/textView_playerPlacementLabel"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="#"
-            android:layout_gravity="center_vertical"/>
-        <TextView
-            android:id="@+id/textView_playerScoreLabel"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Score"
-            android:layout_gravity="center_vertical"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Remove"
-            android:layout_gravity="center_vertical"/>
-    </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewPlayerScores"
-        android:background="#EEEEEE"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="6dp"
-        tools:listitem="@layout/row_player"
-        android:layout_gravity="center_horizontal"/>
+        android:text="Remove Team"/>
 
 
 

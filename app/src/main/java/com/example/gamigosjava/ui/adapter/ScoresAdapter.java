@@ -143,7 +143,10 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         if (winRule.equals("custom")) {
             holder.playerPlacement.setVisibility(EditText.VISIBLE);
             holder.playerScore.setVisibility(EditText.GONE);
-        } else {
+        } else if (winRule.equals("cooperative")) {
+            holder.playerPlacement.setVisibility(EditText.INVISIBLE);
+            holder.playerScore.setVisibility(EditText.INVISIBLE);
+        }else {
             holder.playerPlacement.setVisibility(EditText.GONE);
             holder.playerScore.setVisibility(EditText.VISIBLE);
         }
@@ -180,19 +183,26 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         switch (winRule) {
             case ("highest"):
                 playerList.sort((p1, p2) -> Integer.compare(p2.score, p1.score));
+                for (int i = 0; i < playerList.size(); i++) {
+                    playerList.get(i).placement = i + 1;
+                }
                 break;
             case ("lowest"):
                 playerList.sort((p1, p2) -> Integer.compare(p1.score, p2.score));
+                for (int i = 0; i < playerList.size(); i++) {
+                    playerList.get(i).placement = i + 1;
+                }
                 break;
             case ("custom"):
                 playerList.sort((p1, p2) -> Integer.compare(p1.placement, p2.placement));
                 break;
+            case ("cooperative"):
+                // do something
+                break;
         }
 
         // With users sorted based on preferred placement rules, we can now just set the placements as the sorted order.10
-        for (int i = 0; i < playerList.size(); i++) {
-            playerList.get(i).placement = i + 1;
-        }
+
 
         CollectionReference playersCol = db.collection("matches").document(matchId).collection("players");
         FirestoreUtils.deleteCollection(db, playersCol, 10).onSuccessTask(v -> {

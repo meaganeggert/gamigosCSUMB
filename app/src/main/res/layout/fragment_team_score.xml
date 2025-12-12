@@ -2,43 +2,38 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".ui.activities.TeamScoreFragment"
-    android:background="@color/neutraltan">
+    android:background="@color/neutraltan"
+    android:layout_marginBottom="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
-        android:background="neutraltan">
+        android:background="@color/neutraltan">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="neutraltan">
+            android:background="@color/neutraltan">
 
             <TextView
                 android:id="@+id/textView_teamName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Team"
-                android:layout_weight="5"/>
+                android:layout_weight="9"/>
 
             <EditText
                 android:id="@+id/editText_teamPlacement"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="1st"
-                android:layout_weight="1"/>
-
-            <Button
-                android:id="@+id/button_removeTeam"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:layout_weight="2"/>
+                android:layout_weight="1"
+                android:textAlignment="center"/>
         </LinearLayout>
 
         <LinearLayout

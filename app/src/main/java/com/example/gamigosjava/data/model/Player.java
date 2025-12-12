@@ -4,17 +4,20 @@ public class Player {
     public Friend friend;
     public Integer score;
     public Integer placement;
+    public Integer team;
 
 
     public Player() {
         friend = new Friend();
         score = 0;
         placement = 0;
+        team = 0;
     }
-    public Player(Friend friend, int score, int placement) {
+    public Player(Friend friend, Integer score, Integer placement, Integer team) {
         this.friend = friend;
         this.score = score;
         this.placement = placement;
+        this.team = team;
     }
 
     @Override public String toString() {

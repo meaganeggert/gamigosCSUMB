@@ -17,8 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,7 +37,6 @@ import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
-import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -86,6 +86,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
+    private List<TeamScoreFragment> teamFragmentList;
 
 
     @Override
@@ -137,9 +138,11 @@ public class ViewMatchActivity extends BaseActivity {
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
+        teamFragmentList = new ArrayList<>();
 
         winRuleList.add("Highest Score");
         winRuleList.add("Lowest Score");
+        winRuleList.add("Cooperative");
         winRuleList.add("Custom");
 
         winRuleAdapter = new ArrayAdapter<>(
@@ -237,7 +240,23 @@ public class ViewMatchActivity extends BaseActivity {
                     matchItem.winRule = "lowest";
                     scoreLabel.setVisibility(TextView.VISIBLE);
                     placementLabel.setVisibility(TextView.GONE);
-                } else {
+                } else if (selected.contains("cooperative")) {
+                    matchItem.winRule = "cooperative";
+                    scoreLabel.setVisibility(TextView.INVISIBLE);
+                    placementLabel.setVisibility(TextView.INVISIBLE);
+
+                    if (matchItem.teamCount != null) {
+                        for (int j = 0; j < matchItem.teamCount; j++) {
+                            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+                            fragment.setInviteeList(inviteeList);
+                            fragment.setTeamNumber(i);
+
+                            teamFragmentList.add(fragment);
+                        }
+                        addManyTeamFragments(teamFragmentList);
+                    }
+
+                }else {
                     matchItem.winRule = "custom";
                     scoreLabel.setVisibility(TextView.GONE);
                     placementLabel.setVisibility(TextView.VISIBLE);
@@ -276,6 +295,81 @@ public class ViewMatchActivity extends BaseActivity {
         addPlayer = findViewById(R.id.button_addPlayer);
         addPlayerFromSpinner();
 
+        Button addTeam = findViewById(R.id.button_addTeam);
+        if (addTeam != null) {
+            addTeam.setOnClickListener(v -> {
+                addTeamFragment();
+            });
+        }
+
+        Button removeTeam = findViewById(R.id.button_removeTeam);
+        if (removeTeam != null) {
+            removeTeam.setOnClickListener(v -> {
+                removeTeamFragment();
+            });
+        }
+
+    }
+
+    private void addManyNewTeamFragments(int size) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        for (int i = 0; i < size; i++) {
+            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+            fragment.setInviteeList(inviteeList);
+
+            teamFragmentList.add(fragment);
+            fragment.setTeamNumber(teamFragmentList.size());
+
+            fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
+        }
+
+        fragmentTransaction.commit();
+
+        matchItem.teamCount = teamFragmentList.size();
+    }
+
+    // Use a fragment to replace default user score section.
+
+    private void addManyTeamFragments(List<TeamScoreFragment> list) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        for (TeamScoreFragment f: list) {
+            fragmentTransaction.add(R.id.matchResultContainer, f, "match_result_container");
+        }
+        fragmentTransaction.commit();
+
+        matchItem.teamCount = teamFragmentList.size();
+    }
+    private void addTeamFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+        fragment.setInviteeList(inviteeList);
+
+        fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
+        fragmentTransaction.commit();
+
+        teamFragmentList.add(fragment);
+        fragment.setTeamNumber(teamFragmentList.size());
+        matchItem.teamCount = teamFragmentList.size();
+    }
+
+    private void removeTeamFragment() {
+        if (teamFragmentList.isEmpty()) {
+            return;
+        }
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .remove(teamFragmentList.get(teamFragmentList.size() - 1))
+                .commit();
+
+        teamFragmentList.remove(teamFragmentList.get(teamFragmentList.size() - 1));
+        matchItem.teamCount = teamFragmentList.size();
     }
 
     // Adds a user as a player for the match to track scores using a dropdown of invitees.
@@ -338,6 +432,13 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
+    private void updatePlayerList() {
+        scoresAdapter.setItems(playerList);
+
+        for (TeamScoreFragment f: teamFragmentList) {
+            f.scoresAdapter.setItems(playerList);
+        }
+    }
 
     // Gets previously established players for the current match if there are any.
     private void getPlayers() {
@@ -366,6 +467,7 @@ public class ViewMatchActivity extends BaseActivity {
                 String displayName = doc.getString("displayName");
                 Integer score = doc.get("score", Integer.class);
                 Integer placement = doc.get("placement", Integer.class);
+                Integer team = doc.get("team", Integer.class);
 
                 Log.d(TAG, "Got Player " + displayName);
 
@@ -376,9 +478,14 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = displayName;
                     friend.friendUId = playerId;
 
-                    Player knownPlayer = new Player(friend, score, placement);
+                    Player knownPlayer = new Player(friend, score, placement, team);
                     scoresAdapter.playerList.add(knownPlayer);
                     scoresAdapter.notifyDataSetChanged();
+                    playerList.add(knownPlayer);
+
+//                    for (TeamScoreFragment f: teamFragmentList) {
+//                        f.scoresAdapter.setItems(playerList);
+//                    }
                     continue;
                 }
 
@@ -390,9 +497,14 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = docSnap.getString("displayName");
                     friend.friendUId = docSnap.getString("uid");
 
-                    Player knownPlayer = new Player(friend, score, placement);
+                    Player knownPlayer = new Player(friend, score, placement, team);
                     scoresAdapter.playerList.add(knownPlayer);
                     scoresAdapter.notifyDataSetChanged();
+                    playerList.add(knownPlayer);
+//                    for (TeamScoreFragment f: teamFragmentList) {
+//                        f.scoresAdapter.playerList.add(knownPlayer);
+//                        f.scoresAdapter.notifyDataSetChanged();
+//                    }
                     return null;
                 });
             }
@@ -837,6 +949,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
         matchItem.updatedAt = Timestamp.now();
+        matchItem.teamCount = teamFragmentList.size();
         // winRule will have been set by the spinner view
 
         // Connect values from the match object to the hashmap to be uploaded.
@@ -849,6 +962,7 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("imageUrl", matchItem.imageUrl);
         match.put("updatedAt",  matchItem.updatedAt);
         match.put("winRule", matchItem.winRule);
+        match.put("teamCount", matchItem.teamCount);
 
         if (game.id != null) {
             match.put("gameRef", db.collection("games").document(game.id));
@@ -999,6 +1113,7 @@ public class ViewMatchActivity extends BaseActivity {
             String rulesVariantResult = snap.getString("rules_variant");
             String hostId = snap.getString("hostId");
             String winRule = snap.getString("winRule");
+            Integer teamCount = snap.get("teamCount", Integer.class);
 
             if (id != null) matchItem.id = id;
             if (endedAt != null) matchItem.endedAt = endedAt;
@@ -1009,6 +1124,7 @@ public class ViewMatchActivity extends BaseActivity {
             if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
             if (hostId != null) matchItem.hostId = hostId;
             if (winRule != null) matchItem.winRule = winRule;
+            if (teamCount != null) matchItem.teamCount = teamCount;
 
             setMatchDetails(matchItem);
 
@@ -1034,7 +1150,6 @@ public class ViewMatchActivity extends BaseActivity {
         }
 
         if (winRuleIndex != -1) winRuleDropdown.setSelection(winRuleIndex);
-
 
 
         View matchForm = matchFormContainerHandle.getChildAt(0);
