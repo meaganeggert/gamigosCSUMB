@@ -77,7 +77,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
-    private List<TeamScoreFragment> teamFragmentList;
+    private List<MatchResultFragment> matchResultList;
 
 
     @Override
@@ -129,7 +129,7 @@ public class ViewMatchActivity extends BaseActivity {
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
-        teamFragmentList = new ArrayList<>();
+        matchResultList = new ArrayList<>();
 
         winRuleList.add("Highest Score");
         winRuleList.add("Lowest Score");
@@ -214,26 +214,26 @@ public class ViewMatchActivity extends BaseActivity {
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
-                    removeAllTeamFragments();
-                    addTeamFragment();
+                    removeAllMatchResults();
+                    addMatchResult();
                 } else if (selected.contains("lowest")) {
                     matchItem.winRule = "lowest";
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
-                    removeAllTeamFragments();
-                    addTeamFragment();
+                    removeAllMatchResults();
+                    addMatchResult();
                 } else if (selected.contains("teams")) {
                     matchItem.winRule = "teams";
                     addTeam.setVisibility(Button.VISIBLE);
                     removeTeam.setVisibility(Button.VISIBLE);
 
-                    removeAllTeamFragments();
+                    removeAllMatchResults();
                     if (matchItem.teamCount != null) {
                         if (matchItem.teamCount > 2) {
-                            addManyNewTeamFragments(matchItem.teamCount);
+                            addManyNewMatchResults(matchItem.teamCount);
                         } else {
-                            addManyNewTeamFragments(2);
+                            addManyNewMatchResults(2);
                         }
                     }
                 } else if (selected.contains("cooperative")) {
@@ -241,16 +241,16 @@ public class ViewMatchActivity extends BaseActivity {
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
-                    removeAllTeamFragments();
-                    addTeamFragment();
+                    removeAllMatchResults();
+                    addMatchResult();
 
                 }else {
                     matchItem.winRule = "custom";
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
-                    removeAllTeamFragments();
-                    addTeamFragment();
+                    removeAllMatchResults();
+                    addMatchResult();
                 }
             }
 
@@ -265,101 +265,100 @@ public class ViewMatchActivity extends BaseActivity {
         addTeam = findViewById(R.id.button_addTeam);
         if (addTeam != null) {
             addTeam.setOnClickListener(v -> {
-                addTeamFragment();
+                addMatchResult();
             });
         }
 
         removeTeam = findViewById(R.id.button_removeTeam);
         if (removeTeam != null) {
             removeTeam.setOnClickListener(v -> {
-                if (teamFragmentList.size() <= 0) {
+                if (matchResultList.size() <= 0) {
                     Toast.makeText(this, "Minimum team count is 2.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                removeLastTeamFragment();
+                removeLastMatchResult();
             });
         }
 
     }
 
-    private void addManyNewTeamFragments(int size) {
+    private void addManyNewMatchResults(int size) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         Log.d(TAG, "Adding this many new team fragments. " + size);
 
         for (int i = 0; i < size; i++) {
-            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, (i + 1), playerList);
+            MatchResultFragment fragment = MatchResultFragment.newInstance(matchId, matchItem.winRule, (i + 1), playerList);
             fragment.setInviteeList(inviteeList);
 
-            teamFragmentList.add(fragment);
+            matchResultList.add(fragment);
             fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
         }
 
         fragmentTransaction.commit();
 
-        matchItem.teamCount = teamFragmentList.size();
+        matchItem.teamCount = matchResultList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
 
     // Use a fragment to replace default user score section.
 
-    private void addManyTeamFragments(List<TeamScoreFragment> list) {
+    private void addManyMatchResults(List<MatchResultFragment> list) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        for (TeamScoreFragment f: list) {
+        for (MatchResultFragment f: list) {
             fragmentTransaction.add(R.id.matchResultContainer, f, "match_result_container");
         }
         fragmentTransaction.commit();
 
-        matchItem.teamCount = teamFragmentList.size();
+        matchItem.teamCount = matchResultList.size();
     }
-    private void addTeamFragment() {
+    private void addMatchResult() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, teamFragmentList.size() + 1, playerList);
+        MatchResultFragment fragment = MatchResultFragment.newInstance(matchId, matchItem.winRule, matchResultList.size() + 1, playerList);
         fragment.setInviteeList(inviteeList);
 
         fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
         fragmentTransaction.commit();
 
-        teamFragmentList.add(fragment);
-//        fragment.setTeamNumber(teamFragmentList.size());
-        matchItem.teamCount = teamFragmentList.size();
+        matchResultList.add(fragment);
+        matchItem.teamCount = matchResultList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
 
-    private void removeAllTeamFragments() {
-        if (teamFragmentList.isEmpty()) {
+    private void removeAllMatchResults() {
+        if (matchResultList.isEmpty()) {
             return;
         }
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager()
                 .beginTransaction();
 
-        for (int i = 0; i < teamFragmentList.size(); i++) {
-            fragmentTransaction.remove(teamFragmentList.get(i));
+        for (int i = 0; i < matchResultList.size(); i++) {
+            fragmentTransaction.remove(matchResultList.get(i));
         }
         fragmentTransaction.commit();
 
-        teamFragmentList.clear();
-        matchItem.teamCount = teamFragmentList.size();
+        matchResultList.clear();
+        matchItem.teamCount = matchResultList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
-    private void removeLastTeamFragment() {
-        if (teamFragmentList.isEmpty()) {
+    private void removeLastMatchResult() {
+        if (matchResultList.isEmpty()) {
             return;
         }
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .remove(teamFragmentList.get(teamFragmentList.size() - 1))
+                .remove(matchResultList.get(matchResultList.size() - 1))
                 .commit();
 
-        teamFragmentList.remove(teamFragmentList.get(teamFragmentList.size() - 1));
-        matchItem.teamCount = teamFragmentList.size();
+        matchResultList.remove(matchResultList.get(matchResultList.size() - 1));
+        matchItem.teamCount = matchResultList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
 
     }
@@ -405,7 +404,7 @@ public class ViewMatchActivity extends BaseActivity {
                     Player knownPlayer = new Player(friend, score, placement, team);
                     playerList.add(knownPlayer);
 
-                    for (TeamScoreFragment f: teamFragmentList) {
+                    for (MatchResultFragment f: matchResultList) {
                         f.setPlayerList(playerList);
                     }
                     continue;
@@ -421,7 +420,7 @@ public class ViewMatchActivity extends BaseActivity {
 
                     Player knownPlayer = new Player(friend, score, placement, team);
                     playerList.add(knownPlayer);
-                    for (TeamScoreFragment f: teamFragmentList) {
+                    for (MatchResultFragment f: matchResultList) {
                         f.setPlayerList(playerList);
                     }
                     return null;
@@ -600,7 +599,7 @@ public class ViewMatchActivity extends BaseActivity {
                             Log.d(TAG, "Added invitee to list");
                             inviteeList.add(f);
 
-                            for (TeamScoreFragment frag: teamFragmentList) {
+                            for (MatchResultFragment frag: matchResultList) {
                                 frag.setInviteeList(inviteeList);
                             }
                         }
@@ -660,7 +659,7 @@ public class ViewMatchActivity extends BaseActivity {
                                 Log.d(TAG, "Added invitee to list");
                                 inviteeList.add(f);
 
-                                for (TeamScoreFragment frag: teamFragmentList) {
+                                for (MatchResultFragment frag: matchResultList) {
                                     frag.setInviteeList(inviteeList);
                                 }
 
@@ -871,7 +870,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
         matchItem.updatedAt = Timestamp.now();
-        matchItem.teamCount = teamFragmentList.size();
+        matchItem.teamCount = matchResultList.size();
         // winRule will have been set by the spinner view
 
         // Connect values from the match object to the hashmap to be uploaded.
@@ -916,6 +915,7 @@ public class ViewMatchActivity extends BaseActivity {
             db.collection("matches").add(match)
                     .addOnSuccessListener(documentReference -> {
                         matchItem.id = documentReference.getId();
+                        matchId = matchItem.id;
                         Log.d(TAG, "Saved Match: " + matchItem.id);
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
 
@@ -948,8 +948,8 @@ public class ViewMatchActivity extends BaseActivity {
     }
 
     private void uploadScores() {
-        for (int i = 0; i < teamFragmentList.size(); i++) {
-            teamFragmentList.get(i).scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
+        for (int i = 0; i < matchResultList.size(); i++) {
+            matchResultList.get(i).scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
         }
     }
 

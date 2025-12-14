@@ -33,10 +33,10 @@ import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link TeamScoreFragment#newInstance} factory method to
+ * Use the {@link MatchResultFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TeamScoreFragment extends Fragment {
+public class MatchResultFragment extends Fragment {
     private static final String TAG = "TeamScoreFragment";
     private static final String ARG_MATCH_ID = "param1";
     private static final String ARG_WIN_RULE = "param2";
@@ -64,7 +64,7 @@ public class TeamScoreFragment extends Fragment {
 
 
 
-    public TeamScoreFragment() {
+    public MatchResultFragment() {
         // Required empty public constructor
     }
 
@@ -76,8 +76,8 @@ public class TeamScoreFragment extends Fragment {
      * @param winRule Parameter 2.
      * @return A new instance of fragment TeamScoreFragment.
      */
-    public static TeamScoreFragment newInstance(String matchId, String winRule, Integer teamNumber, List<Player> playerList) {
-        TeamScoreFragment fragment = new TeamScoreFragment();
+    public static MatchResultFragment newInstance(String matchId, String winRule, Integer teamNumber, List<Player> playerList) {
+        MatchResultFragment fragment = new MatchResultFragment();
         Bundle args = new Bundle();
         args.putString(ARG_MATCH_ID, matchId);
         args.putString(ARG_WIN_RULE, winRule);
@@ -104,7 +104,7 @@ public class TeamScoreFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_team_score, container, false);
+        return inflater.inflate(R.layout.fragment_match_result, container, false);
     }
 
     @Override
