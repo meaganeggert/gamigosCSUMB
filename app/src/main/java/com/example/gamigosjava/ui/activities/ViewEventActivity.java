@@ -52,6 +52,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -507,6 +508,7 @@ public class ViewEventActivity extends BaseActivity {
                         UserGameMetric result = new UserGameMetric();
                         // Set default values for user match results.
                         if (p.placement == 1) {
+                            addMatchAsFeedActivity();
                             result.timesWon++;
                             result.winStreak++;
                             result.bestWinStreak++;
@@ -610,7 +612,29 @@ public class ViewEventActivity extends BaseActivity {
         }
     }
 
+    private void addMatchAsFeedActivity(String winnerUid, String winnerName, String winnerAvatarUrl, long streakCount, long winCount, String gameId, String gameImageUrl, Boolean isCoOpGame) {
+        // TODO: Upload match details as a feed activity
+        Map<String, Object> activity = new HashMap<>();
 
+        activity.put("type", "MATCH_WON");
+        activity.put("createdAt", FieldValue.serverTimestamp());
+        activity.put("actorId", winnerUid);
+        activity.put("actorName", winnerName);
+        activity.put("actorImage", winnerAvatarUrl);
+        activity.put("targetId", gameId);
+        activity.put("targetImage", gameImageUrl);
+        activity.put("winStreak", streakCount);
+        activity.put("totalWinsPerGame", winCount);
+
+        db.collection("activities")
+                .add(activity)
+                .addOnSuccessListener( doc -> {
+                    Log.d(TAG, "Added match win as activity: " + doc.getId());
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Failed to add match win as activity: " + e.getMessage());
+                });
+    }
 
 
     private void getGameDetails(Match match) {
