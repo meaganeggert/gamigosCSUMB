@@ -325,7 +325,7 @@ public final class AchievementAwarder {
         newActivity.put("actorName", userName);
         newActivity.put("actorImage", userPhotoUrl);
         newActivity.put("visibility", "friends");
-        newActivity.put("message", achievementName);
+        newActivity.put("message", userName.split(" ")[0] + achievementName);
         newActivity.put("createdAt", FieldValue.serverTimestamp());
 
         batch.set(activity_ref, newActivity);
