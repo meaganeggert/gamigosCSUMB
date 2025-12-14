@@ -139,7 +139,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         if (winRule.equals("custom")) {
             holder.playerPlacement.setVisibility(EditText.VISIBLE);
             holder.playerScore.setVisibility(EditText.GONE);
-        } else if (winRule.equals("cooperative")) {
+        } else if (winRule.equals("cooperative") || winRule.equals("teams")) {
             holder.playerPlacement.setVisibility(EditText.INVISIBLE);
             holder.playerScore.setVisibility(EditText.INVISIBLE);
         }else {
@@ -217,7 +217,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
                 playerHash.put("placement", p.placement);
                 playerHash.put("displayName", p.friend.displayName);
 
-                if (winRule.equals("cooperative")) {
+                if (winRule.equals("cooperative") || winRule.equals("teams")) {
                     playerHash.put("team", p.team);
                 }
 

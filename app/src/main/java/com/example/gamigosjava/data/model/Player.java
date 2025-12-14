@@ -1,5 +1,7 @@
 package com.example.gamigosjava.data.model;
 
+import android.os.Parcelable;
+
 public class Player {
     public Friend friend;
     public Integer score;

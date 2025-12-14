@@ -80,7 +80,7 @@ public class ViewMatchActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private ScoresAdapter scoresAdapter;
-    public Button saveButton, startMatch, endMatch, addPlayer;
+    public Button saveButton, startMatch, endMatch, addPlayer, addTeam, removeTeam;
     private EditText customPlayerInput;
     private Spinner inviteeDropDown, winRuleDropdown;
 
@@ -143,6 +143,7 @@ public class ViewMatchActivity extends BaseActivity {
         winRuleList.add("Highest Score");
         winRuleList.add("Lowest Score");
         winRuleList.add("Cooperative");
+        winRuleList.add("Teams");
         winRuleList.add("Custom");
 
         winRuleAdapter = new ArrayAdapter<>(
@@ -236,26 +237,54 @@ public class ViewMatchActivity extends BaseActivity {
                     matchItem.winRule = "highest";
                     scoreLabel.setVisibility(TextView.VISIBLE);
                     placementLabel.setVisibility(TextView.GONE);
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
                     removeAllTeamFragments();
+                    addTeamFragment();
                 } else if (selected.contains("lowest")) {
                     matchItem.winRule = "lowest";
                     scoreLabel.setVisibility(TextView.VISIBLE);
                     placementLabel.setVisibility(TextView.GONE);
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
                     removeAllTeamFragments();
+                    addTeamFragment();
+                } else if (selected.contains("teams")) {
+                    matchItem.winRule = "teams";
+                    scoreLabel.setVisibility(TextView.INVISIBLE);
+                    placementLabel.setVisibility(TextView.INVISIBLE);
+                    addTeam.setVisibility(Button.VISIBLE);
+                    removeTeam.setVisibility(Button.VISIBLE);
+
+                    removeAllTeamFragments();
+                    if (matchItem.teamCount != null) {
+                        if (matchItem.teamCount > 2) {
+                            addManyNewTeamFragments(matchItem.teamCount);
+                        } else {
+                            addManyNewTeamFragments(2);
+                        }
+                    }
                 } else if (selected.contains("cooperative")) {
                     matchItem.winRule = "cooperative";
                     scoreLabel.setVisibility(TextView.INVISIBLE);
                     placementLabel.setVisibility(TextView.INVISIBLE);
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
 
-                    if (matchItem.teamCount != null) {
-                        addManyNewTeamFragments(matchItem.teamCount);
-                    }
+                    removeAllTeamFragments();
+                    addTeamFragment();
 
                 }else {
                     matchItem.winRule = "custom";
                     scoreLabel.setVisibility(TextView.GONE);
                     placementLabel.setVisibility(TextView.VISIBLE);
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
                     removeAllTeamFragments();
+                    addTeamFragment();
                 }
 
                 // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
@@ -291,16 +320,20 @@ public class ViewMatchActivity extends BaseActivity {
         addPlayer = findViewById(R.id.button_addPlayer);
         addPlayerFromSpinner();
 
-        Button addTeam = findViewById(R.id.button_addTeam);
+        addTeam = findViewById(R.id.button_addTeam);
         if (addTeam != null) {
             addTeam.setOnClickListener(v -> {
                 addTeamFragment();
             });
         }
 
-        Button removeTeam = findViewById(R.id.button_removeTeam);
+        removeTeam = findViewById(R.id.button_removeTeam);
         if (removeTeam != null) {
             removeTeam.setOnClickListener(v -> {
+                if (teamFragmentList.size() <= 2) {
+                    Toast.makeText(this, "Minimum team count is 2.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 removeLastTeamFragment();
             });
         }
@@ -311,10 +344,11 @@ public class ViewMatchActivity extends BaseActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
+        Log.d(TAG, "Adding this many new team fragments. " + size);
+
         for (int i = 0; i < size; i++) {
-            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, (i + 1));
+            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, (i + 1), playerList);
             fragment.setInviteeList(inviteeList);
-            fragment.setPlayerList(playerList);
 
             teamFragmentList.add(fragment);
             fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
@@ -323,6 +357,7 @@ public class ViewMatchActivity extends BaseActivity {
         fragmentTransaction.commit();
 
         matchItem.teamCount = teamFragmentList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
 
     // Use a fragment to replace default user score section.
@@ -342,7 +377,7 @@ public class ViewMatchActivity extends BaseActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, teamFragmentList.size() + 1);
+        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, teamFragmentList.size() + 1, playerList);
         fragment.setInviteeList(inviteeList);
 
         fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
@@ -351,6 +386,7 @@ public class ViewMatchActivity extends BaseActivity {
         teamFragmentList.add(fragment);
 //        fragment.setTeamNumber(teamFragmentList.size());
         matchItem.teamCount = teamFragmentList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
 
     private void removeAllTeamFragments() {
@@ -366,7 +402,11 @@ public class ViewMatchActivity extends BaseActivity {
         }
         fragmentTransaction.commit();
 
+
+
+        teamFragmentList.clear();
         matchItem.teamCount = teamFragmentList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
     }
     private void removeLastTeamFragment() {
         if (teamFragmentList.isEmpty()) {
@@ -380,6 +420,8 @@ public class ViewMatchActivity extends BaseActivity {
 
         teamFragmentList.remove(teamFragmentList.get(teamFragmentList.size() - 1));
         matchItem.teamCount = teamFragmentList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
+
     }
 
     // Adds a user as a player for the match to track scores using a dropdown of invitees.
@@ -448,7 +490,7 @@ public class ViewMatchActivity extends BaseActivity {
         scoresAdapter.setItems(playerList);
 
         for (TeamScoreFragment f: teamFragmentList) {
-            f.scoresAdapter.setItems(playerList);
+            f.setPlayerList(playerList);
         }
     }
 
