@@ -217,7 +217,7 @@ public class TeamScoreFragment extends Fragment {
     // Removes any players from the current fragments scoreAdapter if they
     // are not a part of the current fragments team. (Only when winRule = cooperative/teams)
     private void handleCoopPlayers() {
-        if (!winRule.equals("teams") && !winRule.equals("cooperative")) {
+        if (!winRule.equals("teams")) {
             Log.d(TAG, "Couldn't handle players: win rule isn't coop or teams");
             return;
         }
@@ -343,7 +343,7 @@ public class TeamScoreFragment extends Fragment {
 
         // If the winRule is set to cooperative/teams, only add players to the current fragment's
         // scoresAdapter, otherwise, just add all players.
-        if (winRule.equals("cooperative") || winRule.equals("teams")) {
+        if (winRule.equals("teams")) {
             for (int i = 0; i < playerList.size(); i++) {
                 Player p = playerList.get(i);
 

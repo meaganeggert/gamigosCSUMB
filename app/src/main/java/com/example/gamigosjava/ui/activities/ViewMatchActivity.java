@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,8 +19,6 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.example.gamigosjava.R;
@@ -37,7 +34,6 @@ import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
-import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -74,15 +70,10 @@ public class ViewMatchActivity extends BaseActivity {
 
     private Friend hostUser;
     private List<Friend> inviteeList = new ArrayList<>();
-    private ArrayAdapter inviteeAdapter;
 
     private List<Player> playerList;
-
-    private RecyclerView recyclerView;
-    private ScoresAdapter scoresAdapter;
     public Button saveButton, startMatch, endMatch, addPlayer, addTeam, removeTeam;
-    private EditText customPlayerInput;
-    private Spinner inviteeDropDown, winRuleDropdown;
+    private Spinner winRuleDropdown;
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
@@ -152,13 +143,6 @@ public class ViewMatchActivity extends BaseActivity {
         );
         winRuleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        inviteeAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_dropdown_item,
-                inviteeList
-        );
-        inviteeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
         userGameAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -180,12 +164,6 @@ public class ViewMatchActivity extends BaseActivity {
 
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
-
-        recyclerView = findViewById(R.id.recyclerViewPlayerScores);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        scoresAdapter = new ScoresAdapter();
-        scoresAdapter.setItems(playerList);
-        recyclerView.setAdapter(scoresAdapter);
 
         getPlayers();
 
@@ -230,13 +208,9 @@ public class ViewMatchActivity extends BaseActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String selected = winRuleDropdown.getSelectedItem().toString().toLowerCase();
-                TextView scoreLabel = findViewById(R.id.textView_playerScoreLabel);
-                TextView placementLabel = findViewById(R.id.textView_playerPlacementLabel);
 
                 if (selected.contains("highest")) {
                     matchItem.winRule = "highest";
-                    scoreLabel.setVisibility(TextView.VISIBLE);
-                    placementLabel.setVisibility(TextView.GONE);
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
@@ -244,8 +218,6 @@ public class ViewMatchActivity extends BaseActivity {
                     addTeamFragment();
                 } else if (selected.contains("lowest")) {
                     matchItem.winRule = "lowest";
-                    scoreLabel.setVisibility(TextView.VISIBLE);
-                    placementLabel.setVisibility(TextView.GONE);
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
@@ -253,8 +225,6 @@ public class ViewMatchActivity extends BaseActivity {
                     addTeamFragment();
                 } else if (selected.contains("teams")) {
                     matchItem.winRule = "teams";
-                    scoreLabel.setVisibility(TextView.INVISIBLE);
-                    placementLabel.setVisibility(TextView.INVISIBLE);
                     addTeam.setVisibility(Button.VISIBLE);
                     removeTeam.setVisibility(Button.VISIBLE);
 
@@ -268,8 +238,6 @@ public class ViewMatchActivity extends BaseActivity {
                     }
                 } else if (selected.contains("cooperative")) {
                     matchItem.winRule = "cooperative";
-                    scoreLabel.setVisibility(TextView.INVISIBLE);
-                    placementLabel.setVisibility(TextView.INVISIBLE);
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
@@ -278,18 +246,12 @@ public class ViewMatchActivity extends BaseActivity {
 
                 }else {
                     matchItem.winRule = "custom";
-                    scoreLabel.setVisibility(TextView.GONE);
-                    placementLabel.setVisibility(TextView.VISIBLE);
                     addTeam.setVisibility(Button.GONE);
                     removeTeam.setVisibility(Button.GONE);
 
                     removeAllTeamFragments();
                     addTeamFragment();
                 }
-
-                // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
-                scoresAdapter.winRule = matchItem.winRule;
-                scoresAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -298,27 +260,7 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
-        inviteeDropDown = findViewById(R.id.dropdown_invitees);
-        inviteeDropDown.setAdapter(inviteeAdapter);
-        customPlayerInput = findViewById(R.id.editText_customPlayer);
-
-        Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
-        if (playerTypeToggle != null) {
-            playerTypeToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    inviteeDropDown.setVisibility(Spinner.GONE);
-                    customPlayerInput.setVisibility(Button.VISIBLE);
-                    addPlayerFromText();
-                } else {
-                    inviteeDropDown.setVisibility(Spinner.VISIBLE);
-                    customPlayerInput.setVisibility(Button.GONE);
-                    addPlayerFromSpinner();
-                }
-            });
-        }
-
         addPlayer = findViewById(R.id.button_addPlayer);
-        addPlayerFromSpinner();
 
         addTeam = findViewById(R.id.button_addTeam);
         if (addTeam != null) {
@@ -330,7 +272,7 @@ public class ViewMatchActivity extends BaseActivity {
         removeTeam = findViewById(R.id.button_removeTeam);
         if (removeTeam != null) {
             removeTeam.setOnClickListener(v -> {
-                if (teamFragmentList.size() <= 2) {
+                if (teamFragmentList.size() <= 0) {
                     Toast.makeText(this, "Minimum team count is 2.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -402,8 +344,6 @@ public class ViewMatchActivity extends BaseActivity {
         }
         fragmentTransaction.commit();
 
-
-
         teamFragmentList.clear();
         matchItem.teamCount = teamFragmentList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
@@ -422,76 +362,6 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.teamCount = teamFragmentList.size();
         Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
 
-    }
-
-    // Adds a user as a player for the match to track scores using a dropdown of invitees.
-    private void addPlayerFromSpinner() {
-        if (addPlayer != null) {
-            addPlayer.setOnClickListener(v -> {
-                Player newPlayer = new Player();
-                newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
-
-                if (newPlayer.friend == null) return;
-                if (newPlayer.friend.id == null) return;
-
-                boolean inList = false;
-                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    Player player = scoresAdapter.playerList.get(i);
-                    if (player.friend.id == null) continue;
-
-                    if (player.friend.id.equals(newPlayer.friend.id)) {
-                        inList = true;
-                        break;
-                    }
-                }
-                if (inList) {
-                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                playerList.add(newPlayer);
-                scoresAdapter.playerList.add(newPlayer);
-                scoresAdapter.notifyDataSetChanged();
-            });
-        }
-    }
-
-    // Adds a non-user as a player for the match to track scores using a text input.
-    private void addPlayerFromText() {
-        if (addPlayer != null) {
-            addPlayer.setOnClickListener(v -> {
-                String customName = customPlayerInput.getText().toString();
-                if (customName.isEmpty()) return;
-
-                Player newPlayer = new Player();
-                newPlayer.friend = new Friend();
-                newPlayer.friend.displayName = customName;
-
-                boolean inList = false;
-                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    if (scoresAdapter.playerList.get(i).friend.displayName.equals(newPlayer.friend.displayName)) {
-                        inList = true;
-                        break;
-                    }
-                }
-                if (inList) {
-                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                playerList.add(newPlayer);
-                scoresAdapter.playerList.add(newPlayer);
-                scoresAdapter.notifyDataSetChanged();
-            });
-        }
-    }
-
-    private void updatePlayerList() {
-        scoresAdapter.setItems(playerList);
-
-        for (TeamScoreFragment f: teamFragmentList) {
-            f.setPlayerList(playerList);
-        }
     }
 
     // Gets previously established players for the current match if there are any.
@@ -533,8 +403,6 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.friendUId = playerId;
 
                     Player knownPlayer = new Player(friend, score, placement, team);
-                    scoresAdapter.playerList.add(knownPlayer);
-                    scoresAdapter.notifyDataSetChanged();
                     playerList.add(knownPlayer);
 
                     for (TeamScoreFragment f: teamFragmentList) {
@@ -552,8 +420,6 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.friendUId = docSnap.getString("uid");
 
                     Player knownPlayer = new Player(friend, score, placement, team);
-                    scoresAdapter.playerList.add(knownPlayer);
-                    scoresAdapter.notifyDataSetChanged();
                     playerList.add(knownPlayer);
                     for (TeamScoreFragment f: teamFragmentList) {
                         f.setPlayerList(playerList);
@@ -621,7 +487,6 @@ public class ViewMatchActivity extends BaseActivity {
 
                 hostUser = host;
                 inviteeList.add(host);
-                inviteeAdapter.notifyDataSetChanged();
 
                 enableHostOptions();
             }).addOnFailureListener(e -> {
@@ -645,7 +510,6 @@ public class ViewMatchActivity extends BaseActivity {
 
                     hostUser = host;
                     inviteeList.add(host);
-                    inviteeAdapter.notifyDataSetChanged();
 
                     enableHostOptions();
                 }).addOnFailureListener(e -> {
@@ -735,7 +599,6 @@ public class ViewMatchActivity extends BaseActivity {
                         if (!inFriendList) {
                             Log.d(TAG, "Added invitee to list");
                             inviteeList.add(f);
-                            inviteeAdapter.notifyDataSetChanged();
 
                             for (TeamScoreFragment frag: teamFragmentList) {
                                 frag.setInviteeList(inviteeList);
@@ -796,7 +659,6 @@ public class ViewMatchActivity extends BaseActivity {
                             if (!inFriendList) {
                                 Log.d(TAG, "Added invitee to list");
                                 inviteeList.add(f);
-                                inviteeAdapter.notifyDataSetChanged();
 
                                 for (TeamScoreFragment frag: teamFragmentList) {
                                     frag.setInviteeList(inviteeList);
@@ -1044,8 +906,7 @@ public class ViewMatchActivity extends BaseActivity {
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
-                        uploadTeamScores();
+                        uploadScores();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
@@ -1060,8 +921,7 @@ public class ViewMatchActivity extends BaseActivity {
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id, matchItem.winRule);
-                        uploadTeamScores();
+                        uploadScores();
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
 
@@ -1087,7 +947,7 @@ public class ViewMatchActivity extends BaseActivity {
         }
     }
 
-    private void uploadTeamScores() {
+    private void uploadScores() {
         for (int i = 0; i < teamFragmentList.size(); i++) {
             teamFragmentList.get(i).scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
         }

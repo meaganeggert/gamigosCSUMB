@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:context=".ui.activities.TeamScoreFragment"
-    android:layout_marginBottom="16dp">
+    android:layout_marginBottom="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
-        android:background="@drawable/bubble_feed">
+        android:background="@color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
