@@ -95,6 +95,7 @@ public class AchievementsActivity extends BaseActivity {
                         String type = achievement.getString("type");
                         String title = achievement.getString("name");
                         String description = achievement.getString("description");
+                        String imageUrl = achievement.getString("iconUrl");
                         Long goal = achievement.getLong("goal");
                         String group = achievement.getString("group");
                         int goalInt = goal != null ? goal.intValue() : 1;
@@ -147,7 +148,7 @@ public class AchievementsActivity extends BaseActivity {
                         }
 
                         achievementList.add(new AchievementSummary(
-                                id, title, description, "", current, goalInt, earned
+                                id, title, description, imageUrl, current, goalInt, earned
                         ));
                     }
                     achieveAdapter.setItems(achievementList);
