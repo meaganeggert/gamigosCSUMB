@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:context=".ui.activities.TeamScoreFragment"
-    android:background="@color/neutraltan"
     android:layout_marginBottom="16dp">
 
     <LinearLayout
@@ -12,20 +11,22 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
-        android:background="@color/neutraltan">
+        android:background="@drawable/bubble_feed">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="@color/neutraltan">
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/textView_teamName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Team"
-                android:layout_weight="9"/>
+                android:layout_weight="9"
+                android:textStyle="bold"
+                android:textSize="18dp"/>
 
             <EditText
                 android:id="@+id/editText_teamPlacement"

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,32 +37,29 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class TeamScoreFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String TAG = "TeamScoreFragment";
     private static final String ARG_MATCH_ID = "param1";
     private static final String ARG_WIN_RULE = "param2";
+    private static final String ARG_TEAM_NUMBER = "param3";
 
-    // TODO: Rename and change types of parameters
     private String matchId;
     private String winRule;
     private Integer teamNumber;
 
-    private List<Player> players = new ArrayList<>();
+    private List<Player> playerList = new ArrayList<>();
     public ScoresAdapter scoresAdapter;
 
     Context context;
-    private EditText teamPlacement;
+    private EditText teamPlacement, customPlayerInput;
     private Switch playerTypeToggle;
     private Spinner inviteeDropDown;
-    private EditText customPlayerInput;
     private Button addPlayer;
     private RecyclerView playerScores;
-    private TextView placementLabel;
-    private TextView scoreLabel;
+    private TextView placementLabel, scoreLabel, teamName;
 
     public ArrayAdapter<Friend> inviteeAdapter;
     private List<Friend> inviteeList = new ArrayList<>();
+
 
 
 
@@ -77,12 +75,12 @@ public class TeamScoreFragment extends Fragment {
      * @param winRule Parameter 2.
      * @return A new instance of fragment TeamScoreFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static TeamScoreFragment newInstance(String matchId, String winRule) {
+    public static TeamScoreFragment newInstance(String matchId, String winRule, Integer teamNumber) {
         TeamScoreFragment fragment = new TeamScoreFragment();
         Bundle args = new Bundle();
         args.putString(ARG_MATCH_ID, matchId);
         args.putString(ARG_WIN_RULE, winRule);
+        args.putInt(ARG_TEAM_NUMBER, teamNumber);
         fragment.setArguments(args);
         return fragment;
     }
@@ -93,6 +91,7 @@ public class TeamScoreFragment extends Fragment {
         if (getArguments() != null) {
             matchId = getArguments().getString(ARG_MATCH_ID);
             winRule = getArguments().getString(ARG_WIN_RULE);
+            teamNumber = getArguments().getInt(ARG_TEAM_NUMBER);
         }
     }
 
@@ -114,14 +113,20 @@ public class TeamScoreFragment extends Fragment {
         playerScores = v.findViewById(R.id.recyclerViewPlayerScores);
         placementLabel = v.findViewById(R.id.textView_playerPlacementLabel);
         scoreLabel = v.findViewById(R.id.textView_playerScoreLabel);
+        teamName = v.findViewById(R.id.textView_teamName);
 
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Team ");
+        stringBuilder.append(teamNumber);
+        teamName.setText(stringBuilder);
 
         playerScores.setLayoutManager(new LinearLayoutManager(context));
         scoresAdapter = new ScoresAdapter();
-        scoresAdapter.setItems(players);
+        scoresAdapter.setItems(playerList);
         playerScores.setAdapter(scoresAdapter);
 
         scoresAdapter.winRule = winRule;
+        scoresAdapter.setTeamNumber(teamNumber);
 
         inviteeAdapter = new ArrayAdapter<>(
                 context,
@@ -170,11 +175,38 @@ public class TeamScoreFragment extends Fragment {
         addPlayerFromSpinner();
     }
 
+    // When a game is set to be cooperative, only keep players
+    // with the same team number as the current object's team if set.
+    private void handleCoopPlayers() {
+        if (!winRule.equals("cooperative")) {
+            Log.d(TAG, "Couldn't handle players: win rule isn't coop");
+            return;
+        }
+        if (teamNumber == null) {
+            Log.d(TAG, "Couldn't handle players: team number was null");
+            return;
+        }
+        if (playerList.isEmpty()) {
+            Log.d(TAG, "Couldn't handle players: player list is empty");
+            return;
+        }
+
+        for (int i = 0; i < playerList.size(); i++) {
+            Integer playerTeam = playerList.get(i).team;
+
+            if (playerTeam == null || !playerTeam.equals(teamNumber)) {
+                playerList.remove(i);
+                Log.d(TAG, "Removed Player");
+            }
+        }
+    }
+
     private void addPlayerFromSpinner() {
         if (addPlayer != null) {
             addPlayer.setOnClickListener(v -> {
                 Player newPlayer = new Player();
                 newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
+                newPlayer.team = teamNumber;
 
                 if (newPlayer.friend == null) return;
                 if (newPlayer.friend.id == null) return;
@@ -210,6 +242,7 @@ public class TeamScoreFragment extends Fragment {
                 Player newPlayer = new Player();
                 newPlayer.friend = new Friend();
                 newPlayer.friend.displayName = customName;
+                newPlayer.team = teamNumber;
 
                 boolean inList = false;
                 for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
@@ -243,6 +276,12 @@ public class TeamScoreFragment extends Fragment {
 
     public void setTeamNumber(int teamNumber) {
         this.teamNumber = teamNumber;
+
+        Log.d(TAG, "Set team number: " + this.teamNumber);
+
+        if (scoresAdapter != null) {
+            scoresAdapter.setTeamNumber(this.teamNumber);
+        }
     }
 
     public void setWinRule(String winRule) {
@@ -258,9 +297,20 @@ public class TeamScoreFragment extends Fragment {
     }
 
     public void setPlayerList(List<Player> playerList) {
-        this.players = playerList;
+        this.playerList.clear();
+
+        for (int i = 0; i < playerList.size(); i++) {
+            Player p = playerList.get(i);
+            if (p.team != null && p.team.equals(teamNumber)) {
+                this.playerList.add(p);
+                teamPlacement.setText(p.placement.toString());
+            }
+        }
+
+
 
         if (scoresAdapter != null) {
+            scoresAdapter.setItems(this.playerList);
             scoresAdapter.notifyDataSetChanged();
         }
     }

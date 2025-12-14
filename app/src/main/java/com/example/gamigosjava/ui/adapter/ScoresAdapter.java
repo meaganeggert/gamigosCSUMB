@@ -9,12 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,13 +19,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
-import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -37,6 +32,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     public List<Player> playerList = new ArrayList<>();
     private Context context;
     public String winRule = "highest";
+    public Integer teamNumber;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
@@ -152,6 +148,12 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         }
     }
 
+    public void setTeamNumber(int teamNumber) {
+        this.teamNumber = teamNumber;
+
+        Log.d(TAG, "Set Team Number: " + this.teamNumber);
+    }
+
     @Override
     public int getItemCount() {
         return playerList.size();
@@ -214,6 +216,10 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
                 playerHash.put("score", p.score);
                 playerHash.put("placement", p.placement);
                 playerHash.put("displayName", p.friend.displayName);
+
+                if (winRule.equals("cooperative")) {
+                    playerHash.put("team", p.team);
+                }
 
                 playersCol.add(playerHash).addOnSuccessListener(doc -> {
                     Log.d(TAG, "Successfully added player details to database: " + p.friend.displayName);

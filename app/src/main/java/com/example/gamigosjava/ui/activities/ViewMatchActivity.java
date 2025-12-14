@@ -248,13 +248,6 @@ public class ViewMatchActivity extends BaseActivity {
                     placementLabel.setVisibility(TextView.INVISIBLE);
 
                     if (matchItem.teamCount != null) {
-//                        for (int j = 0; j < matchItem.teamCount; j++) {
-//                            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
-//                            fragment.setInviteeList(inviteeList);
-//                            fragment.setTeamNumber(i);
-//
-//                            teamFragmentList.add(fragment);
-//                        }
                         addManyNewTeamFragments(matchItem.teamCount);
                     }
 
@@ -319,9 +312,8 @@ public class ViewMatchActivity extends BaseActivity {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         for (int i = 0; i < size; i++) {
-            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+            TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, (i + 1));
             fragment.setInviteeList(inviteeList);
-            fragment.setTeamNumber(i + 1);
             fragment.setPlayerList(playerList);
 
             teamFragmentList.add(fragment);
@@ -350,14 +342,14 @@ public class ViewMatchActivity extends BaseActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule);
+        TeamScoreFragment fragment = TeamScoreFragment.newInstance(matchId, matchItem.winRule, teamFragmentList.size() + 1);
         fragment.setInviteeList(inviteeList);
 
         fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
         fragmentTransaction.commit();
 
         teamFragmentList.add(fragment);
-        fragment.setTeamNumber(teamFragmentList.size());
+//        fragment.setTeamNumber(teamFragmentList.size());
         matchItem.teamCount = teamFragmentList.size();
     }
 
@@ -374,7 +366,6 @@ public class ViewMatchActivity extends BaseActivity {
         }
         fragmentTransaction.commit();
 
-//        teamFragmentList.clear();
         matchItem.teamCount = teamFragmentList.size();
     }
     private void removeLastTeamFragment() {
@@ -416,6 +407,7 @@ public class ViewMatchActivity extends BaseActivity {
                     return;
                 }
 
+                playerList.add(newPlayer);
                 scoresAdapter.playerList.add(newPlayer);
                 scoresAdapter.notifyDataSetChanged();
             });
@@ -445,6 +437,7 @@ public class ViewMatchActivity extends BaseActivity {
                     return;
                 }
 
+                playerList.add(newPlayer);
                 scoresAdapter.playerList.add(newPlayer);
                 scoresAdapter.notifyDataSetChanged();
             });
@@ -503,8 +496,7 @@ public class ViewMatchActivity extends BaseActivity {
                     playerList.add(knownPlayer);
 
                     for (TeamScoreFragment f: teamFragmentList) {
-                        f.scoresAdapter.playerList.add(knownPlayer);
-                        f.scoresAdapter.notifyDataSetChanged();
+                        f.setPlayerList(playerList);
                     }
                     continue;
                 }
@@ -522,8 +514,7 @@ public class ViewMatchActivity extends BaseActivity {
                     scoresAdapter.notifyDataSetChanged();
                     playerList.add(knownPlayer);
                     for (TeamScoreFragment f: teamFragmentList) {
-                        f.scoresAdapter.playerList.add(knownPlayer);
-                        f.scoresAdapter.notifyDataSetChanged();
+                        f.setPlayerList(playerList);
                     }
                     return null;
                 });
@@ -1012,6 +1003,7 @@ public class ViewMatchActivity extends BaseActivity {
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
                         scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
+                        uploadTeamScores();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
@@ -1027,7 +1019,7 @@ public class ViewMatchActivity extends BaseActivity {
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
                         scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id, matchItem.winRule);
-
+                        uploadTeamScores();
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
 
@@ -1050,6 +1042,12 @@ public class ViewMatchActivity extends BaseActivity {
                         Log.e(TAG, "Failed to save match: " + e.getMessage());
                         Toast.makeText(this, "Failed to save game.", Toast.LENGTH_SHORT).show();
                     });
+        }
+    }
+
+    private void uploadTeamScores() {
+        for (int i = 0; i < teamFragmentList.size(); i++) {
+            teamFragmentList.get(i).scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
         }
     }
 
