@@ -5,6 +5,7 @@ import com.google.firebase.Timestamp;
 public class ActivityItem {
     private String id;
     private String actorImage;
+    private String targetImage;
     private String type; // ACHIEVEMENT_EARNED, EVENT_CREATED, GAME_WON, EVENT_ATTENDED,
     private String actorId; // user id
     private String actorName; // user who earned the achievement, created the event, etc.
@@ -31,6 +32,14 @@ public class ActivityItem {
 
     public void setActorImage(String avatarURL) {
         this.actorImage = avatarURL;
+    }
+
+    public String getTargetImage() {
+        return targetImage;
+    }
+
+    public void setTargetImage(String targetUrl) {
+        this.targetImage = targetUrl;
     }
 
 
