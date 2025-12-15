@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,7 +68,6 @@ public class MessagesFragment extends Fragment {
         RecyclerView rv = v.findViewById(R.id.rvMessages);
         EditText input = v.findViewById(R.id.etMessage);
         ImageButton send = v.findViewById(R.id.btnSend);
-        ImageButton menu = v.findViewById(R.id.btnMessageMenu);
 
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -106,8 +106,6 @@ public class MessagesFragment extends Fragment {
                 input.setText("");
             }
         });
-
-        menu.setOnClickListener(this::showConversationMenu);
     }
 
     private void loadParticipantNames(String convoId) {
@@ -149,10 +147,9 @@ public class MessagesFragment extends Fragment {
                         Log.w("MessagesFragment", "Failed to load participant ids", e));
     }
 
-
-
     private void showConversationMenu(View anchor) {
-        PopupMenu popup = new PopupMenu(requireContext(), anchor);
+        // Use END so it opens on the right side
+        PopupMenu popup = new PopupMenu(requireContext(), anchor, Gravity.END);
         popup.getMenuInflater().inflate(
                 isGroup ? R.menu.menu_group_conversation : R.menu.menu_dm_conversation,
                 popup.getMenu()
@@ -184,6 +181,11 @@ public class MessagesFragment extends Fragment {
         });
 
         popup.show();
+    }
+
+    public void openConversationMenuFromToolbar() {
+        View anchor = requireView().findViewById(R.id.conversationMenuAnchor);
+        showConversationMenu(anchor);
     }
 
     private void confirmDeleteConversation() {

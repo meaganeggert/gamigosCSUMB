@@ -83,7 +83,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
 
             // Trophy image
-            holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
+            holder.imageIcon.setImageResource(R.drawable.achievement_24);
         } else if (item.getType().equals("EVENT_CREATED")) {
             // Construct message
             String firstName = item.getActorName().split(" ")[0];
@@ -131,6 +131,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             // TODO: Fill this in
         } else if (item.getType().equals("GAME_WON")) {
             // TODO: Fill this in
+            holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
         } else {
             holder.textTitle.setText("Error retrieving content.");
             Log.d(TAG, "ActivityItem Type: " + item.getType());
