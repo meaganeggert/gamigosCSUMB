@@ -74,6 +74,11 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
                 view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
                 break;
 
+            case VIEW_TYPE_MATCH:
+                // Game Specific Row Layout
+                view = inflater.inflate(R.layout.row_feed_game_won, parent, false);
+                break;
+
             case VIEW_TYPE_UNKNOWN:
             default:
                 view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
@@ -173,8 +178,47 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             holder.gameImage.setVisibility(GONE);
         } else if (item.getType().equals("EVENT_ATTENDED")) {
             // TODO: Fill this in
-        } else if (item.getType().equals("GAME_WON")) {
+        } else if (item.getType().equals("MATCH_WON")) {
             // TODO: Fill this in
+            // Construct message
+            String firstName = item.getActorName().split(" ")[0];
+            String message = firstName + item.getMessage();
+            String gameUrl = item.getTargetImage();
+
+            holder.textAchieveMessage.setText(message);
+            holder.textDescript.setVisibility(GONE);
+            holder.gameImage.setVisibility(VISIBLE);
+            holder.gameImage.setColorFilter(null);
+
+            // Temporary Timestamp
+            Timestamp whenCreated = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenCreated.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
+            // Board Game Image
+            if (gameUrl != null && !gameUrl.isEmpty()) {
+                Picasso.get()
+                        .load(gameUrl)
+                        .placeholder(R.drawable.die_solid)
+                        .error(R.drawable.die_solid)
+                        .into(holder.gameImage);
+            } else {
+                Log.d(TAG, "Board game image not found");
+                holder.gameImage.setImageResource(R.drawable.die_solid);
+
+                holder.gameImage.setColorFilter(
+                        holder.itemView.getContext()
+                                .getColor(R.color.orange)
+                );
+            }
+            holder.gameImage.setVisibility(VISIBLE);
+
             holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
         } else if (item.getType().equals("GAME_ACHIEVEMENT_EARNED")) {
             // Construct message
@@ -255,6 +299,8 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             return VIEW_TYPE_EVENT;
         } else if ("FRIEND_ADDED".equals(type)) {
             return VIEW_TYPE_FRIEND;
+        } else if ("MATCH_WON".equals(type)) {
+            return VIEW_TYPE_MATCH;
         } else {
             return VIEW_TYPE_UNKNOWN;
         }

@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.gms.tasks.Tasks;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
@@ -54,6 +55,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -507,8 +509,11 @@ public class ViewEventActivity extends BaseActivity {
                         HashMap<String, Object> metricHash = new HashMap<>();
 
                         UserGameMetric result = new UserGameMetric();
+
+                        boolean isWinner = (p.placement != null && p.placement == 1);
+
                         // Set default values for user match results.
-                        if (p.placement == 1) {
+                        if (isWinner) {
                             result.timesWon++;
                             result.winStreak++;
                             result.bestWinStreak++;
@@ -625,6 +630,32 @@ public class ViewEventActivity extends BaseActivity {
                                 .addOnFailureListener(e -> {
                                     Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
                                 });
+
+                        if (isWinner) {
+                            String winnerId = p.friend.id;
+
+                            DocumentReference winner_Ref = db.collection("users").document(winnerId);
+                            DocumentReference game_Ref   = m.gameRef;
+
+                            Tasks.whenAllSuccess(
+                                    winner_Ref.get(),
+                                    game_Ref.get()
+                            ).addOnSuccessListener(list -> {
+                                DocumentSnapshot winnerSnap = (DocumentSnapshot) list.get(0);
+                                DocumentSnapshot gameSnap   = (DocumentSnapshot) list.get(1);
+
+                                String winnerName = winnerSnap.getString("displayName");
+                                String avatarUrl  = winnerSnap.getString("photoUrl");
+                                String gameImage  = gameSnap.getString("imageUrl");
+                                String gameName = gameSnap.getString("title");
+
+                                Log.i(TAG, "Adding match with winner: " + winnerName + " of game: " + gameSnap.getString("title"));
+                                Log.i(TAG, winnerName + " is on a " + result.winStreak + " game win streak, and has won " + result.timesWon + " times total.");
+                                addMatchAsFeedActivity( winnerId, winnerName, avatarUrl, result.winStreak, result.timesWon, m.gameId, gameName, gameImage, false);
+                            }).addOnFailureListener(e ->
+                                    Log.e(TAG, "Failed to load winner/game for activity: " + e.getMessage()));
+                        }
+
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
                     });
@@ -637,7 +668,33 @@ public class ViewEventActivity extends BaseActivity {
     }
 
 
+    private void addMatchAsFeedActivity(String winnerUid, String winnerName, String winnerAvatarUrl, long streakCount, long winCount, String gameId, String gameName, String gameImageUrl, Boolean isCoOpGame) {
+        // TODO: Upload match details as a feed activity
+        Map<String, Object> activity = new HashMap<>();
 
+        // Construct message
+        String message = " won a game of " + gameName;
+
+        activity.put("type", "MATCH_WON");
+        activity.put("createdAt", FieldValue.serverTimestamp());
+        activity.put("actorId", winnerUid);
+        activity.put("actorName", winnerName);
+        activity.put("actorImage", winnerAvatarUrl);
+        activity.put("targetId", gameId);
+        activity.put("targetImage", gameImageUrl);
+        activity.put("message", message);
+        activity.put("winStreak", streakCount);
+        activity.put("totalWinsPerGame", winCount);
+
+        db.collection("activities")
+                .add(activity)
+                .addOnSuccessListener( doc -> {
+                    Log.d(TAG, "Added match win as activity: " + doc.getId());
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Failed to add match win as activity: " + e.getMessage());
+                });
+    }
 
     private void getGameDetails(Match match) {
         DocumentReference gameDoc = match.gameRef;
