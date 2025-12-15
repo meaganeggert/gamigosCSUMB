@@ -42,7 +42,7 @@
         android:id="@+id/feed_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="X earned Y"
+        android:text="Person X won a game of Y."
         android:textColor="@color/darkblue"
         android:layout_gravity="center_vertical"
         android:textAlignment="center"
@@ -58,6 +58,29 @@
         android:layout_marginHorizontal="3dp"
         app:layout_constraintStart_toEndOf="@id/feed_icon"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/dividerHR"
+        app:layout_constraintEnd_toStartOf="@id/feed_bg_image"/>
+
+<!--    Win Stat Line -->
+    <TextView
+        android:id="@+id/feed_description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Win Streak ++"
+        android:textColor="@color/green"
+        android:layout_gravity="center_vertical"
+        android:textAlignment="center"
+        android:maxLines="1"
+        app:autoSizeMaxTextSize="12sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeStepGranularity="1sp"
+        app:autoSizeTextType="uniform"
+        android:fontFamily="@font/oswald_light"
+        android:letterSpacing="0.05"
+        android:lineHeight="22sp"
+        android:layout_marginHorizontal="3dp"
+        app:layout_constraintStart_toEndOf="@id/feed_icon"
+        app:layout_constraintTop_toBottomOf="@id/feed_message"
         app:layout_constraintBottom_toTopOf="@id/dividerHR"
         app:layout_constraintEnd_toStartOf="@id/feed_bg_image"/>
 
@@ -130,26 +153,6 @@
         app:layout_constraintStart_toEndOf="@id/feed_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/feed_description"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <TextView
-        android:id="@+id/feed_description"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="By doing something crazy"
-        android:textColor="@color/darkblue"
-        android:layout_gravity="center_vertical"
-        android:textAlignment="center"
-        android:maxLines="1"
-        app:autoSizeMaxTextSize="12sp"
-        app:autoSizeMinTextSize="10sp"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform"
-        android:visibility="gone"
-        android:fontFamily="@font/jetbrains_mono_thin"
-        app:layout_constraintStart_toEndOf="@id/feed_icon"
-        app:layout_constraintTop_toBottomOf="@id/feed_title"
-        app:layout_constraintBottom_toTopOf="@id/dividerHR"
         app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

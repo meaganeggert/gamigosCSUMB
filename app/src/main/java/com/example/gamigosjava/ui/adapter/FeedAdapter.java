@@ -185,8 +185,11 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             String message = firstName + item.getMessage();
             String gameUrl = item.getTargetImage();
 
+            String statMessage = "Win Streak: " + item.getWinStreak();
+
             holder.textAchieveMessage.setText(message);
-            holder.textDescript.setVisibility(GONE);
+            holder.textDescript.setText(statMessage);
+            holder.textDescript.setVisibility(VISIBLE);
             holder.gameImage.setVisibility(VISIBLE);
             holder.gameImage.setColorFilter(null);
 
