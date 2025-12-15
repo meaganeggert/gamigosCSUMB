@@ -115,7 +115,7 @@ public class LandingActivity extends BaseActivity {
         if (feedListener != null) feedListener.remove();
 
         feedListener = db.collection("activities")
-                .whereIn("type", Arrays.asList("ACHIEVEMENT_EARNED", "EVENT_CREATED", "FRIEND_ADDED", "MATCH_WON"))
+                .whereIn("type", Arrays.asList("ACHIEVEMENT_EARNED", "EVENT_CREATED", "FRIEND_ADDED", "GAME_ACHIEVEMENT_EARNED"))
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {
@@ -161,7 +161,7 @@ public class LandingActivity extends BaseActivity {
                     }
                     break;
                 case ACHIEVEMENTS:
-                    if ("ACHIEVEMENT_EARNED".equals(type)) {
+                    if ("ACHIEVEMENT_EARNED".equals(type) || "GAME_ACHIEVEMENT_EARNED".equals(type)) {
                         filteredFeedList.add(item);
                     }
                     break;

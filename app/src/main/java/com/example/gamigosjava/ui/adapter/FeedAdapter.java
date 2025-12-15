@@ -34,6 +34,15 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
     private final List<ActivityItem> feedItems = new ArrayList<>();
 
+    private static final int VIEW_TYPE_GLOBAL_ACHIEVEMENT = 1;
+    private static final int VIEW_TYPE_GAME_ACHIEVEMENT = 2;
+    private static final int VIEW_TYPE_EVENT = 3;
+    private static final int VIEW_TYPE_FRIEND = 4;
+    private static final int VIEW_TYPE_MATCH = 5;
+    private static final int VIEW_TYPE_UNKNOWN = 99;
+
+    public FeedAdapter() {}
+
     public void setItems(List<ActivityItem> newItems) {
         feedItems.clear();
         feedItems.addAll(newItems);
@@ -43,14 +52,46 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
     @NonNull
     @Override
     public FeedViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.row_feed_achievement, parent, false);
-        return new FeedViewHolder(v);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view;
+        Log.i(TAG, "ViewType: " + viewType);
+        switch (viewType) {
+            case VIEW_TYPE_GAME_ACHIEVEMENT:
+                // Game Specific Row Layout
+                view = inflater.inflate(R.layout.row_feed_game_achievement, parent, false);
+                break;
+
+            case VIEW_TYPE_GLOBAL_ACHIEVEMENT:
+                view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
+                break;
+
+            case VIEW_TYPE_EVENT:
+                view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
+                break;
+
+            case VIEW_TYPE_FRIEND:
+                // same note as above
+                view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
+                break;
+
+            case VIEW_TYPE_UNKNOWN:
+            default:
+                view = inflater.inflate(R.layout.row_feed_achievement, parent, false);
+                break;
+        }
+
+        return new FeedViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull FeedViewHolder holder, int position) {
         ActivityItem item = feedItems.get(position);
+
+        // Default visibility
+        holder.avatar.setVisibility(VISIBLE);
+        holder.textDescript.setVisibility(GONE);
+        holder.gameImage.setVisibility(GONE);
+        holder.gameImage.setImageResource(R.drawable.die_solid);
 
         String avatarUrl = item.getActorImage();
         if (avatarUrl != null && !avatarUrl.isEmpty()) {
@@ -84,6 +125,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             // Trophy image
             holder.imageIcon.setImageResource(R.drawable.achievement_24);
+            holder.gameImage.setVisibility(GONE);
         } else if (item.getType().equals("EVENT_CREATED")) {
             // Construct message
             String firstName = item.getActorName().split(" ")[0];
@@ -106,6 +148,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             // Trophy image
             holder.imageIcon.setImageResource(R.drawable.ic_event_24);
+            holder.gameImage.setVisibility(GONE);
         } else if (item.getType().equals("FRIEND_ADDED")) {
             // Construct message
             String friendOneName = item.getActorName().split(" ")[0];
@@ -127,11 +170,51 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             // Trophy image
             holder.imageIcon.setImageResource(R.drawable.ic_friends_24);
+            holder.gameImage.setVisibility(GONE);
         } else if (item.getType().equals("EVENT_ATTENDED")) {
             // TODO: Fill this in
         } else if (item.getType().equals("GAME_WON")) {
             // TODO: Fill this in
             holder.imageIcon.setImageResource(R.drawable.ic_trophy_24);
+        } else if (item.getType().equals("GAME_ACHIEVEMENT_EARNED")) {
+            // Construct message
+            String firstName = item.getActorName().split(" ")[0];
+            String message = item.getMessage();
+            String gameUrl = item.getTargetImage();
+
+            holder.textAchieveMessage.setText(message);
+            holder.textDescript.setVisibility(GONE);
+            holder.gameImage.setVisibility(VISIBLE);
+            holder.gameImage.setColorFilter(null);
+
+            // Temporary Timestamp
+            Timestamp whenCreated = item.getCreatedAt();
+            LocalDateTime achievementTimeDate = whenCreated.toDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • hh:mm a");
+            holder.textTimestamp.setText(achievementTimeDate.format(dateFormatter));
+
+            // Trophy image
+            holder.imageIcon.setImageResource(R.drawable.achievement_24);
+            // Board Game Image
+            if (gameUrl != null && !gameUrl.isEmpty()) {
+                Picasso.get()
+                        .load(gameUrl)
+                        .placeholder(R.drawable.die_solid)
+                        .error(R.drawable.die_solid)
+                        .into(holder.gameImage);
+            } else {
+                Log.d(TAG, "Board game image not found");
+                holder.gameImage.setImageResource(R.drawable.die_solid);
+
+                holder.gameImage.setColorFilter(
+                        holder.itemView.getContext()
+                                .getColor(R.color.orange)
+                );
+            }
+            holder.gameImage.setVisibility(VISIBLE);
         } else {
             holder.textTitle.setText("Error retrieving content.");
             Log.d(TAG, "ActivityItem Type: " + item.getType());
@@ -159,20 +242,41 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
         return feedItems.size();
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        ActivityItem item = feedItems.get(position);
+        String type = item.getType();
+
+        if ("GAME_ACHIEVEMENT_EARNED".equals(type)) {
+            return VIEW_TYPE_GAME_ACHIEVEMENT;
+        } else if ("ACHIEVEMENT_EARNED".equals(type)) {
+            return VIEW_TYPE_GLOBAL_ACHIEVEMENT;
+        } else if ("EVENT_CREATED".equals(type)) {
+            return VIEW_TYPE_EVENT;
+        } else if ("FRIEND_ADDED".equals(type)) {
+            return VIEW_TYPE_FRIEND;
+        } else {
+            return VIEW_TYPE_UNKNOWN;
+        }
+    }
+
+
     static class FeedViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageIcon;
+        ImageView imageIcon, gameImage;
         ShapeableImageView avatar;
         TextView textTitle;
-        TextView textDescript;
+        TextView textDescript, textAchieveMessage;
         TextView textTimestamp;
 
         FeedViewHolder(@NonNull View itemView) {
             super(itemView);
             imageIcon = itemView.findViewById(R.id.feed_icon);
             textTitle = itemView.findViewById(R.id.feed_title);
+            textAchieveMessage = itemView.findViewById(R.id.feed_message);
             textDescript = itemView.findViewById(R.id.feed_description);
             textTimestamp = itemView.findViewById(R.id.feed_time);
             avatar = itemView.findViewById(R.id.feed_avatar);
+            gameImage= itemView.findViewById(R.id.feed_bg_image);
         }
     }
 }
