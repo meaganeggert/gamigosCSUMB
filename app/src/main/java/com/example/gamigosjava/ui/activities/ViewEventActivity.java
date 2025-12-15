@@ -46,6 +46,7 @@ import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
 import com.example.gamigosjava.ui.adapter.ImageAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -506,9 +507,11 @@ public class ViewEventActivity extends BaseActivity {
                         HashMap<String, Object> metricHash = new HashMap<>();
 
                         UserGameMetric result = new UserGameMetric();
+
+                        boolean isWinner = (p.placement != null && p.placement == 1);
+
                         // Set default values for user match results.
-                        if (p.placement == 1) {
-                            addMatchAsFeedActivity();
+                        if (isWinner) {
                             result.timesWon++;
                             result.winStreak++;
                             result.bestWinStreak++;
@@ -603,6 +606,30 @@ public class ViewEventActivity extends BaseActivity {
                         metricHash.put("last_time_played", result.lastTimePlayed);
 
                         gameMetric.set(metricHash).addOnSuccessListener(v -> Log.d(TAG, "Successfully updated user game metrics.")).addOnFailureListener(e -> Log.e(TAG, "Failed to update user game metrics: " + e.getMessage()));
+                        if (isWinner) {
+                            String winnerId = p.friend.id;
+
+                            DocumentReference winner_Ref = db.collection("users").document(winnerId);
+                            DocumentReference game_Ref   = m.gameRef;
+
+                            Tasks.whenAllSuccess(
+                                    winner_Ref.get(),
+                                    game_Ref.get()
+                            ).addOnSuccessListener(list -> {
+                                DocumentSnapshot winnerSnap = (DocumentSnapshot) list.get(0);
+                                DocumentSnapshot gameSnap   = (DocumentSnapshot) list.get(1);
+
+                                String winnerName = winnerSnap.getString("displayName");
+                                String avatarUrl  = winnerSnap.getString("photoUrl");
+                                String gameImage  = gameSnap.getString("imageUrl");
+
+                                Log.i(TAG, "Adding match with winner: " + winnerName + " of game: " + gameSnap.getString("title"));
+                                Log.i(TAG, winnerName + " is on a " + result.winStreak + " game win streak, and has won " + result.timesWon + " times total.");
+                                addMatchAsFeedActivity( winnerId, winnerName, avatarUrl, result.winStreak, result.timesWon, m.gameId, gameImage, false);
+                            }).addOnFailureListener(e ->
+                                    Log.e(TAG, "Failed to load winner/game for activity: " + e.getMessage()));
+                        }
+
                     }).addOnFailureListener(e -> Log.e(TAG, "Failed to find user game metrics: " + e.getMessage()));
 
 
@@ -625,6 +652,7 @@ public class ViewEventActivity extends BaseActivity {
         activity.put("targetImage", gameImageUrl);
         activity.put("winStreak", streakCount);
         activity.put("totalWinsPerGame", winCount);
+        activity.put("isCoOpGame", isCoOpGame);
 
         db.collection("activities")
                 .add(activity)
