@@ -25,8 +25,10 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class FriendsLanding extends BaseActivity {
@@ -202,6 +204,26 @@ public class FriendsLanding extends BaseActivity {
                         friend.put("photoUrl", doc.getString("photoUrl"));
                         friendlist.add(friend);
                     }
+
+                    // Alphabetize by displayName (case-insensitive), nulls last
+                    Collections.sort(friendlist, (a, b) -> {
+                        String an = (String) a.get("displayName");
+                        String bn = (String) b.get("displayName");
+
+                        if (an == null) an = "";
+                        if (bn == null) bn = "";
+
+                        int nameCmp = an.toLowerCase(Locale.US).compareTo(bn.toLowerCase(Locale.US));
+                        if (nameCmp != 0) return nameCmp;
+
+                        // Tie-breaker: uid to keep ordering stable
+                        String au = (String) a.get("uid");
+                        String bu = (String) b.get("uid");
+                        if (au == null) au = "";
+                        if (bu == null) bu = "";
+                        return au.compareTo(bu);
+                    });
+
                     friendsAdapter.notifyDataSetChanged();
                 });
     }
