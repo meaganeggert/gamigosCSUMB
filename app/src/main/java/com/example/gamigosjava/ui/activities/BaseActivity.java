@@ -139,7 +139,8 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
 
         // Avatar click takes you to the profile page
-        avatarView.setOnClickListener(v -> startActivity(new Intent(this, ProfileActivity.class)));
+        avatarView.setOnClickListener(v ->
+                MyProfileBottomSheet.newInstance().show(getSupportFragmentManager(), "my_profile_sheet"));
 
         // Optional: give a default title
         // setTitle("HelloWorld");
