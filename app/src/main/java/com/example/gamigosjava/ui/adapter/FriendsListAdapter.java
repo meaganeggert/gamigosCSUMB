@@ -19,6 +19,9 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
     public interface FriendActionListener {
         void onProfileClick(Map<String, Object> friend);
         void onMessageClick(Map<String, Object> friend);
+
+        // NEW: star toggle
+        void onFavoriteToggle(Map<String, Object> friend, boolean newValue);
     }
 
     private final List<Map<String, Object>> items;
@@ -51,11 +54,35 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .into(holder.ivPhoto);
 
+        // Favorite icon state
+        boolean isFavorite;
+        Object favObj = friend.get("favorite");
+        if (favObj instanceof Boolean) {
+            isFavorite = (Boolean) favObj;
+        } else {
+            isFavorite = false;
+        }
+
+        holder.btnFavorite.setImageResource(
+                isFavorite ? R.drawable.sharp_star_24 : R.drawable.outline_star_border_24
+        );
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onProfileClick(friend);
         });
+
         holder.btnMessage.setOnClickListener(v -> {
             if (listener != null) listener.onMessageClick(friend);
+        });
+
+        holder.btnFavorite.setOnClickListener(v -> {
+            boolean newValue = !isFavorite;
+
+            // Optimistic UI: update local map so it feels instant
+            friend.put("favorite", newValue);
+            notifyItemChanged(holder.getBindingAdapterPosition());
+
+            if (listener != null) listener.onFavoriteToggle(friend, newValue);
         });
     }
 
