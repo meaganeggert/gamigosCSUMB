@@ -64,7 +64,11 @@ public class FriendsListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
         }
 
         holder.btnFavorite.setImageResource(
-                isFavorite ? R.drawable.sharp_star_24 : R.drawable.outline_star_border_24
+                isFavorite ? R.drawable.sharp_star_32 : R.drawable.sharp_star_border_32
+        );
+
+        holder.btnFavorite.setBackgroundResource(
+                isFavorite ? R.drawable.bg_favorite_halo : android.R.color.transparent
         );
 
         holder.itemView.setOnClickListener(v -> {
