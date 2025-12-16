@@ -19,5 +19,6 @@
     <color name="rose">#8E3A59</color>
     <color name="greyblue">#2e5090</color>
     <color name="cerulean">#007BA7</color>
+    <color name="darkestblue">#12131B</color>
     <color name="friend_request_highlight">#33FFEB3B</color>
 </resources>
