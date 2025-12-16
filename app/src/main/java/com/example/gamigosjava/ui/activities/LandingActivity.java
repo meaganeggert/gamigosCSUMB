@@ -11,8 +11,12 @@ import com.example.gamigosjava.data.model.ActivityItem;
 
 // Firebase
 import com.example.gamigosjava.R;
+import com.example.gamigosjava.data.model.Match;
+import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.notifications.NotificationTokenManager;
 import com.example.gamigosjava.ui.adapter.FeedAdapter;
+import com.example.gamigosjava.ui.adapter.MatchAdapter;
+import com.example.gamigosjava.ui.adapter.MatchViewAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -23,6 +27,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 // Credential Manager (AndroidX)
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -39,16 +44,19 @@ public class LandingActivity extends BaseActivity {
         GAMES
     }
 
-    private RecyclerView feedRecycler;
-    private TextView defaultEmptyText;
+    private RecyclerView feedRecycler, matchFeedRecycler;
+    private TextView defaultEmptyText, matchDefaultText;
     private FeedAdapter feedAdapter;
+    private MatchAdapter matchFeedAdapter;
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private ListenerRegistration feedListener; // Will allow for real-time feed updates
+    private ListenerRegistration matchFeedListener; // Will allow for real-time feed updates
 
     // List of ALL feed items from Firestore so we don't have to continuously query
     private final List<ActivityItem> allFeedList = new ArrayList<>();
+    private final List<MatchSummary> allMatchList = new ArrayList<>();
     private FeedFilter selectedFilter = FeedFilter.ALL;
 
     @Override
@@ -66,6 +74,8 @@ public class LandingActivity extends BaseActivity {
 
         feedRecycler = findViewById(R.id.recyclerViewFeed);
         defaultEmptyText = findViewById(R.id.emptyText);
+        matchFeedRecycler = findViewById(R.id.recentMatchRecycler);
+//        matchDefaultText = findViewById(R.id.matchEmptyText);
 
         // Find buttons for feed filtering
         Button allFeedFilter = findViewById(R.id.buttonAll);
@@ -95,6 +105,14 @@ public class LandingActivity extends BaseActivity {
         feedAdapter = new FeedAdapter();
         feedRecycler.setAdapter(feedAdapter);
 
+        matchFeedRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        matchFeedAdapter = new MatchAdapter();
+        matchFeedAdapter.setIsHost(false);
+        matchFeedRecycler.setAdapter(matchFeedAdapter);
+
+        PagerSnapHelper snapHelper = new PagerSnapHelper();
+        snapHelper.attachToRecyclerView(matchFeedRecycler);
+
         loadFeed();
     }
 
@@ -110,12 +128,132 @@ public class LandingActivity extends BaseActivity {
         }
     }
 
+    private void loadRecentMatches() {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+        if (matchFeedListener != null) matchFeedListener.remove();
+
+        matchFeedListener = db.collection("matches")
+                .whereArrayContains("playerIds", user.getUid())
+                .orderBy("updatedAt", Query.Direction.DESCENDING)
+                .limit(3)
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.e(TAG, "Match Feed Listener Error: ", e);
+//                        matchDefaultText.setText("Feed failed to load.");
+//                        matchDefaultText.setVisibility(View.VISIBLE);
+                        matchFeedRecycler.setVisibility(View.GONE);
+                        return;
+                    }
+
+                    if (queryDocumentSnapshots == null) return;
+
+                    Log.d(TAG, "Recent matches count: " + queryDocumentSnapshots.size());
+
+                    allMatchList.clear();
+
+                    int index = 0;
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        MatchSummary matchItem = doc.toObject(MatchSummary.class);
+                        if (matchItem != null) {
+                            matchItem.id = doc.getId();
+                            allMatchList.add(matchItem);
+
+                            getPlayersAndWinner(matchItem, index);
+                            index++;
+                        }
+                    }
+
+                    matchFeedAdapter.setItems(allMatchList);
+
+                    if (allMatchList.isEmpty()) {
+//                        matchDefaultText.setText("No recent matches yet.");
+//                        matchDefaultText.setVisibility(View.VISIBLE);
+                        matchFeedRecycler.setVisibility(View.GONE);
+                    } else {
+//                        matchDefaultText.setVisibility(View.GONE);
+                        matchFeedRecycler.setVisibility(View.VISIBLE);
+                    }
+        });
+    }
+
+    private void getPlayersAndWinner(MatchSummary matchItem, int adapterIndex) {
+        if (matchItem.id == null) return;
+
+        db.collection("matches")
+                .document(matchItem.id)
+                .collection("players")
+                .get()
+                .addOnSuccessListener(snaps -> {
+                    if (snaps.isEmpty()) return;
+
+                    List<String> playerNames = new ArrayList<>();
+                    List<String> playerIds = new ArrayList<>();
+                    List<String> playerAvatarUrls = new ArrayList<>();
+                    String winnerUid = null;
+                    String winnerName = null;
+
+                    for (DocumentSnapshot playerSnap : snaps) {
+                        String uId = playerSnap.getString("userId");
+                        String name = playerSnap.getString("displayName");  // or whatever you stored
+                        if (uId != null && !uId.isEmpty()) {
+                            playerIds.add(uId);
+                        }
+                        if (name != null && !name.isEmpty()) {
+                            playerNames.add(name);
+                        }
+
+                        Long placement = playerSnap.getLong("placement");
+                        if (placement != null && placement == 1L) {
+                            // first place = winner
+                            winnerUid = uId;
+                            winnerName = name;
+                        }
+                    }
+
+                    matchItem.playerNames = playerNames;
+
+                    for (String user_id : playerIds) {
+                        // Look up winner user doc to get avatar + displayName
+                        String finalWinnerUid = winnerUid;
+                        db.collection("users")
+                                .document(user_id)
+                                .get()
+                                .addOnSuccessListener(userSnap -> {
+                                    String avatar = userSnap.getString("photoUrl");
+                                    if (avatar != null && !avatar.isEmpty()) {
+                                        playerAvatarUrls.add(avatar);
+                                    }
+
+                                    matchItem.playerAvatars = playerAvatarUrls;
+
+                                    if (user_id.equals(finalWinnerUid)) {
+                                        matchItem.winnerAvatarUrl = avatar;
+                                        matchItem.winnerId = user_id;
+                                    }
+
+                                    matchFeedAdapter.notifyItemChanged(adapterIndex);
+                                })
+                                .addOnFailureListener(err -> {
+                                    Log.e(TAG, "Failed to load avatar info for player: " + user_id, err);
+                                })
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Failed to load players for match: " + matchItem.id, e)
+                                );
+                    }
+                })
+                .addOnFailureListener( e -> {
+                    Log.e(TAG, "Failed to load players for match: " + matchItem.id, e);
+                });
+    }
+
     private void loadFeed() {
         // Kill the listener if it's already running
         if (feedListener != null) feedListener.remove();
 
         feedListener = db.collection("activities")
-                .whereIn("type", Arrays.asList("ACHIEVEMENT_EARNED", "EVENT_CREATED", "FRIEND_ADDED", "GAME_ACHIEVEMENT_EARNED"))
+                .whereIn("type", Arrays.asList("ACHIEVEMENT_EARNED", "EVENT_CREATED", "FRIEND_ADDED", "GAME_ACHIEVEMENT_EARNED", "MATCH_WON"))
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {
@@ -166,7 +304,7 @@ public class LandingActivity extends BaseActivity {
                     }
                     break;
                 case GAMES:
-                    if ("GAMES_WON".equals(type)) {
+                    if ("MATCH_WON".equals(type)) {
                         filteredFeedList.add(item);
                     }
                     break;
@@ -195,6 +333,10 @@ public class LandingActivity extends BaseActivity {
             feedListener.remove();
             feedListener = null;
         }
+        if (matchFeedListener != null) {
+            matchFeedListener.remove();
+            matchFeedListener = null;
+        }
     }
 
     @Override
@@ -202,5 +344,6 @@ public class LandingActivity extends BaseActivity {
         super.onStart();
         // Listen when the feed starts
         loadFeed();
+        loadRecentMatches();
     }
 }

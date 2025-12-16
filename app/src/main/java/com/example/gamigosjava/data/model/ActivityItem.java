@@ -13,6 +13,16 @@ public class ActivityItem {
     private String targetName; // achievement name, event name, game name
     private String message; // pre-built message
     private String visibility; // who can see this
+
+    public Long getWinStreak() {
+        return winStreak;
+    }
+
+    public void setWinStreak(Long winStreak) {
+        this.winStreak = winStreak;
+    }
+
+    private Long winStreak;
     private Timestamp createdAt; // when achievement was earned, event was created, game was won
 
     public ActivityItem() {}
