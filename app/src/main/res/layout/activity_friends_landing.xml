@@ -6,6 +6,26 @@
     android:background="@color/neutralbrown"
     android:padding="16dp">
 
+    <Button
+        android:id="@+id/btnFriendSearchActivity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/yellow"
+        android:textColor="@color/darkblue"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/jetbrains_mono"
+        android:text="@string/search_text" />
+
+    <!--    Horizontal Rule -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/neutraltan"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="1dp"
+        />
+
     <!-- new: list of my friends -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFriends"
@@ -52,14 +72,6 @@
         android:background="@color/neutralbrown"
         android:nestedScrollingEnabled="false" />
 
-    <Button
-        android:id="@+id/btnFriendSearchActivity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/yellow"
-        android:textColor="@color/darkblue"
-        android:layout_marginTop="16dp"
-        android:fontFamily="@font/jetbrains_mono"
-        android:text="@string/search_text" />
+
 
 </LinearLayout>

@@ -25,7 +25,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -206,7 +205,7 @@ public class FriendsLanding extends BaseActivity {
                     }
 
                     // Alphabetize by displayName (case-insensitive), nulls last
-                    Collections.sort(friendlist, (a, b) -> {
+                    friendlist.sort((a, b) -> {
                         String an = (String) a.get("displayName");
                         String bn = (String) b.get("displayName");
 
