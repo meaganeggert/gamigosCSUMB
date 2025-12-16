@@ -22,6 +22,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!--    Background View -->
+    <View
+        android:id="@+id/backgroundBar"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:padding="4dp"
+        android:background="@color/darktaupe"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+<!--    Recycler View for Recent Matches -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recentMatchRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="3dp"
+        tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/row_match"
+        tools:itemCount="3"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintTop_toTopOf="@id/backgroundBar"
+        app:layout_constraintBottom_toBottomOf="@id/backgroundBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
     <!--    All Feed Button -->
     <!--    Will work to filter feed by only events -->
     <com.google.android.material.button.MaterialButton
@@ -42,7 +70,7 @@
         app:autoSizeTextType="uniform"
         app:cornerRadius="10dp"
         android:layout_marginTop="2dp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/backgroundBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/buttonEvents"
         />
@@ -69,7 +97,7 @@
         android:layout_marginEnd="0dp"
         app:layout_constraintStart_toEndOf="@id/buttonAll"
         app:layout_constraintEnd_toStartOf="@id/buttonGames"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/backgroundBar" />
 
     <!--    Games Button -->
     <!--    Will work to filter feed by only games -->
@@ -93,7 +121,7 @@
         android:layout_marginEnd="0dp"
         app:layout_constraintStart_toEndOf="@id/buttonEvents"
         app:layout_constraintEnd_toStartOf="@id/buttonAchievements"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/backgroundBar" />
 
     <!--    Achievements Button -->
     <!--    Will work to filter feed by only achievements -->
@@ -117,7 +145,7 @@
         android:layout_marginEnd="0dp"
         app:layout_constraintStart_toEndOf="@id/buttonGames"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/backgroundBar" />
 
     <!--    Feed -->
     <androidx.recyclerview.widget.RecyclerView

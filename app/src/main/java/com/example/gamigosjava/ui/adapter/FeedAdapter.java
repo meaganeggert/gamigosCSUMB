@@ -3,6 +3,7 @@ package com.example.gamigosjava.ui.adapter;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
@@ -116,6 +118,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             String achievementName = item.getTargetName();
             String message = firstName + " earned " + achievementName + "!";
 
+            holder.titleBackground.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.rose));
             holder.textTitle.setText(message);
             holder.textDescript.setVisibility(GONE);
 
@@ -138,6 +141,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             Log.d(TAG, "eventName: " + eventName);
             String message = firstName + " created an event!";
 
+            holder.titleBackground.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.greyblue));
             holder.textTitle.setText(message);
             holder.textDescript.setVisibility(VISIBLE);
             holder.textDescript.setText(eventName);
@@ -160,6 +164,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             String friendTwoName = item.getTargetName().split(" ")[0];
             String message = friendOneName + " and " + friendTwoName + " are now friends.";
 
+            holder.titleBackground.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.darkblue));
             holder.textTitle.setText(message);
             holder.textDescript.setVisibility(GONE);
             holder.avatar.setVisibility(GONE);
@@ -187,6 +192,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
 
             String statMessage = "Win Streak: " + item.getWinStreak();
 
+            holder.titleBackground.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.blackberry));
             holder.textAchieveMessage.setText(message);
             holder.textDescript.setText(statMessage);
             holder.textDescript.setVisibility(VISIBLE);
@@ -229,6 +235,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             String message = item.getMessage();
             String gameUrl = item.getTargetImage();
 
+            holder.titleBackground.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.rose));
             holder.textAchieveMessage.setText(message);
             holder.textDescript.setVisibility(GONE);
             holder.gameImage.setVisibility(VISIBLE);
@@ -316,6 +323,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
         TextView textTitle;
         TextView textDescript, textAchieveMessage;
         TextView textTimestamp;
+        View titleBackground;
 
         FeedViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -326,6 +334,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder
             textTimestamp = itemView.findViewById(R.id.feed_time);
             avatar = itemView.findViewById(R.id.feed_avatar);
             gameImage= itemView.findViewById(R.id.feed_bg_image);
+            titleBackground = itemView.findViewById(R.id.backgroundBar);
         }
     }
 }

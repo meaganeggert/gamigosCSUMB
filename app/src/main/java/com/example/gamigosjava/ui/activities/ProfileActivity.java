@@ -3,6 +3,7 @@ package com.example.gamigosjava.ui.activities;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -20,12 +21,15 @@ import com.example.gamigosjava.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ProfileActivity extends BaseActivity {
@@ -109,7 +113,78 @@ public class ProfileActivity extends BaseActivity {
                 startActivity(intent);
             });
         }
+
+        Button backfill = findViewById(R.id.buttonBackfill);
+        if (backfill != null) {
+            backfill.setOnClickListener(v -> {
+                backfillMatchPlayerIds();
+            });
+        }
+
+
     }
+
+    private void backfillMatchPlayerIds() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final String TAG = "BackfillPlayerIds";
+
+        db.collection("matches")
+                .get()
+                .addOnSuccessListener(matchSnaps -> {
+                    Log.d(TAG, "Found " + matchSnaps.size() + " matches to backfill");
+
+                    if (matchSnaps.isEmpty()) return;
+
+                    for (DocumentSnapshot matchDoc : matchSnaps.getDocuments()) {
+                        String matchId = matchDoc.getId();
+
+                        db.collection("matches")
+                                .document(matchId)
+                                .collection("players")
+                                .get()
+                                .addOnSuccessListener(playerSnaps -> {
+                                    if (playerSnaps.isEmpty()) {
+                                        Log.d(TAG, "Match " + matchId + " has no players, skipping");
+                                        return;
+                                    }
+
+                                    List<String> playerIds = new ArrayList<>();
+
+                                    for (DocumentSnapshot playerDoc : playerSnaps.getDocuments()) {
+                                        String uid = playerDoc.getString("userId"); // field name in your players docs
+                                        if (uid != null && !uid.isEmpty() && !playerIds.contains(uid)) {
+                                            playerIds.add(uid);
+                                        }
+                                    }
+
+                                    if (playerIds.isEmpty()) {
+                                        Log.d(TAG, "Match " + matchId + " produced no playerIds, skipping");
+                                        return;
+                                    }
+
+                                    Map<String, Object> update = new HashMap<>();
+                                    update.put("playerIds", playerIds);
+
+                                    // Optional: if you want updatedAt for ordering and it doesn't exist
+                                    if (!matchDoc.contains("updatedAt")) {
+                                        update.put("updatedAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+                                    }
+
+                                    matchDoc.getReference()
+                                            .set(update, com.google.firebase.firestore.SetOptions.merge())
+                                            .addOnSuccessListener(v ->
+                                                    Log.d(TAG, "Backfilled playerIds for match " + matchId + ": " + playerIds))
+                                            .addOnFailureListener(e ->
+                                                    Log.e(TAG, "Failed to backfill match " + matchId, e));
+                                })
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Failed to get players for match " + matchId, e));
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to read matches collection", e));
+    }
+
 
     private void uploadPhotoToStorage(Uri imageUri) {
         StorageReference photoRef = storageRef

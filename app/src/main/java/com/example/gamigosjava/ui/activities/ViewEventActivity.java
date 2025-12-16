@@ -57,9 +57,11 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -465,6 +467,27 @@ public class ViewEventActivity extends BaseActivity {
                     matchResults.add(user);
                 }
 
+                // Adding players to match class for easier queries
+                List<String> playerIds = new ArrayList<>();
+                for (Player p : matchResults) {
+                    if (p.friend != null && p.friend.id != null && !p.friend.id.isEmpty()) {
+                        if (!playerIds.contains(p.friend.id)) {
+                            playerIds.add(p.friend.id);
+                        }
+                    }
+                }
+
+                db.collection("matches")
+                        .document(m.id)
+                        .set(
+                                Collections.singletonMap("playerIds", playerIds),
+                                SetOptions.merge()
+                        )
+                        .addOnSuccessListener(v ->
+                                Log.d(TAG, "Updated playerIds for match " + m.id))
+                        .addOnFailureListener(e ->
+                                Log.e(TAG, "Failed to update playerIds: " + e.getMessage()));
+
                 // Update each users metrics
                 for (Player p: matchResults) {
                     if (p.friend.id == null || p.friend.id.isEmpty()) continue;
@@ -714,7 +737,12 @@ public class ViewEventActivity extends BaseActivity {
             Integer minPlayers = snap.get("minPlayers", Integer.class);
             Integer playingTime = snap.get("playingTime", Integer.class);
 
-            MatchSummary matchSummary = new MatchSummary(match.id, eventId, title, imageUrl, minPlayers, maxPlayers, playingTime);
+            String displayTitle = match.gameName;
+            if (displayTitle == null || displayTitle.trim().isEmpty()) {
+                displayTitle = title;
+            }
+
+            MatchSummary matchSummary = new MatchSummary(match.id, eventId, displayTitle, imageUrl, minPlayers, maxPlayers, playingTime);
 
             boolean matchInList = false;
             for (int i = 0; i < matchSummaryList.size(); i++) {
