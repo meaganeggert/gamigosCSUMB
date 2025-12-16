@@ -50,6 +50,13 @@
             android:text="Accept"/>
     </LinearLayout>
 
+    <Button
+        android:id="@+id/button_rsvpMaybe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Maybe"
+        android:layout_gravity="center"/>
+
 
 
 

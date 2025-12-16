@@ -991,6 +991,13 @@ public class ViewEventActivity extends BaseActivity {
             });
         }
 
+        Button maybe = dialogView.findViewById(R.id.button_rsvpMaybe);
+        if (maybe != null) {
+            maybe.setOnClickListener(maybeView -> {
+                dialog.dismiss();
+            });
+        }
+
         dialog.show();
     }
 
