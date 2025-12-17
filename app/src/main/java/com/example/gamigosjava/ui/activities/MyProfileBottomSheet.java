@@ -42,7 +42,6 @@ public class MyProfileBottomSheet extends BottomSheetDialogFragment {
     private RadioGroup rgPrivacy;
     private ImageView ivProfilePhoto;
 
-    private FirebaseFirestore db;
     private FirebaseUser currentUser;
     private DocumentReference userDocRef;
     private StorageReference storageRef;
@@ -83,12 +82,13 @@ public class MyProfileBottomSheet extends BottomSheetDialogFragment {
         tvEmail = view.findViewById(R.id.tvEmail);
         rgPrivacy = view.findViewById(R.id.rgPrivacy);
         ivProfilePhoto = view.findViewById(R.id.ivProfilePhoto);
+        View btnEditPhoto = view.findViewById(R.id.btnEditPhoto);
 
         Button btnSave = view.findViewById(R.id.btnSaveProfile);
         Button btnLogout = view.findViewById(R.id.button_logout);
         Button btnQuickGame = view.findViewById(R.id.buttonQuickGame);
 
-        db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         storageRef = FirebaseStorage.getInstance().getReference();
 
@@ -104,6 +104,8 @@ public class MyProfileBottomSheet extends BottomSheetDialogFragment {
 
         btnSave.setOnClickListener(v -> saveUserProfile());
         ivProfilePhoto.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+        btnEditPhoto.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+
 
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> logOut());
