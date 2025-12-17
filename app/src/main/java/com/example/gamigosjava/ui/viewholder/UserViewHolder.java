@@ -12,7 +12,7 @@ import com.example.gamigosjava.R;
 public class UserViewHolder extends RecyclerView.ViewHolder {
     public TextView tvName;
     public ImageView ivPhoto;
-    public Button btnAddFriend, btnDenyFriend;
+    public Button btnAddFriend, btnDenyFriend, btnPending, btnFriend, btnAcceptFriend;
 
     public UserViewHolder(View itemView) {
         super(itemView);
@@ -20,5 +20,8 @@ public class UserViewHolder extends RecyclerView.ViewHolder {
         ivPhoto = itemView.findViewById(R.id.ivPhoto);
         btnAddFriend = itemView.findViewById(R.id.btnAddFriend);
         btnDenyFriend = itemView.findViewById(R.id.btnDenyFriend);
+        btnPending = itemView.findViewById(R.id.btnPending);
+        btnFriend = itemView.findViewById(R.id.btnFriend);
+        btnAcceptFriend = itemView.findViewById(R.id.btnAcceptFriend);
     }
 }

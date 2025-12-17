@@ -51,18 +51,12 @@
             android:exported="false" />
         <activity
             android:name=".ui.activities.NewConversationActivity"
-            android:exported="true"></activity>
+            android:exported="true"/>
         <activity
             android:name=".ui.activities.ConversationsActivity"
-            android:exported="true"></activity>
+            android:exported="true"/>
         <activity
             android:name=".ui.activities.MessagesActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.activities.ViewUserProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.activities.FriendRequestsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activities.FriendsLanding"

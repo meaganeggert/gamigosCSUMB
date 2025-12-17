@@ -16,33 +16,22 @@
         android:fontFamily="@font/jetbrains_mono"
         android:text="@string/search_text" />
 
-    <!--    Horizontal Rule -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/neutraltan"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="1dp"
-        android:layout_marginEnd="1dp"
-        />
-
     <TextView
         android:id="@+id/tvFavoritesHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/favorites"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="8dp"
-        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:fontFamily="@font/oswald_light"
+        android:layout_marginBottom="8dp"
+        android:textSize="16sp"
         />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="270dp"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="24dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFavorites"
@@ -53,27 +42,17 @@
 
     </FrameLayout>
 
-    <!--    Horizontal Rule -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/neutraltan"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="1dp"
-        android:layout_marginEnd="1dp"
-        />
-
     <!-- new: list of my friends -->
     <TextView
         android:id="@+id/tvFriendsListHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/friends"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="8dp"
-        android:textStyle="bold"
+        android:fontFamily="@font/oswald_light"
+        android:layout_marginBottom="8dp"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:layout_gravity="center_horizontal"
         />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -81,24 +60,8 @@
         android:layout_width="match_parent"
         android:background="@color/neutralbrown"
         android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:background="@color/neutralbrown"
-        android:layout_marginVertical="12dp" />
-
-    <!--    Horizontal Rule -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/neutraltan"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:layout_marginStart="1dp"
-        android:layout_marginEnd="1dp"
-        />
+        android:layout_weight="1"
+        android:layout_marginBottom="24dp"/>
 
     <!-- Requests Section -->
     <TextView
@@ -106,13 +69,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/oswald_light"
-        android:letterSpacing="0.05"
         android:text="@string/requests"
+        android:layout_marginBottom="8dp"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textSize="24sp"
-        android:textColor="@color/black"
-        android:layout_marginBottom="16dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:textColor="@color/black"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvRequests"
@@ -120,7 +82,5 @@
         android:layout_height="wrap_content"
         android:background="@color/neutralbrown"
         android:nestedScrollingEnabled="false" />
-
-
 
 </LinearLayout>

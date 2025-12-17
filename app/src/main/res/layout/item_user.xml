@@ -8,22 +8,23 @@
     app:strokeWidth="1dp"
     android:layout_marginVertical="3dp"
     app:strokeColor="#33000000"
+    app:cardBackgroundColor="@color/neutraltan"
      >
 
     <LinearLayout
-        android:background="@color/neutraltan"
         android:orientation="horizontal"
         android:padding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical" >
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivPhoto"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@android:drawable/ic_menu_camera"
-            android:contentDescription="@string/profile_photo"/>
+            android:contentDescription="@string/profile_photo"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay_CircleImageView"/>
 
         <TextView
             android:id="@+id/tvName"
@@ -41,9 +42,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/jetbrains_mono"
-            android:backgroundTint="@color/green"
+            android:backgroundTint="#1b3b00"
             android:textColor="@color/lightgrey"
             android:text="@string/add" />
+
+        <Button
+            android:id="@+id/btnAcceptFriend"
+            android:fontFamily="@font/jetbrains_mono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/accept"
+            android:backgroundTint="#1b3b00"
+            android:textColor="@color/lightgrey"
+            android:visibility="gone" />
+
 
         <Button
             android:id="@+id/btnDenyFriend"
@@ -52,8 +64,27 @@
             android:layout_height="wrap_content"
             android:text="@string/deny"
             android:layout_marginStart="8dp"
-            android:backgroundTint="@color/brown"
+            android:backgroundTint="#4f0000"
+            android:textColor="@color/lightgrey"
             android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnPending"
+            android:fontFamily="@font/jetbrains_mono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pending"
+            android:enabled="false"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/btnFriend"
+            android:fontFamily="@font/jetbrains_mono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/friend"
+            android:enabled="false"
+            android:visibility="gone"/>
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
