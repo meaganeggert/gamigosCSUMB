@@ -50,7 +50,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewQuickPlayMatches);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter();
+        matchAdapter = new MatchAdapter(false);
         recyclerView.setAdapter(matchAdapter);
 
         Button newGame = findViewById(R.id.button_newGame);
@@ -161,7 +161,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
             boolean matchInList = false;
             for (int i = 0; i < matchSummaryList.size(); i++) {
                 if (matchSummaryList.get(i).id.equals(matchSummary.id)) {
-                    Log.d(TAG, "MATCH WAS FOUND IN LIST FOR GAME DETAILS FUNCTION: " + matchSummary.title);
+                    Log.d(TAG, "MATCH WAS FOUND IN LIST FOR GAME DETAILS FUNCTION: " + matchSummary.gameName);
                     matchInList = true;
                     matchSummaryList.set(i, matchSummary);
                     matchAdapter.setItems(matchSummaryList);
