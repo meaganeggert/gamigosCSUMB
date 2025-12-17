@@ -54,7 +54,6 @@
             android:fontFamily="@font/jetbrains_mono"
             android:textColor="@color/darktaupe"
             android:backgroundTint="@color/yellow"
-            android:textColor="@color/black"
             android:text="@string/message" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
