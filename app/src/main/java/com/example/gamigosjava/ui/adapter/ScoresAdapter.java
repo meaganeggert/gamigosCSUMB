@@ -9,9 +9,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,11 +22,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,6 +38,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     private Context context;
     public String winRule = "highest";
     public Integer teamNumber;
+    private boolean isEditable = false;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
@@ -146,6 +152,12 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             holder.playerPlacement.setVisibility(EditText.GONE);
             holder.playerScore.setVisibility(EditText.VISIBLE);
         }
+
+        if (!isEditable) {
+            holder.playerScore.setEnabled(false);
+            holder.playerPlacement.setEnabled(false);
+            holder.removePlayer.setVisibility(Button.INVISIBLE);
+        }
     }
 
     public void setTeamNumber(int teamNumber) {
@@ -231,5 +243,10 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
             return null;
         });
 
+    }
+
+    public void setEditable(boolean isEditable) {
+        this.isEditable = isEditable;
+        notifyDataSetChanged();
     }
 }

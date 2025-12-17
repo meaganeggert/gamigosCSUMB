@@ -34,19 +34,23 @@ import java.util.List;
 
 public class GetAllQuickPlayActivity extends BaseActivity {
     private static final String TAG = "Get ALl Quick Play Matches";
-    FirebaseAuth auth = FirebaseAuth.getInstance();
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-    FirebaseUser currentUser = auth.getCurrentUser();
-    List<MatchSummary> matchSummaryList = new ArrayList<>();
-    List<DocumentReference> matchDocRefList = new ArrayList<>();
-    MatchAdapter matchAdapter;
-    RecyclerView recyclerView;
+    private FirebaseAuth auth;
+    private FirebaseFirestore db;
+    private FirebaseUser currentUser;
+    private List<MatchSummary> matchSummaryList = new ArrayList<>();
+    private List<DocumentReference> matchDocRefList = new ArrayList<>();
+    private MatchAdapter matchAdapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_get_all_quick_play);
         setTopTitle("Games");
+
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        currentUser = auth.getCurrentUser();
 
         recyclerView = findViewById(R.id.recyclerViewQuickPlayMatches);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));

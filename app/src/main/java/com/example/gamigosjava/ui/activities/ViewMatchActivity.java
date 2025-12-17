@@ -29,11 +29,13 @@ import com.example.gamigosjava.data.model.BGGItem;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.GameSummary;
+import com.example.gamigosjava.data.model.Invitee;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
+import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -68,17 +70,19 @@ public class ViewMatchActivity extends BaseActivity {
     private Event eventItem;
 
 
-    private Friend hostUser;
+    private Friend hostUser = new Friend();
     private List<Friend> inviteeList = new ArrayList<>();
 
     private List<Player> playerList;
-    public Button saveButton, startMatch, endMatch, addPlayer, addTeam, removeTeam;
+    public Button saveButton, startMatch, endMatch, addPlayer, addTeam, removeTeam, cancelButton;
     private Spinner winRuleDropdown;
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
     private List<MatchResultFragment> matchResultList;
 
+    private Invitee currentInvitee;
+    private boolean isInvited = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,6 +98,10 @@ public class ViewMatchActivity extends BaseActivity {
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
         matchItem = new Match();
+
+        currentInvitee = new Invitee();
+        getHost();
+
 
         if (!eventId.isEmpty()) {
             matchItem.eventId = eventId;
@@ -123,7 +131,7 @@ public class ViewMatchActivity extends BaseActivity {
             Log.e(TAG, "Failed to find save match button.");
         }
 
-        Button cancelButton = findViewById(R.id.button_cancelMatch);
+        cancelButton = findViewById(R.id.button_cancelMatch);
         if (cancelButton != null) {
             cancelButton.setOnClickListener(v -> {
                 finish();
@@ -131,6 +139,9 @@ public class ViewMatchActivity extends BaseActivity {
         } else {
             Log.e(TAG, "Failed to find cancel match button.");
         }
+
+        startMatch = findViewById(R.id.button_startMatch);
+        endMatch = findViewById(R.id.button_endMatch);
 
     }
 
@@ -273,7 +284,7 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
-        addPlayer = findViewById(R.id.button_addPlayer);
+//        addPlayer = findViewById(R.id.button_addPlayer);
 
         addTeam = findViewById(R.id.button_addTeam);
         if (addTeam != null) {
@@ -485,12 +496,45 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Get the host of the event/match to include as a possible player and show/hide certain buttons
     private void getHost() {
-        if (matchId.isEmpty()) {
-            matchItem.hostId = currentUser.getUid();
-        }
-
         // Search match for host id.
         if (eventId.isEmpty() || eventId == null) {
+
+            if (matchId.isEmpty()) {
+                matchItem.hostId = currentUser.getUid();
+
+                hostUser = new Friend();
+                hostUser.displayName = currentUser.getDisplayName();
+                hostUser.id = currentUser.getUid();
+                hostUser.friendUId = currentUser.getUid();
+
+                boolean inList = false;
+                for (Friend f: inviteeList) {
+                    if (f.id.equals(hostUser.id)) {
+                        inList = true;
+                        break;
+                    }
+                }
+
+                if (!inList) {
+                    inviteeList.add(hostUser);
+
+                    Log.d(TAG, "Added host to invitee list.");
+
+                    if (matchResultList == null) return;
+
+                    for (int i = 0; i < matchResultList.size(); i++) {
+                        matchResultList.get(i).setInviteeList(inviteeList);
+
+                    }
+                }
+
+                return;
+            }
+
+            if (matchItem.hostId == null) {
+                return;
+            }
+
             db.collection("users").document(matchItem.hostId).get().addOnSuccessListener(s -> {
                 if (!s.exists()) return;
 
@@ -502,9 +546,26 @@ public class ViewMatchActivity extends BaseActivity {
                 Log.d(TAG, "HOST NAME: " + host.displayName);
 
                 hostUser = host;
-                inviteeList.add(host);
 
-                enableHostOptions();
+                boolean inList = false;
+                for (Friend f: inviteeList) {
+                    if (f.id.equals(hostUser.id)) {
+                        inList = true;
+                        break;
+                    }
+                }
+
+                if (!inList) {
+                    inviteeList.add(host);
+
+                    Log.d(TAG, "Added host to invitee list.");
+
+                    for (MatchResultFragment f: matchResultList) {
+                        f.setInviteeList(inviteeList);
+                    }
+                }
+
+                setUIElements();
             }).addOnFailureListener(e -> {
                 Log.e(TAG, "Failed to get host info: " + e.getMessage());
             });
@@ -525,9 +586,25 @@ public class ViewMatchActivity extends BaseActivity {
                     Log.d(TAG, "EVENT HOST NAME: " + host.displayName);
 
                     hostUser = host;
-                    inviteeList.add(host);
+                    boolean inList = false;
+                    for (Friend f: inviteeList) {
+                        if (f.id.equals(hostUser.id)) {
+                            inList = true;
+                            break;
+                        }
+                    }
 
-                    enableHostOptions();
+                    if (!inList) {
+                        inviteeList.add(host);
+
+                        Log.d(TAG, "Added host to invitee list.");
+
+                        for (MatchResultFragment f: matchResultList) {
+                            f.setInviteeList(inviteeList);
+                        }
+                    }
+
+                    setUIElements();
                 }).addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to get host info: " + e.getMessage());
                 });
@@ -538,8 +615,9 @@ public class ViewMatchActivity extends BaseActivity {
 
     }
 
-    // Set visibility for certain features based on whether or not the current user is host.
-    public void enableHostOptions() {
+    // Set visibility for certain features based on whether or not the current user is host or even invited.
+    public void setUIElements() {
+        Log.d(TAG, "HOST USER ID: " + hostUser.id);
         if (!currentUser.getUid().equals(hostUser.id)) {
             EditText ruleChanges = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_rules);
             EditText notes = matchFormContainerHandle.findViewById(R.id.editTextTextMultiLine_notes);
@@ -551,8 +629,22 @@ public class ViewMatchActivity extends BaseActivity {
             game.setEnabled(false);
             winRule.setEnabled(false);
 
+            if (!isInvited) {
+                saveButton.setVisibility(Button.GONE);
+//                addPlayer.setEnabled(false);
+                cancelButton.setText("Back");
+            } else {
+                saveButton.setVisibility(Button.VISIBLE);
+//                addPlayer.setEnabled(true);
+            }
+
             return;
         }
+
+
+        // Set match buttons available to host.
+        startMatch = findViewById(R.id.button_startMatch);
+        endMatch = findViewById(R.id.button_endMatch);
 
         if (startMatch != null) {
             startMatch.setVisibility(Button.VISIBLE);
@@ -604,6 +696,12 @@ public class ViewMatchActivity extends BaseActivity {
                         String displayName = docSnap.getString("displayName");
 
                         Friend f = new Friend(id, friendUid, displayName);
+
+                        if (f.id != null & f.id.equals(currentUser.getUid())) {
+                            isInvited = true;
+                            setUIElements();
+                        }
+
                         boolean inFriendList = false;
                         for (int i = 0; i < inviteeList.size(); i++) {
                             if (inviteeList.get(i).id.equals(f.id)) {
@@ -628,18 +726,18 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Get invited players from the event to list as possible players of the match.
     private void getInvitees() {
-        if (eventId.isEmpty() || eventId == null) {
-            getHost();
-            getFriends();
-            return;
-        }
-
         if (currentUser == null) {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        getHost();
+        if (eventId.isEmpty() || eventId == null) {
+            getHost();
+            getFriends();
+            Log.d(TAG, "Invitees: eventId was empty.");
+            return;
+        }
+
 
         String uid = currentUser.getUid();
 
@@ -657,6 +755,12 @@ public class ViewMatchActivity extends BaseActivity {
                     }
 
                     for (DocumentSnapshot d : snap) {
+                        // If the user declined the invite, then bother getting
+                        // user info or adding as a possible player.
+                        String status = d.getString("status");
+                        if (!status.equals("accepted")) continue;
+
+                        // Get user info
                         DocumentReference inviteeRef = d.getDocumentReference("userRef");
                         inviteeRef.get().onSuccessTask(inviteeSnap -> {
                             String id = inviteeSnap.getId();
@@ -664,6 +768,12 @@ public class ViewMatchActivity extends BaseActivity {
                             String displayName = inviteeSnap.getString("displayName");
 
                             Friend f = new Friend(id, friendUid, displayName);
+
+                            if (f.id != null && f.id.equals(currentUser.getUid())) {
+                                isInvited = true;
+                                setUIElements();
+                            }
+
                             boolean inFriendList = false;
                             for (int i = 0; i < inviteeList.size(); i++) {
                                 if (inviteeList.get(i).id.equals(f.id)) {
@@ -1044,6 +1154,7 @@ public class ViewMatchActivity extends BaseActivity {
 
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
+            getHost();
             getFriends();
             return;
         }
@@ -1085,8 +1196,8 @@ public class ViewMatchActivity extends BaseActivity {
             if (winRule != null) matchItem.winRule = winRule;
             if (teamCount != null) matchItem.teamCount = teamCount;
 
+            getHost();
             getInvitees();
-
             setMatchDetails(matchItem);
 
         }).addOnFailureListener(e -> {

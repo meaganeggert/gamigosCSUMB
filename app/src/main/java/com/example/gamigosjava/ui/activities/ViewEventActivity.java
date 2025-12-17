@@ -39,6 +39,7 @@ import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Event;
 import com.example.gamigosjava.data.model.Friend;
 import com.example.gamigosjava.data.model.Image;
+import com.example.gamigosjava.data.model.Invitee;
 import com.example.gamigosjava.data.model.Match;
 import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
@@ -101,6 +102,8 @@ public class ViewEventActivity extends BaseActivity {
     private Set<String> originalInviteeUids = new HashSet<>();
     boolean isHost = false;
 
+    Invitee currentInvitee;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        api = BGGService.getInstance();
@@ -118,6 +121,8 @@ public class ViewEventActivity extends BaseActivity {
 
         eventId = getIntent().getStringExtra("selectedEventId");
         Log.d(TAG, "Event ID: " + eventId);
+
+        currentInvitee = new Invitee();
 
         getMatches(eventId);
         getEventImages();
@@ -919,7 +924,9 @@ public class ViewEventActivity extends BaseActivity {
     }
 
 
-    private void setHostUIElements() {
+    private void setUIElements() {
+
+
         // Event Form Fragment UI Elements
         EditText title = eventContainer.findViewById(R.id.editText_eventTitle);
         EditText notes = eventContainer.findViewById(R.id.editTextTextMultiLine_eventNotes);
@@ -935,7 +942,9 @@ public class ViewEventActivity extends BaseActivity {
             endEvent.setVisibility(Button.VISIBLE);
             deleteEvent.setVisibility(Button.VISIBLE);
             updateEventButton.setVisibility(Button.VISIBLE);
-        } else { // Disable/Remove UI elements for non-hosts
+            imageAdapter.setEditable(true);
+        }
+        else { // Disable/Remove UI elements for non-hosts
             title.setEnabled(false);
             notes.setEnabled(false);
             schedule.setVisibility(Button.GONE);
@@ -957,6 +966,11 @@ public class ViewEventActivity extends BaseActivity {
             addGameButton.setVisibility(Button.GONE);
             photos.setVisibility(Button.GONE);
             cancelChanges.setText("Back");
+            imageAdapter.setEditable(false);
+
+            // If there are no invitees, skip checking invitee status, otherwise, check and set if
+            // the user can delete a photo
+            if (currentInvitee.userRef != null && currentInvitee.status.equals("accepted")) imageAdapter.setEditable(true);
         }
 
         matchAdapter.setIsHost(isHost);
@@ -978,10 +992,9 @@ public class ViewEventActivity extends BaseActivity {
         isPopulatingInvitees = true;
 
         if (currentUser.getUid().equals(event.hostId)) isHost = true;
+        setUIElements();
 
-        setHostUIElements();
-
-        if ("past".equals(event.status)) {
+        if (event.status.equals("past")) {
             startEvent.setEnabled(false);
             endEvent.setEnabled(false);
             deleteEvent.setEnabled(false);
@@ -1014,6 +1027,25 @@ public class ViewEventActivity extends BaseActivity {
                     continue;
                 }
 
+                // Used for rsvp and checking invitee status
+                currentInvitee = new Invitee();
+                currentInvitee.eventId = snap.getString("eventId");
+                currentInvitee.eventTitle = snap.getString("eventTitle");
+                currentInvitee.hostId = snap.getString("hostId");
+                currentInvitee.hostName = snap.getString("hostName");
+                currentInvitee.status = snap.getString("status");
+                currentInvitee.scheduledAt = snap.getTimestamp("scheduledAt");
+
+                String status = snap.getString("status");
+                // Skip the declined user
+                if (status.equals("declined")) {
+                    // Current user is the declined user, bring the user to the previous page.
+                    if (snap.getId().equals(currentUser.getUid())) {
+                        Toast.makeText(this, "You declined this match.", Toast.LENGTH_SHORT).show();
+                    }
+                    continue;
+                }
+
                 // This is the invitee's user UID (users/{uid})
                 String inviteeUid = userRef.getId();
                 originalInviteeUids.add(inviteeUid);
@@ -1041,7 +1073,23 @@ public class ViewEventActivity extends BaseActivity {
                         friendList.add(f);
                         friendAdapter.notifyDataSetChanged();
                         friendDropdown.setSelection(friendList.indexOf(f));
+
+                        if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
+                            Log.d("RSVP", "Current User ID: " + currentUser.getUid());
+                            Log.d("RSVP", "ID: " + f.id + " Status: " + status);
+                            createRSVPDialog();
+                            setUIElements();
+                        }
                     }
+
+                    currentInvitee.userRef = userRef;
+                    currentInvitee.userInfo = f;
+
+//                    if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
+//                        createRSVPDialog();
+//                        setUIElements();
+//                    }
+
                 }).addOnFailureListener(e ->
                         Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
             }
@@ -1052,6 +1100,80 @@ public class ViewEventActivity extends BaseActivity {
             isPopulatingInvitees = false;
       });
 
+    }
+
+    private void createRSVPDialog() {
+        View dialogView = View.inflate(this, R.layout.dialog_rsvp, null);
+        TextView eventTitle = dialogView.findViewById(R.id.textView_rsvpEventTitle);
+        TextView eventHost = dialogView.findViewById(R.id.textView_rsvpEventHost);
+
+        String title = currentInvitee.eventTitle;
+        if (title != null && !title.isEmpty()) {
+            eventTitle.setText(title);
+        }
+
+        StringBuilder host = new StringBuilder();
+        host.append("Hosted by: ");
+        if (currentInvitee.hostName != null && !currentInvitee.hostName.isEmpty()) {
+            host.append(currentInvitee.hostName);
+            eventHost.setText(host.toString());
+        }
+
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        Button decline = dialogView.findViewById(R.id.button_rsvpDecline);
+        if (decline != null) {
+            decline.setOnClickListener(closeView -> {
+                currentInvitee.status = "declined";
+                updateInviteeStatus();
+                dialog.dismiss();
+            });
+
+        }
+
+        Button accept = dialogView.findViewById(R.id.button_rsvpAccept);
+        if (accept != null) {
+            accept.setOnClickListener(deleteView -> {
+                currentInvitee.status = "accepted";
+                updateInviteeStatus();
+                dialog.dismiss();
+            });
+        }
+
+        Button maybe = dialogView.findViewById(R.id.button_rsvpMaybe);
+        if (maybe != null) {
+            maybe.setOnClickListener(maybeView -> {
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
+    }
+
+    private void updateInviteeStatus() {
+        if (currentInvitee.status.equals("accepted")) imageAdapter.setEditable(true);
+
+        DocumentReference inviteRef = db.collection("events")
+                .document(eventItem.id)
+                .collection("invitees")
+                .document(currentInvitee.userInfo.id);
+
+        Map<String, Object> invite = new HashMap<>();
+        invite.put("status", currentInvitee.status);
+        invite.put("userRef", currentInvitee.userRef);
+        invite.put("eventId", currentInvitee.eventId);
+        invite.put("eventTitle", currentInvitee.eventTitle);
+        invite.put("hostName", currentInvitee.hostName);
+        invite.put("hostId", currentInvitee.hostId);
+        invite.put("scheduledAt", currentInvitee.scheduledAt); // Firestore Timestamp
+
+        inviteRef.set(invite).onSuccessTask(v -> {
+            Toast.makeText(this, "Successfully updated invite status.", Toast.LENGTH_SHORT).show();
+            return null;
+        });
     }
 
     private boolean haveInviteesActuallyChanged() {
