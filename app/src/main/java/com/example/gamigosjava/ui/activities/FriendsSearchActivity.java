@@ -1,6 +1,5 @@
 package com.example.gamigosjava.ui.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -450,11 +449,17 @@ public class FriendsSearchActivity extends BaseActivity {
     private void onUserClicked(Map<String, Object> user) {
         String otherUid = (String) user.get("docId");
         if (otherUid == null) return;
-
-        Intent intent = new Intent(this, ViewUserProfileActivity.class);
-        intent.putExtra("USER_ID", otherUid);
-        startActivity(intent);
+        showUserProfileSheet(otherUid);
     }
+
+    private void showUserProfileSheet(String uid) {
+        String tag = "view_user_profile";
+        if (getSupportFragmentManager().findFragmentByTag(tag) != null) return;
+
+        ViewUserProfileBottomSheet.newInstance(uid)
+                .show(getSupportFragmentManager(), tag);
+    }
+
 
     @Override
     protected void onDestroy() {

@@ -83,9 +83,7 @@ public class FriendsLanding extends BaseActivity {
 
             @Override
             public void onRowClick(String uid) {
-                Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
-                intent.putExtra("USER_ID", uid);
-                startActivity(intent);
+                showUserProfileSheet(uid);
             }
         });
         rvRequests.setAdapter(requestsAdapter);
@@ -107,9 +105,7 @@ public class FriendsLanding extends BaseActivity {
             @Override
             public void onProfileClick(Map<String, Object> friend) {
                 String friendUid = (String) friend.get("uid");
-                Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
-                intent.putExtra("USER_ID", friendUid);
-                startActivity(intent);
+                if (friendUid != null) showUserProfileSheet(friendUid);
             }
 
             @Override
@@ -135,9 +131,7 @@ public class FriendsLanding extends BaseActivity {
             @Override
             public void onProfileClick(Map<String, Object> friend) {
                 String friendUid = (String) friend.get("uid");
-                Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
-                intent.putExtra("USER_ID", friendUid);
-                startActivity(intent);
+                if (friendUid != null) showUserProfileSheet(friendUid);
             }
 
             @Override
@@ -480,6 +474,16 @@ public class FriendsLanding extends BaseActivity {
         batch.delete(myIncomingRef);
         batch.delete(theirOutgoingRef);
         batch.commit();
+    }
+
+    private void showUserProfileSheet(String uid) {
+        String tag = "view_user_profile";
+
+        if (getSupportFragmentManager().findFragmentByTag(tag) != null) return;
+
+        ViewUserProfileBottomSheet
+                .newInstance(uid)
+                .show(getSupportFragmentManager(), tag);
     }
 
     @Override
