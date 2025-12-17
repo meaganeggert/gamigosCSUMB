@@ -124,7 +124,7 @@ public class ViewEventActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter(false);
+        matchAdapter = new MatchAdapter();
         recyclerView.setAdapter(matchAdapter);
 
         eventContainer = findViewById(R.id.eventFormContainer);
@@ -290,7 +290,7 @@ public class ViewEventActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter(false);
+        matchAdapter = new MatchAdapter();
         recyclerView.setAdapter(matchAdapter);
 
     }

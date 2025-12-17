@@ -39,9 +39,9 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
     public boolean isHost = true;
     public boolean isRecent = true;
 
-    public MatchAdapter(boolean isRecent) {
-        this.isRecent = isRecent;
-    }
+//    public MatchAdapter(boolean isRecent) {
+//        this.isRecent = isRecent;
+//    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView image;

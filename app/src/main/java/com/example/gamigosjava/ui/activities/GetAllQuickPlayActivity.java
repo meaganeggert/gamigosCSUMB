@@ -50,7 +50,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewQuickPlayMatches);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter(false);
+        matchAdapter = new MatchAdapter();
         recyclerView.setAdapter(matchAdapter);
 
         Button newGame = findViewById(R.id.button_newGame);

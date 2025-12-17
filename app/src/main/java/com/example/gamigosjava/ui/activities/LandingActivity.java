@@ -106,7 +106,7 @@ public class LandingActivity extends BaseActivity {
         feedRecycler.setAdapter(feedAdapter);
 
         matchFeedRecycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        matchFeedAdapter = new MatchAdapter(true);
+        matchFeedAdapter = new MatchAdapter();
         matchFeedAdapter.setIsHost(false);
         matchFeedRecycler.setAdapter(matchFeedAdapter);
 
