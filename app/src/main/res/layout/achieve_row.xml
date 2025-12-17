@@ -14,7 +14,6 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
-        android:background="@color/grey"
         android:layout_marginStart="2dp"
         android:layout_gravity="center_vertical"
         app:shapeAppearanceOverlay="@style/CircularImage"/>

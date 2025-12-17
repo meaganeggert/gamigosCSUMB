@@ -112,11 +112,15 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.ViewHolder> 
             if (event.imageUrl != null && !event.imageUrl.isEmpty()) {
                 Picasso.get()
                         .load(event.imageUrl)
-                        .placeholder(R.drawable.ic_launcher_background) // optional placeholder
-                        .error(R.drawable.ic_launcher_foreground)       // fallback if broken
+                        .placeholder(R.drawable.ic_event_24) // optional placeholder
+                        .error(R.drawable.ic_event_24)       // fallback if broken
                         .into(holder.image);
             } else {
-                holder.image.setImageResource(R.drawable.ic_launcher_background);
+                holder.image.setColorFilter(
+                        holder.itemView.getContext()
+                                .getColor(R.color.orange)
+                );
+                holder.image.setImageResource(R.drawable.ic_event_24);
             }
             holder.image.setVisibility(VISIBLE);
             holder.gamesPlayed.setVisibility(GONE);
