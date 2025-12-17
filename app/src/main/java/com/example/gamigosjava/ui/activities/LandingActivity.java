@@ -136,6 +136,7 @@ public class LandingActivity extends BaseActivity {
 
         matchFeedListener = db.collection("matches")
                 .whereArrayContains("playerIds", user.getUid())
+                .whereNotEqualTo("winRule", "cooperative")
                 .orderBy("updatedAt", Query.Direction.DESCENDING)
                 .limit(3)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {

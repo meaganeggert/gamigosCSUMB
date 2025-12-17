@@ -478,6 +478,8 @@ public class ViewEventActivity extends BaseActivity {
                     return;
                 }
 
+                boolean isCoop = "cooperative".equals(m.winRule);
+
                 List<Player> matchResults = new ArrayList<>();
                 for (DocumentSnapshot player: snaps) {
                     Player user = new Player();
@@ -555,6 +557,7 @@ public class ViewEventActivity extends BaseActivity {
                         UserGameMetric result = new UserGameMetric();
 
                         boolean isWinner = (p.placement != null && p.placement == 1);
+                        boolean isTeam = (p.team != null);
 
                         // Set default values for user match results.
                         if (isWinner) {
@@ -695,7 +698,9 @@ public class ViewEventActivity extends BaseActivity {
 
                                 Log.i(TAG, "Adding match with winner: " + winnerName + " of game: " + gameSnap.getString("title"));
                                 Log.i(TAG, winnerName + " is on a " + result.winStreak + " game win streak, and has won " + result.timesWon + " times total.");
-                                addMatchAsFeedActivity( winnerId, winnerName, avatarUrl, result.winStreak, result.timesWon, m.gameId, gameName, gameImage, false);
+                                if (!isCoop) {
+                                    addMatchAsFeedActivity(winnerId, winnerName, avatarUrl, result.winStreak, result.timesWon, m.gameId, gameName, gameImage, false);
+                                }
                             }).addOnFailureListener(e ->
                                     Log.e(TAG, "Failed to load winner/game for activity: " + e.getMessage()));
                         }
