@@ -164,7 +164,7 @@ public class ViewEventActivity extends BaseActivity {
                 updateEvent();
                 uploadUserMatchMetrics();
                 endEvent.setEnabled(false);
-                startEvent.setEnabled(true);
+                startEvent.setEnabled(false);
             });
         }
 
@@ -188,7 +188,7 @@ public class ViewEventActivity extends BaseActivity {
                             updateEvent();
                             uploadUserMatchMetrics();
                             endEvent.setEnabled(false);
-                            startEvent.setEnabled(true);
+                            startEvent.setEnabled(false);
                             dialog.dismiss();
                             finish();
                         })
