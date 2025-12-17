@@ -2,6 +2,7 @@ package com.example.gamigosjava.ui.activities;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -177,7 +178,27 @@ public class ViewEventActivity extends BaseActivity {
 
                 getUserInput();
                 updateEvent();
-                finish();
+
+                new AlertDialog.Builder(ViewEventActivity.this)
+                        .setTitle("Done for the night?")
+                        .setMessage("We'll save the details for now. User statistics will update when you end your event.")
+                        .setPositiveButton("Yes, we're done", (dialog, which) -> {
+                            eventItem.status = "past";
+                            eventItem.endedAt = Timestamp.now();
+                            updateEvent();
+                            uploadUserMatchMetrics();
+                            endEvent.setEnabled(false);
+                            startEvent.setEnabled(true);
+                            dialog.dismiss();
+                            finish();
+                        })
+                        .setNegativeButton("No", (dialog, which) -> {
+                            dialog.dismiss();
+                            finish();
+                        })
+                        .show();
+
+//                finish();
             });
         }
 

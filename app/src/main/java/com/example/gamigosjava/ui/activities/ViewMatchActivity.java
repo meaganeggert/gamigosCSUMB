@@ -12,15 +12,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IdRes;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 
 import com.example.gamigosjava.R;
@@ -36,8 +34,6 @@ import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
-import com.example.gamigosjava.ui.adapter.MatchAdapter;
-import com.example.gamigosjava.ui.adapter.ScoresAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -74,18 +70,14 @@ public class ViewMatchActivity extends BaseActivity {
 
     private Friend hostUser;
     private List<Friend> inviteeList = new ArrayList<>();
-    private ArrayAdapter inviteeAdapter;
 
     private List<Player> playerList;
-
-    private RecyclerView recyclerView;
-    private ScoresAdapter scoresAdapter;
-    public Button saveButton, startMatch, endMatch, addPlayer;
-    private EditText customPlayerInput;
-    private Spinner inviteeDropDown, winRuleDropdown;
+    public Button saveButton, startMatch, endMatch, addPlayer, addTeam, removeTeam;
+    private Spinner winRuleDropdown;
 
     private List<String> winRuleList = new ArrayList<>();
     private ArrayAdapter<String> winRuleAdapter;
+    private List<MatchResultFragment> matchResultList;
 
 
     @Override
@@ -137,9 +129,12 @@ public class ViewMatchActivity extends BaseActivity {
         userGameList = new ArrayList<>();
         apiGameList = new ArrayList<>();
         playerList = new ArrayList<>();
+        matchResultList = new ArrayList<>();
 
         winRuleList.add("Highest Score");
         winRuleList.add("Lowest Score");
+        winRuleList.add("Cooperative");
+        winRuleList.add("Teams");
         winRuleList.add("Custom");
 
         winRuleAdapter = new ArrayAdapter<>(
@@ -147,13 +142,6 @@ public class ViewMatchActivity extends BaseActivity {
                 winRuleList
         );
         winRuleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        inviteeAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_dropdown_item,
-                inviteeList
-        );
-        inviteeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         userGameAdapter = new ArrayAdapter<>(
                 this,
@@ -177,12 +165,6 @@ public class ViewMatchActivity extends BaseActivity {
         View match = LayoutInflater.from(this).inflate(R.layout.fragment_match_form, matchFormContainerHandle, false);
         matchFormContainerHandle.addView(match);
 
-        recyclerView = findViewById(R.id.recyclerViewPlayerScores);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        scoresAdapter = new ScoresAdapter();
-        scoresAdapter.setItems(playerList);
-        recyclerView.setAdapter(scoresAdapter);
-
         getPlayers();
 
         // Set board game dropdown for each new match form.
@@ -197,6 +179,7 @@ public class ViewMatchActivity extends BaseActivity {
         }
 
         SearchView search = match.findViewById(R.id.searchView_bggSearch);
+        search.setIconified(false);
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String s) {
@@ -226,26 +209,50 @@ public class ViewMatchActivity extends BaseActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String selected = winRuleDropdown.getSelectedItem().toString().toLowerCase();
-                TextView scoreLabel = findViewById(R.id.textView_playerScoreLabel);
-                TextView placementLabel = findViewById(R.id.textView_playerPlacementLabel);
 
                 if (selected.contains("highest")) {
                     matchItem.winRule = "highest";
-                    scoreLabel.setVisibility(TextView.VISIBLE);
-                    placementLabel.setVisibility(TextView.GONE);
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
+                    removeAllMatchResults();
+                    addMatchResult();
                 } else if (selected.contains("lowest")) {
                     matchItem.winRule = "lowest";
-                    scoreLabel.setVisibility(TextView.VISIBLE);
-                    placementLabel.setVisibility(TextView.GONE);
-                } else {
-                    matchItem.winRule = "custom";
-                    scoreLabel.setVisibility(TextView.GONE);
-                    placementLabel.setVisibility(TextView.VISIBLE);
-                }
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
 
-                // notify the recycler view to change the visible text fields (i.e. swap between placement and score)
-                scoresAdapter.winRule = matchItem.winRule;
-                scoresAdapter.notifyDataSetChanged();
+                    removeAllMatchResults();
+                    addMatchResult();
+                } else if (selected.contains("teams")) {
+                    matchItem.winRule = "teams";
+                    addTeam.setVisibility(Button.VISIBLE);
+                    removeTeam.setVisibility(Button.VISIBLE);
+
+                    removeAllMatchResults();
+                    if (matchItem.teamCount != null) {
+                        if (matchItem.teamCount > 2) {
+                            addManyNewMatchResults(matchItem.teamCount);
+                        } else {
+                            addManyNewMatchResults(2);
+                        }
+                    }
+                } else if (selected.contains("cooperative")) {
+                    matchItem.winRule = "cooperative";
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
+                    removeAllMatchResults();
+                    addMatchResult();
+
+                }else {
+                    matchItem.winRule = "custom";
+                    addTeam.setVisibility(Button.GONE);
+                    removeTeam.setVisibility(Button.GONE);
+
+                    removeAllMatchResults();
+                    addMatchResult();
+                }
             }
 
             @Override
@@ -254,90 +261,108 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
-        inviteeDropDown = findViewById(R.id.dropdown_invitees);
-        inviteeDropDown.setAdapter(inviteeAdapter);
-        customPlayerInput = findViewById(R.id.editText_customPlayer);
-
-        Switch playerTypeToggle = findViewById(R.id.switch_customPlayerToggle);
-        if (playerTypeToggle != null) {
-            playerTypeToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    inviteeDropDown.setVisibility(Spinner.GONE);
-                    customPlayerInput.setVisibility(Button.VISIBLE);
-                    addPlayerFromText();
-                } else {
-                    inviteeDropDown.setVisibility(Spinner.VISIBLE);
-                    customPlayerInput.setVisibility(Button.GONE);
-                    addPlayerFromSpinner();
-                }
-            });
-        }
-
         addPlayer = findViewById(R.id.button_addPlayer);
-        addPlayerFromSpinner();
 
-    }
-
-    // Adds a user as a player for the match to track scores using a dropdown of invitees.
-    private void addPlayerFromSpinner() {
-        if (addPlayer != null) {
-            addPlayer.setOnClickListener(v -> {
-                Player newPlayer = new Player();
-                newPlayer.friend = (Friend) inviteeDropDown.getSelectedItem();
-
-                if (newPlayer.friend == null) return;
-                if (newPlayer.friend.id == null) return;
-
-                boolean inList = false;
-                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    Player player = scoresAdapter.playerList.get(i);
-                    if (player.friend.id == null) continue;
-
-                    if (player.friend.id.equals(newPlayer.friend.id)) {
-                        inList = true;
-                        break;
-                    }
-                }
-                if (inList) {
-                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                scoresAdapter.playerList.add(newPlayer);
-                scoresAdapter.notifyDataSetChanged();
+        addTeam = findViewById(R.id.button_addTeam);
+        if (addTeam != null) {
+            addTeam.setOnClickListener(v -> {
+                addMatchResult();
             });
         }
-    }
 
-    // Adds a non-user as a player for the match to track scores using a text input.
-    private void addPlayerFromText() {
-        if (addPlayer != null) {
-            addPlayer.setOnClickListener(v -> {
-                String customName = customPlayerInput.getText().toString();
-                if (customName.isEmpty()) return;
-
-                Player newPlayer = new Player();
-                newPlayer.friend = new Friend();
-                newPlayer.friend.displayName = customName;
-
-                boolean inList = false;
-                for (int i = 0; i < scoresAdapter.getItemCount(); i++) {
-                    if (scoresAdapter.playerList.get(i).friend.displayName.equals(newPlayer.friend.displayName)) {
-                        inList = true;
-                        break;
-                    }
-                }
-                if (inList) {
-                    Toast.makeText(this, "User is already a player in this match.", Toast.LENGTH_SHORT).show();
+        removeTeam = findViewById(R.id.button_removeTeam);
+        if (removeTeam != null) {
+            removeTeam.setOnClickListener(v -> {
+                if (matchResultList.size() <= 0) {
+                    Toast.makeText(this, "Minimum team count is 2.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                scoresAdapter.playerList.add(newPlayer);
-                scoresAdapter.notifyDataSetChanged();
+                removeLastMatchResult();
             });
         }
+
     }
 
+    private void addManyNewMatchResults(int size) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        Log.d(TAG, "Adding this many new team fragments. " + size);
+
+        for (int i = 0; i < size; i++) {
+            MatchResultFragment fragment = MatchResultFragment.newInstance(matchId, matchItem.winRule, (i + 1), playerList);
+            fragment.setInviteeList(inviteeList);
+
+            matchResultList.add(fragment);
+            fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
+        }
+
+        fragmentTransaction.commit();
+
+        matchItem.teamCount = matchResultList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
+    }
+
+    // Use a fragment to replace default user score section.
+
+    private void addManyMatchResults(List<MatchResultFragment> list) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        for (MatchResultFragment f: list) {
+            fragmentTransaction.add(R.id.matchResultContainer, f, "match_result_container");
+        }
+        fragmentTransaction.commit();
+
+        matchItem.teamCount = matchResultList.size();
+    }
+    private void addMatchResult() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        MatchResultFragment fragment = MatchResultFragment.newInstance(matchId, matchItem.winRule, matchResultList.size() + 1, playerList);
+        fragment.setInviteeList(inviteeList);
+
+        fragmentTransaction.add(R.id.matchResultContainer, fragment, "match_result_container");
+        fragmentTransaction.commit();
+
+        matchResultList.add(fragment);
+        matchItem.teamCount = matchResultList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
+    }
+
+    private void removeAllMatchResults() {
+        if (matchResultList.isEmpty()) {
+            return;
+        }
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager()
+                .beginTransaction();
+
+        for (int i = 0; i < matchResultList.size(); i++) {
+            fragmentTransaction.remove(matchResultList.get(i));
+        }
+        fragmentTransaction.commit();
+
+        matchResultList.clear();
+        matchItem.teamCount = matchResultList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
+    }
+    private void removeLastMatchResult() {
+        if (matchResultList.isEmpty()) {
+            return;
+        }
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .remove(matchResultList.get(matchResultList.size() - 1))
+                .commit();
+
+        matchResultList.remove(matchResultList.get(matchResultList.size() - 1));
+        matchItem.teamCount = matchResultList.size();
+        Log.d(TAG, "Team Fragment Count: " + matchItem.teamCount);
+
+    }
 
     // Gets previously established players for the current match if there are any.
     private void getPlayers() {
@@ -366,6 +391,7 @@ public class ViewMatchActivity extends BaseActivity {
                 String displayName = doc.getString("displayName");
                 Integer score = doc.get("score", Integer.class);
                 Integer placement = doc.get("placement", Integer.class);
+                Integer team = doc.get("team", Integer.class);
 
                 Log.d(TAG, "Got Player " + displayName);
 
@@ -376,9 +402,12 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = displayName;
                     friend.friendUId = playerId;
 
-                    Player knownPlayer = new Player(friend, score, placement);
-                    scoresAdapter.playerList.add(knownPlayer);
-                    scoresAdapter.notifyDataSetChanged();
+                    Player knownPlayer = new Player(friend, score, placement, team);
+                    playerList.add(knownPlayer);
+
+                    for (MatchResultFragment f: matchResultList) {
+                        f.setPlayerList(playerList);
+                    }
                     continue;
                 }
 
@@ -390,9 +419,11 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = docSnap.getString("displayName");
                     friend.friendUId = docSnap.getString("uid");
 
-                    Player knownPlayer = new Player(friend, score, placement);
-                    scoresAdapter.playerList.add(knownPlayer);
-                    scoresAdapter.notifyDataSetChanged();
+                    Player knownPlayer = new Player(friend, score, placement, team);
+                    playerList.add(knownPlayer);
+                    for (MatchResultFragment f: matchResultList) {
+                        f.setPlayerList(playerList);
+                    }
                     return null;
                 });
             }
@@ -456,7 +487,6 @@ public class ViewMatchActivity extends BaseActivity {
 
                 hostUser = host;
                 inviteeList.add(host);
-                inviteeAdapter.notifyDataSetChanged();
 
                 enableHostOptions();
             }).addOnFailureListener(e -> {
@@ -480,7 +510,6 @@ public class ViewMatchActivity extends BaseActivity {
 
                     hostUser = host;
                     inviteeList.add(host);
-                    inviteeAdapter.notifyDataSetChanged();
 
                     enableHostOptions();
                 }).addOnFailureListener(e -> {
@@ -570,8 +599,10 @@ public class ViewMatchActivity extends BaseActivity {
                         if (!inFriendList) {
                             Log.d(TAG, "Added invitee to list");
                             inviteeList.add(f);
-                            inviteeAdapter.notifyDataSetChanged();
 
+                            for (MatchResultFragment frag: matchResultList) {
+                                frag.setInviteeList(inviteeList);
+                            }
                         }
                     }
                 }).addOnFailureListener(e -> {
@@ -628,7 +659,10 @@ public class ViewMatchActivity extends BaseActivity {
                             if (!inFriendList) {
                                 Log.d(TAG, "Added invitee to list");
                                 inviteeList.add(f);
-                                inviteeAdapter.notifyDataSetChanged();
+
+                                for (MatchResultFragment frag: matchResultList) {
+                                    frag.setInviteeList(inviteeList);
+                                }
 
                             }
                             return null;
@@ -652,7 +686,7 @@ public class ViewMatchActivity extends BaseActivity {
         String uid = currentUser.getUid();
 
 //        userGameList.clear();
-        userGameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
+        userGameList.add(new GameSummary(null, "Select Game", null, null, null, null));
 
             // Get games the user previously played
         CollectionReference gamesRef = db
@@ -793,6 +827,7 @@ public class ViewMatchActivity extends BaseActivity {
                 Log.d("BGG", "Loaded " + list.size() + " game(s)"); // debug
 
                 apiGameList.clear();
+                apiGameList.add(new GameSummary(null, "Results", null, null, null, null));
                 apiGameList.addAll(list);
                 apiGameAdapter.notifyDataSetChanged();
             }
@@ -837,6 +872,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.gameId = game.id;
         matchItem.imageUrl = game.imageUrl;
         matchItem.updatedAt = Timestamp.now();
+        matchItem.teamCount = matchResultList.size();
         // winRule will have been set by the spinner view
 
         // Connect values from the match object to the hashmap to be uploaded.
@@ -849,6 +885,7 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("imageUrl", matchItem.imageUrl);
         match.put("updatedAt",  matchItem.updatedAt);
         match.put("winRule", matchItem.winRule);
+        match.put("teamCount", matchItem.teamCount);
 
         if (game.id != null) {
             match.put("gameRef", db.collection("games").document(game.id));
@@ -870,7 +907,7 @@ public class ViewMatchActivity extends BaseActivity {
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
+                        uploadScores();
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update match database element " + matchItem.id + ": " + e.getMessage());
                     });
@@ -880,13 +917,13 @@ public class ViewMatchActivity extends BaseActivity {
             db.collection("matches").add(match)
                     .addOnSuccessListener(documentReference -> {
                         matchItem.id = documentReference.getId();
+                        matchId = matchItem.id;
                         Log.d(TAG, "Saved Match: " + matchItem.id);
                         Toast.makeText(this, "Saved Game", Toast.LENGTH_SHORT).show();
 
                         uploadUserGamesHosted(uid, game);
                         uploadUserGamesPlayed(uid, game);
-                        scoresAdapter.uploadPlayerScores(db, currentUser, matchItem.id, matchItem.winRule);
-
+                        uploadScores();
 
                         HashMap<String, Object> eventMatchHash = new HashMap<>();
 
@@ -909,6 +946,12 @@ public class ViewMatchActivity extends BaseActivity {
                         Log.e(TAG, "Failed to save match: " + e.getMessage());
                         Toast.makeText(this, "Failed to save game.", Toast.LENGTH_SHORT).show();
                     });
+        }
+    }
+
+    private void uploadScores() {
+        for (int i = 0; i < matchResultList.size(); i++) {
+            matchResultList.get(i).scoresAdapter.uploadPlayerScores(db, currentUser, matchId, matchItem.winRule);
         }
     }
 
@@ -999,6 +1042,7 @@ public class ViewMatchActivity extends BaseActivity {
             String rulesVariantResult = snap.getString("rules_variant");
             String hostId = snap.getString("hostId");
             String winRule = snap.getString("winRule");
+            Integer teamCount = snap.get("teamCount", Integer.class);
 
             if (id != null) matchItem.id = id;
             if (endedAt != null) matchItem.endedAt = endedAt;
@@ -1009,6 +1053,7 @@ public class ViewMatchActivity extends BaseActivity {
             if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
             if (hostId != null) matchItem.hostId = hostId;
             if (winRule != null) matchItem.winRule = winRule;
+            if (teamCount != null) matchItem.teamCount = teamCount;
 
             setMatchDetails(matchItem);
 
@@ -1034,7 +1079,6 @@ public class ViewMatchActivity extends BaseActivity {
         }
 
         if (winRuleIndex != -1) winRuleDropdown.setSelection(winRuleIndex);
-
 
 
         View matchForm = matchFormContainerHandle.getChildAt(0);

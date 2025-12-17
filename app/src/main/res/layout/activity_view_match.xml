@@ -7,7 +7,8 @@
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:layout_gravity="center_horizontal"
-    tools:context=".ui.activities.ViewMatchActivity">
+    tools:context=".ui.activities.ViewMatchActivity"
+    android:background="@color/neutralbrown">
 
     <LinearLayout
         android:id="@+id/viewMatchRoot"
@@ -21,7 +22,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
-            android:layout_margin="6dp">
+            android:layout_marginTop="12dp">
 
             <Button
                 android:id="@+id/button_startMatch"
