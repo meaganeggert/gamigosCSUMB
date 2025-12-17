@@ -41,21 +41,22 @@
         android:layout_marginTop="12dp"
         android:fontFamily="@font/jetbrains_mono"
         />
+
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center">
 
         <TextView
             android:id="@+id/textView_eventStart"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:fontFamily="@font/jetbrains_mono"
-            android:ems="15"
             android:hint="Event Start"
             android:padding="3dp"
-            android:textSize="12dp"/>
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/button_selectSchedule"
@@ -63,7 +64,8 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/jetbrains_mono"
             android:backgroundTint="@color/yellow"
-            android:textColor="@color/black"
+            android:textColor="@color/darkblue"
+            android:textSize="10sp"
             android:text="Set"/>
     </LinearLayout>
 
@@ -118,7 +120,7 @@
             android:layout_height="wrap_content"
             android:textSize="12dp"
             android:fontFamily="@font/jetbrains_mono"
-            android:text="Invite Friend"
+            android:text="Add Friend"
             android:layout_margin="12dp"
             />
         <Button

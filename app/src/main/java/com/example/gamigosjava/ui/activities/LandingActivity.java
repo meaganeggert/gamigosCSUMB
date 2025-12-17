@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import me.relex.circleindicator.CircleIndicator2;
+
 public class LandingActivity extends BaseActivity {
     private static final String TAG = "LandingActivity";
 
@@ -58,6 +60,8 @@ public class LandingActivity extends BaseActivity {
     private final List<ActivityItem> allFeedList = new ArrayList<>();
     private final List<MatchSummary> allMatchList = new ArrayList<>();
     private FeedFilter selectedFilter = FeedFilter.ALL;
+    PagerSnapHelper snapHelper;
+    CircleIndicator2 indicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,8 +114,11 @@ public class LandingActivity extends BaseActivity {
         matchFeedAdapter.setIsHost(false);
         matchFeedRecycler.setAdapter(matchFeedAdapter);
 
-        PagerSnapHelper snapHelper = new PagerSnapHelper();
+        snapHelper = new PagerSnapHelper();
+        indicator = findViewById(R.id.indicator);
+        indicator.attachToRecyclerView(matchFeedRecycler, snapHelper);
         snapHelper.attachToRecyclerView(matchFeedRecycler);
+
 
         loadFeed();
     }
@@ -167,6 +174,7 @@ public class LandingActivity extends BaseActivity {
                     }
 
                     matchFeedAdapter.setItems(allMatchList);
+                    indicator.attachToRecyclerView(matchFeedRecycler, snapHelper);
 
                     if (allMatchList.isEmpty()) {
 //                        matchDefaultText.setText("No recent matches yet.");

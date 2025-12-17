@@ -45,10 +45,24 @@
         tools:itemCount="3"
         app:layout_constraintVertical_bias="0.5"
         app:layout_constraintTop_toTopOf="@id/backgroundBar"
-        app:layout_constraintBottom_toBottomOf="@id/backgroundBar"
+        app:layout_constraintBottom_toTopOf="@id/indicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />
+
+<!--    Page Indicators -->
+    <me.relex.circleindicator.CircleIndicator2
+        android:id="@+id/indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:gravity="center"
+        android:paddingVertical="2dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/backgroundBar"
+        app:ci_drawable="@drawable/page_dot_active"
+        app:ci_drawable_unselected="@drawable/page_dot_inactive"/>
+
 
     <!--    All Feed Button -->
     <!--    Will work to filter feed by only events -->
