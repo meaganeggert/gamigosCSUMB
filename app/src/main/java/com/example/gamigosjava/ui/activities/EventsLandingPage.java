@@ -17,6 +17,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.Source;
 
@@ -29,6 +30,9 @@ public class EventsLandingPage extends BaseActivity {
     private static final String TAG = "EventsHome";
     private RecyclerView recyclerViewActive, recyclerViewPast;
     private EventAdapter eventAdapterActive, eventAdapterPast;
+
+    private ListenerRegistration eventsListener; // Will allow for real-time feed updates
+
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
