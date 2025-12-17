@@ -100,7 +100,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem = new Match();
 
         currentInvitee = new Invitee();
-//        getHost();
+        getHost();
 
 
         if (!eventId.isEmpty()) {
@@ -506,6 +506,32 @@ public class ViewMatchActivity extends BaseActivity {
                 hostUser.displayName = currentUser.getDisplayName();
                 hostUser.id = currentUser.getUid();
                 hostUser.friendUId = currentUser.getUid();
+
+                boolean inList = false;
+                for (Friend f: inviteeList) {
+                    if (f.id.equals(hostUser.id)) {
+                        inList = true;
+                        break;
+                    }
+                }
+
+                if (!inList) {
+                    inviteeList.add(hostUser);
+
+                    Log.d(TAG, "Added host to invitee list.");
+
+                    if (matchResultList == null) return;
+
+                    for (int i = 0; i < matchResultList.size(); i++) {
+                        matchResultList.get(i).setInviteeList(inviteeList);
+
+                    }
+                }
+
+                return;
+            }
+
+            if (matchItem.hostId == null) {
                 return;
             }
 
@@ -560,7 +586,23 @@ public class ViewMatchActivity extends BaseActivity {
                     Log.d(TAG, "EVENT HOST NAME: " + host.displayName);
 
                     hostUser = host;
-                    inviteeList.add(host);
+                    boolean inList = false;
+                    for (Friend f: inviteeList) {
+                        if (f.id.equals(hostUser.id)) {
+                            inList = true;
+                            break;
+                        }
+                    }
+
+                    if (!inList) {
+                        inviteeList.add(host);
+
+                        Log.d(TAG, "Added host to invitee list.");
+
+                        for (MatchResultFragment f: matchResultList) {
+                            f.setInviteeList(inviteeList);
+                        }
+                    }
 
                     setUIElements();
                 }).addOnFailureListener(e -> {

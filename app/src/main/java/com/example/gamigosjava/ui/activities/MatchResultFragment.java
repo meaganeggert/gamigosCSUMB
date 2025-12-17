@@ -306,6 +306,8 @@ public class MatchResultFragment extends Fragment {
     public void setInviteeList(List<Friend> inviteeList) {
         this.inviteeList = inviteeList;
 
+        Log.d(TAG, "SET INVITEES");
+
         if (inviteeAdapter != null) {
             inviteeAdapter.notifyDataSetChanged();
         }
