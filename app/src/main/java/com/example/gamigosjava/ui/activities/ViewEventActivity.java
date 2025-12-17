@@ -164,7 +164,7 @@ public class ViewEventActivity extends BaseActivity {
                 updateEvent();
                 uploadUserMatchMetrics();
                 endEvent.setEnabled(false);
-                startEvent.setEnabled(true);
+                startEvent.setEnabled(false);
             });
         }
 
@@ -188,7 +188,7 @@ public class ViewEventActivity extends BaseActivity {
                             updateEvent();
                             uploadUserMatchMetrics();
                             endEvent.setEnabled(false);
-                            startEvent.setEnabled(true);
+                            startEvent.setEnabled(false);
                             dialog.dismiss();
                             finish();
                         })
@@ -817,9 +817,14 @@ public class ViewEventActivity extends BaseActivity {
             eventItem.notes = snap.getString("notes");
             setEventForm(eventItem);
 
-            if("active".equals(eventItem.status)) {
+            if(eventItem.status.equals("active")) {
                 startEvent.setEnabled(false);
                 endEvent.setEnabled(true);
+            }
+
+            if (eventItem.status.equals("past")) {
+                startEvent.setEnabled(false);
+                endEvent.setEnabled(false);
             }
 
         }).addOnFailureListener(e -> Log.e(TAG, "Error getting event " + eventId + ": " + e.getMessage()));

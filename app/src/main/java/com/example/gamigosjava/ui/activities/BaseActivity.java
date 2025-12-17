@@ -120,7 +120,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (id == R.id.nav_games && !(this instanceof com.example.gamigosjava.ui.activities.MatchLandingActivity)) {
-                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.MatchLandingActivity.class));
+                startActivity(new Intent(this, com.example.gamigosjava.ui.activities.GetAllQuickPlayActivity.class));
                 overridePendingTransition(0,0);
                 finish();
                 return true;
