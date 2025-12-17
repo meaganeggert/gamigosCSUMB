@@ -278,6 +278,8 @@ public class FriendsSearchActivity extends BaseActivity {
                         user.put("status", STATUS_FRIEND);
                     } else if (myOutgoing.contains(uid)) {
                         user.put("status", STATUS_PENDING);
+                    } else if (myIncoming.contains(uid)) {
+                        user.put("status", STATUS_INCOMING);
                     } else {
                         user.put("status", STATUS_NONE);
                     }
@@ -300,6 +302,7 @@ public class FriendsSearchActivity extends BaseActivity {
 
                 // normal path
                 adapter.notifyDataSetChanged();
+                refreshStatuses();
                 currentPage++;
 
             } catch (JSONException jsonException) {
