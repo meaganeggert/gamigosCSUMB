@@ -22,6 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Event"
+            android:fontFamily="@font/jetbrains_mono"
             android:textSize="24dp"
             android:layout_gravity="center_horizontal"/>
 
@@ -86,6 +87,9 @@
             android:id="@+id/button_createEvent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/darkblue"
             android:text="Create Event"
             android:layout_gravity="center_horizontal"/>
 
@@ -93,6 +97,9 @@
             android:id="@+id/button_cancelCreateEvent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/darkblue"
             android:text="Cancel"
             android:layout_gravity="center_horizontal"/>
 

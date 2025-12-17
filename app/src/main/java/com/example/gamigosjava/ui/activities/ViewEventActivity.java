@@ -186,7 +186,7 @@ public class ViewEventActivity extends BaseActivity {
 
                 new AlertDialog.Builder(ViewEventActivity.this)
                         .setTitle("Done for the night?")
-                        .setMessage("We'll save the details for now. User statistics will update when you end your event.")
+                        .setMessage("Click 'yes' to end the event and update player scores. If you're still playing, click 'no' and we'll save the details for now.")
                         .setPositiveButton("Yes, we're done", (dialog, which) -> {
                             eventItem.status = "past";
                             eventItem.endedAt = Timestamp.now();
@@ -348,8 +348,8 @@ public class ViewEventActivity extends BaseActivity {
         db.collection("events").document(eventItem.id)
                 .set(eventItem)
                 .addOnSuccessListener(v -> {
-                    Toast.makeText(this, "Successfully updated the event.", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Event Updated.");
+                    Toast.makeText(this, "Event Updated.", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Successfully updated the event.");
 
                     // Recreate local alarm ONLY for planned events
                     cancelEventStartAlarm(eventItem.id);

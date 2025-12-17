@@ -103,7 +103,8 @@ public class ProfileActivity extends BaseActivity {
                 startActivity(intent);
             });
         } else {
-            Toast.makeText(this, "BGG test button not found", Toast.LENGTH_SHORT).show();
+            Log.e("Profile", "BGG Test button not found");
+//            Toast.makeText(this, "BGG test button not found", Toast.LENGTH_SHORT).show();
         }
 
         Button quickGame = findViewById(R.id.buttonQuickGame);

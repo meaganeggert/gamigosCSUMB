@@ -152,7 +152,7 @@ public class NotificationsActivity extends BaseActivity {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to delete selected notifications", e);
-                    Toast.makeText(this, "Failed to delete selected notifications", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(this, "Failed to delete selected notifications", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -228,7 +228,7 @@ public class NotificationsActivity extends BaseActivity {
                             })
                             .addOnFailureListener(e -> {
                                 Log.e(TAG, "Failed to clear notifications", e);
-                                Toast.makeText(this, "Failed to clear notifications.", Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(this, "Failed to clear notifications.", Toast.LENGTH_SHORT).show();
                                 btnClearAll.setEnabled(true);
                             });
                 })

@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.drawerlayout)
 
+    // Pagination dots
+    implementation("me.relex:circleindicator:2.1.6")
+
     // Firebase (BoM first)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

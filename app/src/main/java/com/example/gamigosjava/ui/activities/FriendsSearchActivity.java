@@ -1,6 +1,7 @@
 package com.example.gamigosjava.ui.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -306,9 +307,10 @@ public class FriendsSearchActivity extends BaseActivity {
                 currentPage++;
 
             } catch (JSONException jsonException) {
-                Toast.makeText(FriendsSearchActivity.this,
-                        "Parse error: " + jsonException.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                Log.e("FriendSearch", "Error" + jsonException.getMessage());
+//                Toast.makeText(FriendsSearchActivity.this,
+//                        "Parse error: " + jsonException.getMessage(),
+//                        Toast.LENGTH_SHORT).show();
             }
         }));
     }

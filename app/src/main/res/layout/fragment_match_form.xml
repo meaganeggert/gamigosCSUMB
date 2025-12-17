@@ -14,11 +14,15 @@
         android:id="@+id/textView_matchDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/jetbrains_mono"
+        android:textAlignment="center"
+        android:layout_gravity="center"
         android:text="Match Details"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/jetbrains_mono"
         android:text="Game"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
@@ -48,6 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Rule Changes"
+        android:fontFamily="@font/jetbrains_mono"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
     <EditText
@@ -63,6 +68,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Additional Notes"
+        android:fontFamily="@font/jetbrains_mono"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
     <EditText
@@ -79,7 +85,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Placements Determined By"
+        android:fontFamily="@font/jetbrains_mono"
+        android:text="Winner Determined By:"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
     <Spinner
@@ -112,12 +119,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="- Team"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/black"
+            android:fontFamily="@font/jetbrains_mono"
             android:layout_marginRight="16dp"/>
 
         <Button
             android:id="@+id/button_addTeam"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/black"
             android:text="+ Team"/>
     </LinearLayout>
 

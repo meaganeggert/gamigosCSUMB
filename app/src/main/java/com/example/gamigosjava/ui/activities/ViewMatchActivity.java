@@ -112,7 +112,7 @@ public class ViewMatchActivity extends BaseActivity {
 
 //        matchItem.hostId = currentUser.getUid();
 
-        Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm(R.id.matchFormContainer);
 
         // Set match buttons available to host.
@@ -796,7 +796,8 @@ public class ViewMatchActivity extends BaseActivity {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to load invitees: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to load invitees: " + e.getMessage());
+//                    Toast.makeText(this, "Failed to load invitees: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -908,7 +909,7 @@ public class ViewMatchActivity extends BaseActivity {
         api.search(query, "boardgame").enqueue(new Callback<SearchResponse>() {
             @Override public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> resp) {
                 if (!resp.isSuccessful()) {
-                    Toast.makeText(ViewMatchActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(ViewMatchActivity.this, "Response not successful", Toast.LENGTH_SHORT).show();
                     String err = null;
                     try { err = resp.errorBody() != null ? resp.errorBody().string() : null; } catch (Exception ignored) {}
                     Log.e("BGG", "Search HTTP " + resp.code() + " " + err);
@@ -949,7 +950,7 @@ public class ViewMatchActivity extends BaseActivity {
                 }
 
                 // 🟢 Add this to confirm data size
-                Toast.makeText(ViewMatchActivity.this, "Loaded " + list.size() + " games", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(ViewMatchActivity.this, "Loaded " + list.size() + " games", Toast.LENGTH_SHORT).show();
                 Log.d("BGG", "Loaded " + list.size() + " game(s)"); // debug
 
                 apiGameList.clear();

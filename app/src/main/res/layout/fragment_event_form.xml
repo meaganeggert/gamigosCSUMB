@@ -13,6 +13,8 @@
         android:id="@+id/textView_EventDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/jetbrains_mono"
+        android:layout_gravity="center"
         android:text="Event Details"/>
 
     <TextView
@@ -20,6 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:textSize="12dp"
+        android:fontFamily="@font/jetbrains_mono"
         android:text="Title"/>
 
     <EditText
@@ -36,26 +39,33 @@
         android:textSize="12dp"
         android:text="Date and Time"
         android:layout_marginTop="12dp"
+        android:fontFamily="@font/jetbrains_mono"
         />
+
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center">
 
         <TextView
             android:id="@+id/textView_eventStart"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ems="15"
+            android:layout_weight="1"
+            android:fontFamily="@font/jetbrains_mono"
             android:hint="Event Start"
             android:padding="3dp"
-            android:textSize="12dp"/>
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/button_selectSchedule"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/darkblue"
+            android:textSize="10sp"
             android:text="Set"/>
     </LinearLayout>
 
@@ -63,6 +73,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/jetbrains_mono"
         android:textSize="12dp"
         android:text="Visibility"
         android:layout_marginTop="12dp"
@@ -87,6 +98,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="12dp"
+        android:fontFamily="@font/jetbrains_mono"
         android:text="Invites"
         android:layout_marginTop="12dp"
         />
@@ -107,7 +119,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12dp"
-            android:text="Invite Friend"
+            android:fontFamily="@font/jetbrains_mono"
+            android:text="Add Friend"
             android:layout_margin="12dp"
             />
         <Button
@@ -115,12 +128,18 @@
             android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/black"
             android:text="-"/>
         <Button
             android:id="@+id/button_addFriend"
             android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/black"
             android:text="+"/>
     </LinearLayout>
 
@@ -128,6 +147,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Additional Notes"
+        android:fontFamily="@font/jetbrains_mono"
         android:textSize="12dp"
         android:layout_marginTop="12dp"/>
 
