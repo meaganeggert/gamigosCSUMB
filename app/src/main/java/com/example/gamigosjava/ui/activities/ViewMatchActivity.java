@@ -179,6 +179,7 @@ public class ViewMatchActivity extends BaseActivity {
         }
 
         SearchView search = match.findViewById(R.id.searchView_bggSearch);
+        search.setIconified(false);
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String s) {
@@ -685,7 +686,7 @@ public class ViewMatchActivity extends BaseActivity {
         String uid = currentUser.getUid();
 
 //        userGameList.clear();
-        userGameList.add(new GameSummary(null, "Search BGG", null, null, null, null));
+        userGameList.add(new GameSummary(null, "Select Game", null, null, null, null));
 
             // Get games the user previously played
         CollectionReference gamesRef = db
@@ -826,6 +827,7 @@ public class ViewMatchActivity extends BaseActivity {
                 Log.d("BGG", "Loaded " + list.size() + " game(s)"); // debug
 
                 apiGameList.clear();
+                apiGameList.add(new GameSummary(null, "Results", null, null, null, null));
                 apiGameList.addAll(list);
                 apiGameAdapter.notifyDataSetChanged();
             }
