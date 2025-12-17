@@ -94,10 +94,22 @@ public class ViewMatchActivity extends BaseActivity {
         eventId = getIntent().getStringExtra("selectedEventId");
         matchId = getIntent().getStringExtra("selectedMatchId");
         matchItem = new Match();
-        matchItem.hostId = currentUser.getUid();
+
+        if (!eventId.isEmpty()) {
+            matchItem.eventId = eventId;
+        }
+        if (!matchId.isEmpty()) {
+            matchItem.id = matchId;
+        }
+
+//        matchItem.hostId = currentUser.getUid();
 
         Toast.makeText(this, "Selected Event: " + eventId + "\nSelectedMatch: " + matchId, Toast.LENGTH_SHORT).show();
         addMatchForm(R.id.matchFormContainer);
+
+        // Set match buttons available to host.
+        startMatch = findViewById(R.id.button_startMatch);
+        endMatch = findViewById(R.id.button_endMatch);
 
         getMatchDetails(matchId);
         getEventDetails(eventId);
@@ -158,7 +170,7 @@ public class ViewMatchActivity extends BaseActivity {
         apiGameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         getGames();
-        getInvitees();
+//        getInvitees();
 
 
 
@@ -473,6 +485,10 @@ public class ViewMatchActivity extends BaseActivity {
 
     // Get the host of the event/match to include as a possible player and show/hide certain buttons
     private void getHost() {
+        if (matchId.isEmpty()) {
+            matchItem.hostId = currentUser.getUid();
+        }
+
         // Search match for host id.
         if (eventId.isEmpty() || eventId == null) {
             db.collection("users").document(matchItem.hostId).get().addOnSuccessListener(s -> {
@@ -506,7 +522,7 @@ public class ViewMatchActivity extends BaseActivity {
                     host.displayName = s.getString("displayName");
                     host.friendUId = s.getString("uid");
 
-                    Log.d(TAG, "HOST NAME: " + host.displayName);
+                    Log.d(TAG, "EVENT HOST NAME: " + host.displayName);
 
                     hostUser = host;
                     inviteeList.add(host);
@@ -537,10 +553,6 @@ public class ViewMatchActivity extends BaseActivity {
 
             return;
         }
-
-        // Set match buttons available to host.
-        startMatch = findViewById(R.id.button_startMatch);
-        endMatch = findViewById(R.id.button_endMatch);
 
         if (startMatch != null) {
             startMatch.setVisibility(Button.VISIBLE);
@@ -574,6 +586,10 @@ public class ViewMatchActivity extends BaseActivity {
     private void getFriends() {
         if (currentUser == null) return;
         if (!eventId.isEmpty()) return;
+
+        if (matchId.isEmpty()) {
+            matchItem.hostId = currentUser.getUid();
+        }
 
         db.collection("users")
                 .document(matchItem.hostId)
@@ -893,9 +909,12 @@ public class ViewMatchActivity extends BaseActivity {
             match.put("gameRef", game.id);
         }
 
-        if (matchItem.hostId == null || matchItem.hostId.isEmpty()) {
-            matchItem.hostId = currentUser.getUid();
+        if (matchId == null || matchId.isEmpty()) {
+            if (matchItem.hostId == null || matchItem.hostId.isEmpty()) {
+                matchItem.hostId = currentUser.getUid();
+            }
         }
+
         match.put("hostId", matchItem.hostId);
 
 
@@ -1017,6 +1036,10 @@ public class ViewMatchActivity extends BaseActivity {
     // Gets the current match details previously saved.
     // Calls the function setMatchDetails
     private void getMatchDetails(String matchId) {
+        if (!eventId.isEmpty()) {
+            getInvitees();
+        }
+
         if (matchId.isEmpty()) {
             Log.d(TAG, "No match id was passed in.");
             getFriends();
@@ -1049,11 +1072,16 @@ public class ViewMatchActivity extends BaseActivity {
             if (gameRef != null) matchItem.gameRef = gameRef;
             if (startedAt != null) matchItem.startedAt = startedAt;
             if (notes != null) matchItem.notes = notes;
-            if (eventIdResult != null) matchItem.eventId = eventIdResult;
+            if (eventIdResult != null) {
+                matchItem.eventId = eventIdResult;
+                eventId = eventIdResult;
+            }
             if (rulesVariantResult != null) matchItem.rulesVariant = rulesVariantResult;
             if (hostId != null) matchItem.hostId = hostId;
             if (winRule != null) matchItem.winRule = winRule;
             if (teamCount != null) matchItem.teamCount = teamCount;
+
+            getInvitees();
 
             setMatchDetails(matchItem);
 

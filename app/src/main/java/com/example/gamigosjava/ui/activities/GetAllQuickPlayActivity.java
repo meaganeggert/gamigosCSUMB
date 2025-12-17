@@ -103,7 +103,6 @@ public class GetAllQuickPlayActivity extends BaseActivity {
         if (currentUser == null) return;
 
         Query query = db.collection("matches")
-                        .whereEqualTo("eventId", "")
                         .orderBy("updatedAt", Query.Direction.DESCENDING);
 
         query.addSnapshotListener((snaps, e) -> {
