@@ -101,7 +101,7 @@ public class EventsRepo {
         } else {
             Log.i(TAG, "Loading event details for past events");
             Query query = db.collection("events")
-                    .whereLessThan("scheduledAt", now)
+                    .whereEqualTo("status", "past")
                     .orderBy("scheduledAt", Query.Direction.DESCENDING)
                     .limit(viewLimit);
 
