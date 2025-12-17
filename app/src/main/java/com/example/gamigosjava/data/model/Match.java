@@ -4,10 +4,13 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 
+import java.util.List;
+
 public class Match {
     public String id;
     public String eventId;
     public String gameId;
+    public String gameName;
     public String notes;
     public String rulesVariant;
 
@@ -20,4 +23,8 @@ public class Match {
     public String hostId;
     public String winRule;
     public Integer teamCount;
+
+    public String winnerId;
+
+    public List<String> playerIds;
 }

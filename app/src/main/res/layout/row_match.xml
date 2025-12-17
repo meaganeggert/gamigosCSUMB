@@ -8,15 +8,17 @@
     android:layout_height="wrap_content"
     android:minHeight="100dp"
     android:layout_marginVertical="3dp"
+    android:layout_marginHorizontal="4dp"
     android:background="@drawable/bubble_feed">
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageGame"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
         android:layout_gravity="center_vertical"
-        android:background="#AAA"
+        android:clipToOutline="true"
+        app:shapeAppearanceOverlay="@style/CircularImage"
         android:src="@drawable/gamigos_die"/>
 
     <LinearLayout
@@ -34,14 +36,13 @@
             android:layout_marginVertical="1dp"
             android:fontFamily="@font/oswald_light"
             android:letterSpacing="0.05"
-            android:maxLines="1"
+            android:maxLines="2"
             android:paddingVertical="2dp"
-            android:text="Spirit Title"
+            android:text="Match Title"
             android:includeFontPadding="true"
             android:textAlignment="center"
             android:textColor="@color/black"
-            app:autoSizeMaxTextSize="28sp"
-            app:autoSizeMinTextSize="18sp"
+            android:textSize="20sp"
             android:ellipsize="end"
             app:autoSizeStepGranularity="1sp"
             app:autoSizeTextType="uniform" />
@@ -59,11 +60,12 @@
         <TextView
             android:id="@+id/textPlaytimeTitle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="22dp"
             android:layout_gravity="center"
             android:fontFamily="@font/jetbrains_mono_thin"
             android:text="Time Played:"
             android:textColor="@color/darkblue"
+            android:visibility="gone"
             android:textSize="14sp" />
 
         <TextView
@@ -74,6 +76,7 @@
             android:textSize="14sp"
             android:layout_gravity="center"
             android:layout_width="wrap_content"
+            android:visibility="gone"
             android:layout_height="wrap_content" />
 
         <!--    Horizontal Rule -->
@@ -85,6 +88,7 @@
             android:layout_marginTop="10dp"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
+            android:visibility="gone"
             />
 
         <TextView
@@ -155,11 +159,13 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_marginEnd="4dp"
+            android:paddingBottom="5dp"
             android:scaleType="centerCrop"
             android:layout_gravity="center"
             android:clipToOutline="true"
             app:shapeAppearanceOverlay="@style/CircularImage"
             android:src="@drawable/ic_person_24" />
+
 
     </LinearLayout>
 

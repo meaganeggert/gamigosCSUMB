@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.gms.tasks.Tasks;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
@@ -43,8 +44,10 @@ import com.example.gamigosjava.data.model.MatchSummary;
 import com.example.gamigosjava.data.model.OnDateTimePicked;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.UserGameMetric;
+import com.example.gamigosjava.data.repository.AchievementAwarder;
 import com.example.gamigosjava.data.repository.EventsRepo;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
+import com.example.gamigosjava.ui.AchievementNotifier;
 import com.example.gamigosjava.ui.adapter.ImageAdapter;
 import com.example.gamigosjava.ui.adapter.MatchAdapter;
 import com.google.firebase.Timestamp;
@@ -53,10 +56,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -482,6 +488,27 @@ public class ViewEventActivity extends BaseActivity {
                     matchResults.add(user);
                 }
 
+                // Adding players to match class for easier queries
+                List<String> playerIds = new ArrayList<>();
+                for (Player p : matchResults) {
+                    if (p.friend != null && p.friend.id != null && !p.friend.id.isEmpty()) {
+                        if (!playerIds.contains(p.friend.id)) {
+                            playerIds.add(p.friend.id);
+                        }
+                    }
+                }
+
+                db.collection("matches")
+                        .document(m.id)
+                        .set(
+                                Collections.singletonMap("playerIds", playerIds),
+                                SetOptions.merge()
+                        )
+                        .addOnSuccessListener(v ->
+                                Log.d(TAG, "Updated playerIds for match " + m.id))
+                        .addOnFailureListener(e ->
+                                Log.e(TAG, "Failed to update playerIds: " + e.getMessage()));
+
                 // Update each users metrics
                 for (Player p: matchResults) {
                     if (p.friend.id == null || p.friend.id.isEmpty()) continue;
@@ -526,8 +553,11 @@ public class ViewEventActivity extends BaseActivity {
                         HashMap<String, Object> metricHash = new HashMap<>();
 
                         UserGameMetric result = new UserGameMetric();
+
+                        boolean isWinner = (p.placement != null && p.placement == 1);
+
                         // Set default values for user match results.
-                        if (p.placement == 1) {
+                        if (isWinner) {
                             result.timesWon++;
                             result.winStreak++;
                             result.bestWinStreak++;
@@ -621,8 +651,58 @@ public class ViewEventActivity extends BaseActivity {
                         metricHash.put("first_time_played", result.firstTimePlayed);
                         metricHash.put("last_time_played", result.lastTimePlayed);
 
-                        gameMetric.set(metricHash).addOnSuccessListener(v -> Log.d(TAG, "Successfully updated user game metrics.")).addOnFailureListener(e -> Log.e(TAG, "Failed to update user game metrics: " + e.getMessage()));
-                    }).addOnFailureListener(e -> Log.e(TAG, "Failed to find user game metrics: " + e.getMessage()));
+                        gameMetric.set(metricHash)
+                                .addOnSuccessListener(v -> {
+                                    Log.d(TAG, "Successfully updated user game metrics.");
+
+                                    // Award game-specific achievements
+                                    AchievementAwarder awarder = new AchievementAwarder(db);
+                                    awarder.awardGameSpecificAchievements(p.friend.id, m.gameId)
+                                            .addOnSuccessListener(earned -> {
+                                                Log.i(TAG, "Game Specific Achievements Awarded");
+                                                if (earned != null && !earned.isEmpty()) {
+                                                    AchievementNotifier notifier = new AchievementNotifier(this, findViewById(R.id.main));
+                                                    for (String title : earned) {
+                                                        notifier.pickAchievementBanner(title, null);
+                                                    }
+                                                }
+                                            })
+                                            .addOnFailureListener( e-> {
+                                                Log.e(TAG, "Game Specific Achievements Flow FAILED.");
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
+                                });
+
+                        if (isWinner) {
+                            String winnerId = p.friend.id;
+
+                            DocumentReference winner_Ref = db.collection("users").document(winnerId);
+                            DocumentReference game_Ref   = m.gameRef;
+
+                            Tasks.whenAllSuccess(
+                                    winner_Ref.get(),
+                                    game_Ref.get()
+                            ).addOnSuccessListener(list -> {
+                                DocumentSnapshot winnerSnap = (DocumentSnapshot) list.get(0);
+                                DocumentSnapshot gameSnap   = (DocumentSnapshot) list.get(1);
+
+                                String winnerName = winnerSnap.getString("displayName");
+                                String avatarUrl  = winnerSnap.getString("photoUrl");
+                                String gameImage  = gameSnap.getString("imageUrl");
+                                String gameName = gameSnap.getString("title");
+
+                                Log.i(TAG, "Adding match with winner: " + winnerName + " of game: " + gameSnap.getString("title"));
+                                Log.i(TAG, winnerName + " is on a " + result.winStreak + " game win streak, and has won " + result.timesWon + " times total.");
+                                addMatchAsFeedActivity( winnerId, winnerName, avatarUrl, result.winStreak, result.timesWon, m.gameId, gameName, gameImage, false);
+                            }).addOnFailureListener(e ->
+                                    Log.e(TAG, "Failed to load winner/game for activity: " + e.getMessage()));
+                        }
+
+                    }).addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to find user game metrics: " + e.getMessage());
+                    });
 
 
                 }
@@ -632,7 +712,33 @@ public class ViewEventActivity extends BaseActivity {
     }
 
 
+    private void addMatchAsFeedActivity(String winnerUid, String winnerName, String winnerAvatarUrl, long streakCount, long winCount, String gameId, String gameName, String gameImageUrl, Boolean isCoOpGame) {
+        // TODO: Upload match details as a feed activity
+        Map<String, Object> activity = new HashMap<>();
 
+        // Construct message
+        String message = " won a game of " + gameName;
+
+        activity.put("type", "MATCH_WON");
+        activity.put("createdAt", FieldValue.serverTimestamp());
+        activity.put("actorId", winnerUid);
+        activity.put("actorName", winnerName);
+        activity.put("actorImage", winnerAvatarUrl);
+        activity.put("targetId", gameId);
+        activity.put("targetImage", gameImageUrl);
+        activity.put("message", message);
+        activity.put("winStreak", streakCount);
+        activity.put("totalWinsPerGame", winCount);
+
+        db.collection("activities")
+                .add(activity)
+                .addOnSuccessListener( doc -> {
+                    Log.d(TAG, "Added match win as activity: " + doc.getId());
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Failed to add match win as activity: " + e.getMessage());
+                });
+    }
 
     private void getGameDetails(Match match) {
         DocumentReference gameDoc = match.gameRef;
@@ -652,7 +758,12 @@ public class ViewEventActivity extends BaseActivity {
             Integer minPlayers = snap.get("minPlayers", Integer.class);
             Integer playingTime = snap.get("playingTime", Integer.class);
 
-            MatchSummary matchSummary = new MatchSummary(match.id, eventId, title, imageUrl, minPlayers, maxPlayers, playingTime);
+            String displayTitle = match.gameName;
+            if (displayTitle == null || displayTitle.trim().isEmpty()) {
+                displayTitle = title;
+            }
+
+            MatchSummary matchSummary = new MatchSummary(match.id, eventId, displayTitle, imageUrl, minPlayers, maxPlayers, playingTime);
 
             boolean matchInList = false;
             for (int i = 0; i < matchSummaryList.size(); i++) {
@@ -701,7 +812,7 @@ public class ViewEventActivity extends BaseActivity {
             eventItem.notes = snap.getString("notes");
             setEventForm(eventItem);
 
-            if(eventItem.status.equals("active")) {
+            if("active".equals(eventItem.status)) {
                 startEvent.setEnabled(false);
                 endEvent.setEnabled(true);
             }
@@ -859,7 +970,7 @@ public class ViewEventActivity extends BaseActivity {
 
         setHostUIElements();
 
-        if (event.status.equals("past")) {
+        if ("past".equals(event.status)) {
             startEvent.setEnabled(false);
             endEvent.setEnabled(false);
             deleteEvent.setEnabled(false);

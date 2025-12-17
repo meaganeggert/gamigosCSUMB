@@ -35,6 +35,18 @@
             android:fontFamily="@font/jetbrains_mono"
             android:textSize="16sp" />
 
+        <ImageButton
+            android:id="@+id/btnFavoriteFriend"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_favorite_halo"
+            android:contentDescription="@string/favorites"
+            android:src="@drawable/sharp_star_border_32"
+            android:scaleType="center"
+            android:padding="6dp"
+            app:tint="@color/yellow" />
+
         <Button
             android:id="@+id/btnMessageFriend"
             android:layout_width="wrap_content"

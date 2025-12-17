@@ -2,14 +2,26 @@ package com.example.gamigosjava.data.model;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MatchSummary {
-    public final String id;
-    public final String eventId;
-    public final String title;
-    public final String imageUrl;
-    public final Integer minPlayers;
-    public final Integer maxPlayers;
-    public final Integer playingTime;  // minutes
+    public String id;
+    public String eventId;
+    public String title;
+    public String imageUrl;
+    public Integer minPlayers;
+    public Integer maxPlayers;
+    public Integer playingTime;  // minutes
+
+    public List<String> playerNames = new ArrayList<>();
+    public List<String> playerIds = new ArrayList<>();
+    public List<String> playerAvatars = new ArrayList<>();
+    public String winnerId;
+    public String winnerName;
+    public String winnerAvatarUrl;
+
+    public MatchSummary() {}
 
     public MatchSummary(String id, String eventId, String title, String imageUrl,
                        Integer minPlayers, Integer maxPlayers, Integer playingTime) {

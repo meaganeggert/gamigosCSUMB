@@ -27,6 +27,7 @@ import com.google.firebase.firestore.WriteBatch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class FriendsLanding extends BaseActivity {
@@ -37,13 +38,18 @@ public class FriendsLanding extends BaseActivity {
     private TextView tvRequestsHeader;
     private FriendsListAdapter friendsAdapter;
     private FriendRequestRowAdapter requestsAdapter;
-    private final List<Map<String, Object>> friendlist = new ArrayList<>();
     private final List<FriendRequestRowAdapter.RequestRow> requestRows = new ArrayList<>();
     private ListenerRegistration friendsListener;
     private ListenerRegistration incomingListener;
     private ListenerRegistration outgoingListener;
     private RecyclerView rvRequests;
     private String focusRequestUid;
+
+    //  For favorites list
+    private RecyclerView rvFavorites;
+    private FriendsListAdapter favoritesAdapter;
+    private final List<Map<String, Object>> favoriteList = new ArrayList<>();
+    private final List<Map<String, Object>> nonFavoriteList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +103,7 @@ public class FriendsLanding extends BaseActivity {
         RecyclerView rvFriends = findViewById(R.id.rvFriends);
         rvFriends.setLayoutManager(new LinearLayoutManager(this));
 
-        friendsAdapter = new FriendsListAdapter(friendlist, new FriendsListAdapter.FriendActionListener() {
+        friendsAdapter = new FriendsListAdapter(nonFavoriteList, new FriendsListAdapter.FriendActionListener() {
             @Override
             public void onProfileClick(Map<String, Object> friend) {
                 String friendUid = (String) friend.get("uid");
@@ -112,8 +118,44 @@ public class FriendsLanding extends BaseActivity {
                 String friendName = (String) friend.get("displayName");
                 ensureDmAndOpen(friendUid, friendName);
             }
+
+            @Override
+            public void onFavoriteToggle(Map<String, Object> friend, boolean newValue) {
+                String uid = (String) friend.get("uid");
+                if (uid != null) setFavorite(uid, newValue);
+            }
         });
         rvFriends.setAdapter(friendsAdapter);
+
+        //  Initializing Favorites RecyclerView
+        rvFavorites = findViewById(R.id.rvFavorites);
+
+        rvFavorites.setLayoutManager(new LinearLayoutManager(this));
+        favoritesAdapter = new FriendsListAdapter(favoriteList, new FriendsListAdapter.FriendActionListener() {
+            @Override
+            public void onProfileClick(Map<String, Object> friend) {
+                String friendUid = (String) friend.get("uid");
+                Intent intent = new Intent(FriendsLanding.this, ViewUserProfileActivity.class);
+                intent.putExtra("USER_ID", friendUid);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onMessageClick(Map<String, Object> friend) {
+                String friendUid = (String) friend.get("uid");
+                String friendName = (String) friend.get("displayName");
+                ensureDmAndOpen(friendUid, friendName);
+            }
+
+            @Override
+            public void onFavoriteToggle(Map<String, Object> friend, boolean newValue) {
+                String uid = (String) friend.get("uid");
+                if (uid != null) setFavorite(uid, newValue);
+            }
+        });
+        rvFavorites.setAdapter(favoritesAdapter);
+
+        //  Set up listeners
         listenForFriends();
         listenForIncomingRequests();
         listenForOutgoingRequests();
@@ -180,6 +222,24 @@ public class FriendsLanding extends BaseActivity {
         convoRef.collection("participantsData").document(uid).set(pd);
     }
 
+    private void sortFriendsByNameThenUid(List<Map<String, Object>> list) {
+        list.sort((a, b) -> {
+            String an = (String) a.get("displayName");
+            String bn = (String) b.get("displayName");
+
+            if (an == null) an = "";
+            if (bn == null) bn = "";
+
+            int nameCmp = an.toLowerCase(Locale.US).compareTo(bn.toLowerCase(Locale.US));
+            if (nameCmp != 0) return nameCmp;
+
+            String au = (String) a.get("uid");
+            String bu = (String) b.get("uid");
+            if (au == null) au = "";
+            if (bu == null) bu = "";
+            return au.compareTo(bu);
+        });
+    }
 
     private void listenForFriends() {
         if (currentUser == null) {
@@ -194,15 +254,46 @@ public class FriendsLanding extends BaseActivity {
                 .addSnapshotListener((snap, e) -> {
                     if (e != null || snap == null) return;
 
-                    friendlist.clear();
+                    favoriteList.clear();
+                    nonFavoriteList.clear();
+
                     for (DocumentSnapshot doc : snap.getDocuments()) {
                         Map<String, Object> friend = new HashMap<>();
                         friend.put("uid", doc.getId());
                         friend.put("displayName", doc.getString("displayName"));
                         friend.put("photoUrl", doc.getString("photoUrl"));
-                        friendlist.add(friend);
+
+                        Boolean fav = doc.getBoolean("favorite");
+                        boolean isFavorite = fav != null && fav;
+                        friend.put("favorite", isFavorite);
+
+                        if (isFavorite) favoriteList.add(friend);
+                        else nonFavoriteList.add(friend);
                     }
+
+                    sortFriendsByNameThenUid(favoriteList);
+                    sortFriendsByNameThenUid(nonFavoriteList);
+
+                    boolean hasFavorites = !favoriteList.isEmpty();
+                    rvFavorites.setVisibility(hasFavorites ? View.VISIBLE : View.GONE);
+
+                    favoritesAdapter.notifyDataSetChanged();
                     friendsAdapter.notifyDataSetChanged();
+                });
+    }
+
+    private void setFavorite(String friendUid, boolean isFavorite) {
+        if (currentUser == null) return;
+
+        String myUid = currentUser.getUid();
+        db.collection("users")
+                .document(myUid)
+                .collection("friends")
+                .document(friendUid)
+                .update("favorite", isFavorite)
+                .addOnFailureListener(err -> {
+                    Log.w(TAG, "Failed to update favorite for " + friendUid, err);
+                    Toast.makeText(this, "Failed to update favorite", Toast.LENGTH_SHORT).show();
                 });
     }
 
