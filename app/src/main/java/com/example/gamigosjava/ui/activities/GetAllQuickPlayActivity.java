@@ -46,7 +46,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_get_all_quick_play);
-        setTopTitle("Quick Play");
+        setTopTitle("Games");
 
         recyclerView = findViewById(R.id.recyclerViewQuickPlayMatches);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -103,7 +103,6 @@ public class GetAllQuickPlayActivity extends BaseActivity {
         if (currentUser == null) return;
 
         Query query = db.collection("matches")
-                        .whereEqualTo("eventId", "")
                         .orderBy("updatedAt", Query.Direction.DESCENDING);
 
         query.addSnapshotListener((snaps, e) -> {
