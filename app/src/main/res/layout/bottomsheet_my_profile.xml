@@ -206,6 +206,7 @@
                 android:autoSizeStepGranularity="1sp"
                 android:maxLines="1"
                 android:backgroundTint="#8f4f00"
+                android:visibility="gone"
                 android:textColor="@color/lightgrey"/>
 
             <Button

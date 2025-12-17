@@ -117,7 +117,8 @@ public class ProfileActivity extends BaseActivity {
         Button backfill = findViewById(R.id.buttonBackfill);
         if (backfill != null) {
             backfill.setOnClickListener(v -> {
-                backfillMatchPlayerIds();
+//                backfillMatchPlayerIds();
+                backfillMatchGameNames();
             });
         }
 
@@ -184,6 +185,73 @@ public class ProfileActivity extends BaseActivity {
                 .addOnFailureListener(e ->
                         Log.e(TAG, "Failed to read matches collection", e));
     }
+
+    private void backfillMatchGameNames() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final String TAG = "BackfillGameNames";
+
+        db.collection("matches")
+                .get()
+                .addOnSuccessListener(matchSnaps -> {
+                    Log.d(TAG, "Found " + matchSnaps.size() + " matches to backfill");
+
+                    if (matchSnaps.isEmpty()) return;
+
+                    for (DocumentSnapshot matchDoc : matchSnaps.getDocuments()) {
+                        String matchId = matchDoc.getId();
+
+                        String existingName = matchDoc.getString("gameName");
+                        if (existingName != null && !existingName.trim().isEmpty()) {
+                            Log.d(TAG, "Match " + matchId + " already has gameName, skipping it.");
+                            continue;
+                        }
+
+                        DocumentReference gameRef = matchDoc.getDocumentReference("gameRef");
+                        if (gameRef == null) {
+                            Log.d(TAG, "Match " + matchId + " has no gameRef. Can't add.");
+                            continue;
+                        }
+
+                        gameRef.get()
+                                .addOnSuccessListener(gameSnap -> {
+                                    if (gameSnap == null || !gameSnap.exists()) {
+                                        Log.d(TAG, "Game doc missing for match: " + matchId +
+                                                " at " + gameRef.getPath());
+                                        return;
+                                    }
+
+                                    String title      = gameSnap.getString("title");
+                                    String imageUrl   = gameSnap.getString("imageUrl");
+                                    Integer minPlayers = gameSnap.get("minPlayers", Integer.class);
+                                    Integer maxPlayers = gameSnap.get("maxPlayers", Integer.class);
+                                    Integer playingTime = gameSnap.get("playingTime", Integer.class);
+
+                                    if (title == null || title.trim().isEmpty()) {
+                                        Log.d(TAG, "Game " + gameRef.getPath() +
+                                                " has no title. Can't add.");
+                                        return;
+                                    }
+
+                                    Map<String, Object> updates = new HashMap<>();
+                                    updates.put("gameName", title);
+
+                                    matchDoc.getReference()
+                                            .set(updates, com.google.firebase.firestore.SetOptions.merge())
+                                            .addOnSuccessListener(v ->
+                                                    Log.d(TAG, "Backfilled gameName for match: "
+                                                            + matchId + " -> " + title))
+                                            .addOnFailureListener(e ->
+                                                    Log.e(TAG, "Failed to backfill gameNames for match: " + matchId, e));
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "Failed to load game for match: " + matchId, e);
+                                });
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to read matches collection", e));
+    }
+
 
 
     private void uploadPhotoToStorage(Uri imageUri) {

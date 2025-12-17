@@ -124,7 +124,7 @@ public class ViewEventActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter();
+        matchAdapter = new MatchAdapter(false);
         recyclerView.setAdapter(matchAdapter);
 
         eventContainer = findViewById(R.id.eventFormContainer);
@@ -290,7 +290,7 @@ public class ViewEventActivity extends BaseActivity {
 
         recyclerView = findViewById(R.id.recyclerViewMatchGame);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter();
+        matchAdapter = new MatchAdapter(false);
         recyclerView.setAdapter(matchAdapter);
 
     }
@@ -452,6 +452,7 @@ public class ViewEventActivity extends BaseActivity {
                         matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
                         assert matchResult.gameRef != null;
                         matchResult.gameId = matchResult.gameRef.getId();
+                        matchResult.gameName = matchSnap.getString("gameName");
 
                         matchResult.playersRef = db
                                 .collection("matches")
@@ -773,7 +774,7 @@ public class ViewEventActivity extends BaseActivity {
             boolean matchInList = false;
             for (int i = 0; i < matchSummaryList.size(); i++) {
                 if (matchSummaryList.get(i).id.equals(matchSummary.id)) {
-                    Log.d(TAG, "MATCH WAS FOUND IN LIST FOR GAME DETAILS FUNCTION: " + matchSummary.title);
+                    Log.d(TAG, "MATCH WAS FOUND IN LIST FOR GAME DETAILS FUNCTION: " + matchSummary.gameName);
                     matchInList = true;
                     matchSummaryList.set(i, matchSummary);
                     matchAdapter.setItems(matchSummaryList);

@@ -60,7 +60,7 @@ public class MatchLandingActivity extends BaseActivity {
         // RecyclerView + Adapter
         recyclerViewMatches = findViewById(R.id.recyclerView_Matches);
         recyclerViewMatches.setLayoutManager(new LinearLayoutManager(this));
-        matchAdapter = new MatchAdapter();
+        matchAdapter = new MatchAdapter(false);
         recyclerViewMatches.setAdapter(matchAdapter);
 
         // Allow the individual events to be clickable
