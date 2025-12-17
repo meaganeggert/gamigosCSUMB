@@ -172,7 +172,7 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
                             FirestoreUtils.deleteCollection(db, matchDoc.collection("players"), 10).onSuccessTask(v -> {
                                 Toast.makeText(context, "Deleted match score results.", Toast.LENGTH_SHORT).show();
                                 matchDoc.delete().onSuccessTask(matchVoid -> {
-                                    Toast.makeText(context, "Deleted game " + match.title, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "Deleted game " + match.gameName, Toast.LENGTH_SHORT).show();
                                     matches.remove(match);
                                     notifyDataSetChanged();
                                     return null;
