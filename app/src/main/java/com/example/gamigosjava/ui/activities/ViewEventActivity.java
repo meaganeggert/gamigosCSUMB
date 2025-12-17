@@ -1072,15 +1072,22 @@ public class ViewEventActivity extends BaseActivity {
                         friendList.add(f);
                         friendAdapter.notifyDataSetChanged();
                         friendDropdown.setSelection(friendList.indexOf(f));
+
+                        if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
+                            Log.d("RSVP", "Current User ID: " + currentUser.getUid());
+                            Log.d("RSVP", "ID: " + f.id + " Status: " + status);
+                            createRSVPDialog();
+                            setUIElements();
+                        }
                     }
 
                     currentInvitee.userRef = userRef;
                     currentInvitee.userInfo = f;
 
-                    if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
-                        createRSVPDialog();
-                        setUIElements();
-                    }
+//                    if (f.id.equals(currentUser.getUid()) && currentInvitee.status.equals("invited")) {
+//                        createRSVPDialog();
+//                        setUIElements();
+//                    }
 
                 }).addOnFailureListener(e ->
                         Log.e(TAG, "Failed to get friend invite: " + e.getMessage()));
