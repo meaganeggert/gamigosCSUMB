@@ -8,24 +8,24 @@
     app:cardElevation="2dp"
     app:strokeWidth="1dp"
     app:strokeColor="#33000000"
-    android:background="?attr/colorSurface" >
+    app:cardBackgroundColor="@color/neutraltan">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:gravity="center_vertical"
-        android:background="@color/neutraltan">
+        android:gravity="center_vertical">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivAvatar"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:scaleType="centerCrop"
             android:src="@android:drawable/picture_frame"
             android:contentDescription="@string/profile_photo"
-            android:layout_marginEnd="12dp"/>
+            android:layout_marginEnd="12dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay_CircleImageView"/>
 
         <TextView
             android:id="@+id/tvName"
@@ -41,6 +41,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/accept"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="#1b3b00"
+            android:textColor="@color/lightgrey"
+            android:layout_marginEnd="8dp"
             android:visibility="gone"/>
 
         <Button
@@ -48,6 +52,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/decline"
+            android:fontFamily="@font/jetbrains_mono"
+            android:backgroundTint="#4f0000"
+            android:textColor="@color/lightgrey"
             android:visibility="gone"/>
 
         <Button

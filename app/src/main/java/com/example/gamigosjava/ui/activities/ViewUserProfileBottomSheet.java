@@ -56,7 +56,7 @@ public class ViewUserProfileBottomSheet extends BottomSheetDialogFragment {
 
     private ImageView ivAvatar;
     private TextView tvName, tvEmail;
-    private Button btnPrimary, btnSecondary;
+    private Button btnPrimary, btnSecondary, btnPending;
 
     private String myUid;
     private String viewedUserId;
@@ -108,6 +108,7 @@ public class ViewUserProfileBottomSheet extends BottomSheetDialogFragment {
         tvEmail = view.findViewById(R.id.tvEmail);
         btnPrimary = view.findViewById(R.id.btnPrimaryAction);
         btnSecondary = view.findViewById(R.id.btnSecondaryAction);
+        btnPending = view.findViewById(R.id.btnPendingDisabled);
 
         loadProfile();
         startRelationshipListeners();
@@ -244,28 +245,31 @@ public class ViewUserProfileBottomSheet extends BottomSheetDialogFragment {
         switch (currentRelation) {
             case REL_NONE:
                 btnPrimary.setText(R.string.add_friend);
-                btnPrimary.setEnabled(true);
+                btnPrimary.setVisibility(View.VISIBLE);
                 btnSecondary.setVisibility(View.GONE);
+                btnPending.setVisibility(View.GONE);
                 break;
 
             case REL_OUTGOING:
-                btnPrimary.setText(R.string.pending);
-                btnPrimary.setEnabled(false);
+                btnPrimary.setVisibility(View.GONE);
                 btnSecondary.setVisibility(View.GONE);
+                btnPending.setVisibility(View.VISIBLE);
                 break;
 
             case REL_INCOMING:
                 btnPrimary.setText(R.string.accept);
-                btnPrimary.setEnabled(true);
+                btnPrimary.setVisibility(View.VISIBLE);
                 btnSecondary.setText(R.string.deny);
                 btnSecondary.setVisibility(View.VISIBLE);
+                btnPending.setVisibility(View.GONE);
                 break;
 
             case REL_FRIEND:
                 btnPrimary.setText(R.string.message);
-                btnPrimary.setEnabled(true);
+                btnPrimary.setVisibility(View.VISIBLE);
                 btnSecondary.setText(R.string.unfriend);
                 btnSecondary.setVisibility(View.VISIBLE);
+                btnPending.setVisibility(View.GONE);
                 break;
         }
     }

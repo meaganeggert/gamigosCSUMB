@@ -68,24 +68,32 @@ public class UserAdapter extends RecyclerView.Adapter<UserViewHolder> {
 
         switch (status) {
             case STATUS_NONE:
-                holder.btnAddFriend.setText("Add");
-                holder.btnAddFriend.setEnabled(true);
+                holder.btnAddFriend.setVisibility(View.VISIBLE);
+                holder.btnAcceptFriend.setVisibility(View.GONE);
                 holder.btnDenyFriend.setVisibility(View.GONE);
+                holder.btnPending.setVisibility(View.GONE);
+                holder.btnFriend.setVisibility(View.GONE);
                 break;
             case STATUS_PENDING:
-                holder.btnAddFriend.setText("Pending");
-                holder.btnAddFriend.setEnabled(false);
+                holder.btnAddFriend.setVisibility(View.GONE);
+                holder.btnAcceptFriend.setVisibility(View.GONE);
                 holder.btnDenyFriend.setVisibility(View.GONE);
+                holder.btnPending.setVisibility(View.VISIBLE);
+                holder.btnFriend.setVisibility(View.GONE);
                 break;
             case STATUS_FRIEND:
-                holder.btnAddFriend.setText("Friend");
-                holder.btnAddFriend.setEnabled(false);
+                holder.btnAddFriend.setVisibility(View.GONE);
+                holder.btnAcceptFriend.setVisibility(View.GONE);
                 holder.btnDenyFriend.setVisibility(View.GONE);
+                holder.btnPending.setVisibility(View.GONE);
+                holder.btnFriend.setVisibility(View.VISIBLE);
                 break;
             case STATUS_INCOMING:
-                holder.btnAddFriend.setText("Accept");
-                holder.btnAddFriend.setEnabled(true);
+                holder.btnAddFriend.setVisibility(View.GONE);
+                holder.btnAcceptFriend.setVisibility(View.VISIBLE);
                 holder.btnDenyFriend.setVisibility(View.VISIBLE);
+                holder.btnPending.setVisibility(View.GONE);
+                holder.btnFriend.setVisibility(View.GONE);
                 break;
         }
 
@@ -104,6 +112,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserViewHolder> {
             if (listener != null) {
                 listener.onDenyClick(user);
             }
+        });
+
+        holder.btnAcceptFriend.setOnClickListener(v -> {
+            if (listener != null) listener.onAddClick(user);
         });
     }
 

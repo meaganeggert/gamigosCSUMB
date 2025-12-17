@@ -38,6 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/my_profile"
+                android:fontFamily="@font/oswald_light"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginTop="16dp"
@@ -51,6 +52,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textAlignment="center"
+                android:fontFamily="@font/jetbrains_mono"
                 android:textColor="#444444"
                 app:layout_constraintTop_toBottomOf="@id/tvProfileTitle"
                 app:layout_constraintStart_toStartOf="parent"
@@ -75,7 +77,7 @@
                     android:layout_gravity="center"
                     android:layout_marginBottom="8dp">
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/ivProfilePhoto"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -84,6 +86,7 @@
                         android:contentDescription="@string/profile_photo"
                         android:clickable="true"
                         android:focusable="true"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay_CircleImageView"
                         />
 
                     <!-- edit icon overlay -->
@@ -118,6 +121,7 @@
                         android:id="@+id/tvDisplayNameLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/oswald_light"
                         android:text="@string/display_name"
                         android:textStyle="bold"/>
 
@@ -127,6 +131,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="textPersonName"
                         android:hint="@string/display_name"
+                        android:fontFamily="@font/jetbrains_mono"
                         android:autofillHints="name"/>
 
                 </LinearLayout>
@@ -142,6 +147,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/privacy_options"
+                        android:fontFamily="@font/oswald_light"
                         android:textStyle="bold" />
 
                     <RadioGroup
@@ -154,18 +160,21 @@
                             android:id="@+id/rbPublic"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="@font/jetbrains_mono"
                             android:text="@string/public_option" />
 
                         <RadioButton
                             android:id="@+id/rbFriends"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="@font/jetbrains_mono"
                             android:text="@string/friends_only" />
 
                         <RadioButton
                             android:id="@+id/rbPrivate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="@font/jetbrains_mono"
                             android:text="@string/private_option" />
                     </RadioGroup>
 
@@ -178,7 +187,6 @@
                     android:layout_marginTop="16dp"
                     android:text="@string/save"
                     android:fontFamily="@font/jetbrains_mono"
-                    android:letterSpacing="0.1"
                     android:autoSizeMaxTextSize="24sp"
                     android:autoSizeMinTextSize="10sp"
                     android:autoSizeTextType="uniform"
@@ -199,7 +207,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:fontFamily="@font/jetbrains_mono"
-                android:letterSpacing="0.1"
                 android:autoSizeMaxTextSize="24sp"
                 android:autoSizeMinTextSize="10sp"
                 android:autoSizeTextType="uniform"
@@ -220,7 +227,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginBottom="6dp"
                 android:fontFamily="@font/jetbrains_mono"
-                android:letterSpacing="0.1"
                 android:autoSizeMaxTextSize="24sp"
                 android:autoSizeMinTextSize="10sp"
                 android:autoSizeTextType="uniform"

@@ -4,27 +4,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardElevation="2dp"
     android:layout_marginVertical="3dp"
+    app:cardElevation="2dp"
     app:strokeWidth="1dp"
     app:strokeColor="#33000000"
-     >
+    app:cardBackgroundColor="@color/neutraltan">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@color/neutraltan">
+        android:gravity="center_vertical">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivPhoto"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@drawable/ic_person_24"
             android:contentDescription="@string/friend_photo"
-            android:layout_marginEnd="12dp" />
+            android:layout_marginEnd="12dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay_CircleImageView"/>
 
         <TextView
             android:id="@+id/tvName"
@@ -45,7 +45,7 @@
             android:src="@drawable/sharp_star_border_32"
             android:scaleType="center"
             android:padding="6dp"
-            app:tint="@color/yellow" />
+            app:tint="#b18326" />
 
         <Button
             android:id="@+id/btnMessageFriend"
@@ -53,6 +53,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/jetbrains_mono"
             android:backgroundTint="@color/yellow"
+            android:textColor="@color/black"
             android:text="@string/message" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
