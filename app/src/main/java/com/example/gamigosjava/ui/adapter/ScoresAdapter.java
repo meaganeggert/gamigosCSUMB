@@ -9,12 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,13 +19,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.repository.FirestoreUtils;
-import com.example.gamigosjava.ui.activities.ViewEventActivity;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -37,6 +32,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     public List<Player> playerList = new ArrayList<>();
     private Context context;
     public String winRule = "highest";
+    public Integer teamNumber;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
@@ -143,10 +139,19 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         if (winRule.equals("custom")) {
             holder.playerPlacement.setVisibility(EditText.VISIBLE);
             holder.playerScore.setVisibility(EditText.GONE);
-        } else {
+        } else if (winRule.equals("cooperative") || winRule.equals("teams")) {
+            holder.playerPlacement.setVisibility(EditText.INVISIBLE);
+            holder.playerScore.setVisibility(EditText.INVISIBLE);
+        }else {
             holder.playerPlacement.setVisibility(EditText.GONE);
             holder.playerScore.setVisibility(EditText.VISIBLE);
         }
+    }
+
+    public void setTeamNumber(int teamNumber) {
+        this.teamNumber = teamNumber;
+
+        Log.d(TAG, "Set Team Number: " + this.teamNumber);
     }
 
     @Override
@@ -180,19 +185,26 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
         switch (winRule) {
             case ("highest"):
                 playerList.sort((p1, p2) -> Integer.compare(p2.score, p1.score));
+                for (int i = 0; i < playerList.size(); i++) {
+                    playerList.get(i).placement = i + 1;
+                }
                 break;
             case ("lowest"):
                 playerList.sort((p1, p2) -> Integer.compare(p1.score, p2.score));
+                for (int i = 0; i < playerList.size(); i++) {
+                    playerList.get(i).placement = i + 1;
+                }
                 break;
             case ("custom"):
                 playerList.sort((p1, p2) -> Integer.compare(p1.placement, p2.placement));
                 break;
+            case ("cooperative"):
+                // do something
+                break;
         }
 
         // With users sorted based on preferred placement rules, we can now just set the placements as the sorted order.10
-        for (int i = 0; i < playerList.size(); i++) {
-            playerList.get(i).placement = i + 1;
-        }
+
 
         CollectionReference playersCol = db.collection("matches").document(matchId).collection("players");
         FirestoreUtils.deleteCollection(db, playersCol, 10).onSuccessTask(v -> {
@@ -204,6 +216,10 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
                 playerHash.put("score", p.score);
                 playerHash.put("placement", p.placement);
                 playerHash.put("displayName", p.friend.displayName);
+
+                if (winRule.equals("cooperative") || winRule.equals("teams")) {
+                    playerHash.put("team", p.team);
+                }
 
                 playersCol.add(playerHash).addOnSuccessListener(doc -> {
                     Log.d(TAG, "Successfully added player details to database: " + p.friend.displayName);
