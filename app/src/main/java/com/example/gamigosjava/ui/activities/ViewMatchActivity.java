@@ -34,18 +34,24 @@ import com.example.gamigosjava.data.model.Player;
 import com.example.gamigosjava.data.model.SearchResponse;
 import com.example.gamigosjava.data.model.ThingResponse;
 import com.example.gamigosjava.data.model.UserGameMetric;
+import com.example.gamigosjava.data.repository.AchievementAwarder;
+import com.example.gamigosjava.ui.AchievementNotifier;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -1209,6 +1215,8 @@ public class ViewMatchActivity extends BaseActivity {
                 return;
             }
 
+            boolean isCoop = "cooperative".equals(m.winRule);
+
             List<Player> matchResults = new ArrayList<>();
             for (DocumentSnapshot player: snaps) {
                 Player user = new Player();
@@ -1218,6 +1226,24 @@ public class ViewMatchActivity extends BaseActivity {
 
                 matchResults.add(user);
             }
+
+            List<String> playerIds = new ArrayList<>();
+            for (Player p : matchResults) {
+                if (p.friend != null && p.friend.id != null && !p.friend.id.isEmpty()) {
+                    if (!playerIds.contains(p.friend.id)) {
+                        playerIds.add(p.friend.id);
+                    }
+                }
+            }
+
+            db.collection("matches")
+                    .document(m.id)
+                    .set(Collections.singletonMap("playerIds", playerIds), SetOptions.merge())
+                    .addOnSuccessListener(v ->
+                            Log.d(TAG, "Updated playerIds for quickplay match " + m.id))
+                    .addOnFailureListener(e ->
+                            Log.e(TAG, "Failed to update playerIds for quickplay: " + e.getMessage()));
+
 
             // Update each users metrics
             for (Player p: matchResults) {
@@ -1263,8 +1289,11 @@ public class ViewMatchActivity extends BaseActivity {
                     HashMap<String, Object> metricHash = new HashMap<>();
 
                     UserGameMetric result = new UserGameMetric();
+
+                    boolean isWinner = (p.placement != null && p.placement == 1);
+
                     // Set default values for user match results.
-                    if (p.placement == 1) {
+                    if (isWinner) {
                         result.timesWon++;
                         result.winStreak++;
                         result.bestWinStreak++;
@@ -1360,6 +1389,19 @@ public class ViewMatchActivity extends BaseActivity {
 
                     gameMetric.set(metricHash).addOnSuccessListener(v -> {
                         Log.d(TAG, "Successfully updated user game metrics.");
+
+                        // Award game-specific achievements
+                        AchievementAwarder awarder = new AchievementAwarder(db);
+                        awarder.awardGameSpecificAchievements(p.friend.id, m.gameId)
+                                .addOnSuccessListener(earned -> {
+                                    Log.i(TAG, "Game Specific Achievements Awarded");
+                                    if (earned != null && !earned.isEmpty()) {
+                                        AchievementNotifier notifier =
+                                                new AchievementNotifier(this, findViewById(R.id.main));
+                                        for (String title : earned) {
+                                            notifier.pickAchievementBanner(title, null);
+                                        }
+                                    }
                     }).addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to update user game metrics: " + e.getMessage());
                     });
@@ -1371,6 +1413,34 @@ public class ViewMatchActivity extends BaseActivity {
             }
         });
 
+    }
+
+    private void addMatchAsFeedActivity(String winnerUid, String winnerName, String winnerAvatarUrl, long streakCount, long winCount, String gameId, String gameName, String gameImageUrl, Boolean isCoOpGame) {
+        // TODO: Upload match details as a feed activity
+        Map<String, Object> activity = new HashMap<>();
+
+        // Construct message
+        String message = " won a game of " + gameName;
+
+        activity.put("type", "MATCH_WON");
+        activity.put("createdAt", FieldValue.serverTimestamp());
+        activity.put("actorId", winnerUid);
+        activity.put("actorName", winnerName);
+        activity.put("actorImage", winnerAvatarUrl);
+        activity.put("targetId", gameId);
+        activity.put("targetImage", gameImageUrl);
+        activity.put("message", message);
+        activity.put("winStreak", streakCount);
+        activity.put("totalWinsPerGame", winCount);
+
+        db.collection("activities")
+                .add(activity)
+                .addOnSuccessListener( doc -> {
+                    Log.d(TAG, "Added quickplay match win as activity: " + doc.getId());
+                })
+                .addOnFailureListener( e-> {
+                    Log.e(TAG, "Failed to add quickplay match win as activity: " + e.getMessage());
+                });
     }
 }
 
