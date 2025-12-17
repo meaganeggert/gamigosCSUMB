@@ -37,7 +37,11 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
     private final List<MatchSummary> matches = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     public boolean isHost = true;
+    public boolean isRecent = true;
 
+//    public MatchAdapter(boolean isRecent) {
+//        this.isRecent = isRecent;
+//    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
@@ -72,9 +76,13 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(@NonNull MatchAdapter.ViewHolder holder, int position) {
 
-        holder.players.setVisibility(View.GONE);
-        holder.attendeeRecycler.setVisibility(View.GONE);
-        holder.playtime.setVisibility(View.GONE);
+//        if (isRecent) {
+//            holder.title.setVisibility(GONE);
+//        }
+
+        holder.players.setVisibility(GONE);
+        holder.attendeeRecycler.setVisibility(GONE);
+        holder.playtime.setVisibility(GONE);
 
         MatchSummary match = matches.get(position);
         List<Attendee> playerList = new ArrayList<>();
@@ -87,9 +95,9 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
         holder.attendeeRecycler.setAdapter(playerAdapter);
 
 
-        Log.d("MatchAdapter", "Binding: " + match.title);
+        Log.d("MatchAdapter", "Binding: " + match.gameName);
 
-        holder.title.setText(match.title != null ? match.title : "Unknown");
+        holder.title.setText(match.gameName != null ? match.gameName : "Unknown");
 //        holder.players.setText("Players: " + (match.minPlayers != null ? match.minPlayers : "?"));
         holder.playtime.setText("Playtime: " + (match.playingTime != null ? match.playingTime + " min" : "?"));
 
@@ -141,7 +149,7 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
             Context context = v.getContext();
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Confirm Deletion")
-                    .setMessage("Are you sure you want to delete this game (" + match.title + ")? This action cannot be undone.")
+                    .setMessage("Are you sure you want to delete this game (" + match.gameName + ")? This action cannot be undone.")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

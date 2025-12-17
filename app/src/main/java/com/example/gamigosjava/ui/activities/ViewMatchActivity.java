@@ -996,6 +996,7 @@ public class ViewMatchActivity extends BaseActivity {
         matchItem.notes = notesValue.getText().toString();
         matchItem.rulesVariant = ruleChangeValue.getText().toString();
         matchItem.gameId = game.id;
+        matchItem.gameName = game.title;
         matchItem.imageUrl = game.imageUrl;
         matchItem.updatedAt = Timestamp.now();
         matchItem.teamCount = matchResultList.size();
@@ -1012,6 +1013,7 @@ public class ViewMatchActivity extends BaseActivity {
         match.put("updatedAt",  matchItem.updatedAt);
         match.put("winRule", matchItem.winRule);
         match.put("teamCount", matchItem.teamCount);
+        match.put("gameName", matchItem.gameName);
 
         if (game.id != null) {
             match.put("gameRef", db.collection("games").document(game.id));
@@ -1176,11 +1178,13 @@ public class ViewMatchActivity extends BaseActivity {
             String rulesVariantResult = snap.getString("rules_variant");
             String hostId = snap.getString("hostId");
             String winRule = snap.getString("winRule");
+            String gameName = snap.getString("gameName");
             Integer teamCount = snap.get("teamCount", Integer.class);
 
             if (id != null) matchItem.id = id;
             if (endedAt != null) matchItem.endedAt = endedAt;
             if (gameRef != null) matchItem.gameRef = gameRef;
+            if (gameName != null) matchItem.gameName = gameName;
             if (startedAt != null) matchItem.startedAt = startedAt;
             if (notes != null) matchItem.notes = notes;
             if (eventIdResult != null) {
