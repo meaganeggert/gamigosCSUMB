@@ -35,7 +35,7 @@
 
     <!--    Horizontal Rule -->
     <View
-        android:id="@+id/activeHR"
+        android:id="@+id/activeHRTop"
         android:layout_width="0dp"
         android:layout_height="3dp"
         android:background="@color/neutralbrown"
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:text="Active Events"
         android:gravity="center"
-        android:textColor="@color/grey"
+        android:textColor="@color/black"
         android:textSize="19sp"
         android:fontFamily="@font/oswald_light"
         android:letterSpacing="0.05"
@@ -109,7 +109,7 @@
         android:layout_height="wrap_content"
         android:text="Past Events"
         android:gravity="center"
-        android:textColor="@color/grey"
+        android:textColor="@color/black"
         android:textSize="19sp"
         android:fontFamily="@font/oswald_light"
         android:letterSpacing="0.05"

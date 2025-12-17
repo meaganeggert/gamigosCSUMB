@@ -16,7 +16,6 @@
         android:layout_height="80dp"
         android:scaleType="centerCrop"
         android:layout_gravity="center_vertical"
-        android:background="#AAA"
         android:src="@drawable/gamigos_die"/>
 
     <LinearLayout

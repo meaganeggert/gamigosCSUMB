@@ -17,6 +17,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.Source;
 
@@ -28,9 +29,12 @@ public class GetAllEventsActivity extends BaseActivity {
     private static final String TAG = "AllEvents";
     private RecyclerView recyclerView;
     private EventAdapter eventAdapter;
-
+    private ListenerRegistration eventsListener; // To allow for real-time updates
     private FirebaseFirestore db;
+    private EventsRepo eventsRepo;
     private FirebaseAuth auth;
+    String filter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +47,8 @@ public class GetAllEventsActivity extends BaseActivity {
         com.google.firebase.Timestamp now = com.google.firebase.Timestamp.now();
         Log.i(TAG, "Today's date: " + now);
 
-        String filter = getIntent().getStringExtra("filter");
-
+        // Get filter
+        filter = getIntent().getStringExtra("filter");
         // Set title for NavBar
         setTopTitle(filter.equalsIgnoreCase("active") ? "Active Events" : "Past Events");
 
@@ -52,33 +56,13 @@ public class GetAllEventsActivity extends BaseActivity {
         db = FirebaseFirestore.getInstance();
 
         // Get Event Repo
-        EventsRepo eventsRepo = new EventsRepo(db);
+        eventsRepo = new EventsRepo(db);
 
         // RecyclerView + Adapter
         recyclerView = findViewById(R.id.recyclerViewEvents);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         eventAdapter = new EventAdapter(filter.equals("active"));
         recyclerView.setAdapter(eventAdapter);
-
-        // Read event collection from database
-        if (filter.equalsIgnoreCase("active")) {
-            eventsRepo.loadAllEventDetails(true, 10)
-                .addOnSuccessListener( events -> {
-                    eventAdapter.setItems(events);
-                })
-                .addOnFailureListener( e-> {
-                    Log.e(TAG, "Error loading active events: ", e);
-                });
-        } else {
-            eventsRepo.loadAllEventDetails(false, 10)
-                    .addOnSuccessListener( events -> {
-                        eventAdapter.setItems(events);
-                        Log.i(TAG, "Past events loaded successfully");
-                    })
-                    .addOnFailureListener( e-> {
-                        Log.e(TAG, "Error loading past events: ", e);
-                    });
-        }
 
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
@@ -109,6 +93,67 @@ public class GetAllEventsActivity extends BaseActivity {
             });
         } else {
             Log.e(TAG, "Back button NOT FOUND"); // debug
+        }
+    }
+
+    private void listenForEventChanges() {
+        if (eventsListener != null) return; // already attached
+
+        eventsListener = db.collection("events")
+                .addSnapshotListener((snap, e) -> {
+                    if (e != null) {
+                        Log.e(TAG, "Event listener failed: ", e);
+                        return;
+                    }
+
+                    if (snap == null) {
+                        Log.w(TAG, "Snap == null");
+                        return;
+                    }
+
+                    Log.d(TAG, "Refreshing events with " + snap.getDocumentChanges().size() + " changes.");
+
+                    // Update events
+                    loadEvents();
+                });
+    }
+
+
+    private void loadEvents() {
+        // Read event collection from database
+        if (filter.equalsIgnoreCase("active")) {
+            eventsRepo.loadAllEventDetails(true, 10)
+                    .addOnSuccessListener( events -> {
+                        eventAdapter.setItems(events);
+                    })
+                    .addOnFailureListener( e-> {
+                        Log.e(TAG, "Error loading active events: ", e);
+                    });
+        } else {
+            eventsRepo.loadAllEventDetails(false, 10)
+                    .addOnSuccessListener( events -> {
+                        eventAdapter.setItems(events);
+                        Log.i(TAG, "Past events loaded successfully");
+                    })
+                    .addOnFailureListener( e-> {
+                        Log.e(TAG, "Error loading past events: ", e);
+                    });
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        listenForEventChanges();  // start listening to keep a live feed
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (eventsListener != null) { // kill the listener
+            eventsListener.remove();
+            eventsListener = null;
+            Log.d(TAG, "Killed events listener");
         }
     }
 

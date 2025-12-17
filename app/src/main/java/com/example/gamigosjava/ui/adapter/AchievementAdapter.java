@@ -11,6 +11,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gamigosjava.R;
@@ -91,12 +92,16 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
             Log.d(TAG, "Achievement Icon Loading");
             Picasso.get()
                     .load(achievement.iconUrl)
-                    .placeholder(R.drawable.ic_launcher_background) // optional placeholder
-                    .error(R.drawable.ic_launcher_foreground)       // fallback if broken
+                    .placeholder(R.drawable.achievement_24) // optional placeholder
+                    .error(R.drawable.achievement_24)       // fallback if broken
                     .into(holder.image);
         } else {
             Log.d(TAG, "Achievement Icon Not Found");
-            holder.image.setImageResource(R.drawable.ic_launcher_background);
+            holder.image.setColorFilter(
+                    holder.itemView.getContext()
+                            .getColor(R.color.orange)
+            );
+            holder.image.setImageResource(R.drawable.achievement_24);
         }
     }
 
