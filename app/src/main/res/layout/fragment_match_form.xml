@@ -33,7 +33,6 @@
             android:layout_height="40dp"
             android:queryHint="Search Board Game Geek..."
             android:iconifiedByDefault="false"
-            android:background="@color/cardview_light_background"
             android:layout_margin="3dp"/>
 
         <Spinner
