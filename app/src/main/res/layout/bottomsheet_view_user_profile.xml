@@ -92,7 +92,6 @@
                 app:layout_constraintTop_toBottomOf="@id/tvEmail"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btnSecondaryAction"
-                android:layout_marginEnd="8dp"
                 android:fontFamily="@font/jetbrains_mono"
                 android:letterSpacing="0.1"
                 android:autoSizeMaxTextSize="24sp"
@@ -100,6 +99,7 @@
                 android:autoSizeTextType="uniform"
                 android:autoSizeStepGranularity="1sp"
                 android:maxLines="1"
+                android:visibility="gone"
                 android:backgroundTint="#1b3b00"
                 android:textColor="@color/lightgrey"/>
 
@@ -113,7 +113,7 @@
                 app:layout_constraintBottom_toBottomOf="@id/btnPrimaryAction"
                 app:layout_constraintStart_toEndOf="@id/btnPrimaryAction"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="16dp"
                 android:fontFamily="@font/jetbrains_mono"
                 android:letterSpacing="0.1"
                 android:autoSizeMaxTextSize="24sp"
@@ -123,6 +123,25 @@
                 android:maxLines="1"
                 android:backgroundTint="#4f0000"
                 android:textColor="@color/lightgrey"/>
+
+            <Button
+                android:id="@+id/btnPendingDisabled"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/pending"
+                app:layout_constraintTop_toBottomOf="@id/tvEmail"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="@font/jetbrains_mono"
+                android:letterSpacing="0.1"
+                android:autoSizeMaxTextSize="24sp"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
+                android:enabled="false"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
