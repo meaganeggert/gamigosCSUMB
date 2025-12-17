@@ -265,7 +265,7 @@ public class MatchResultFragment extends Fragment {
                     return;
                 }
 
-                Toast.makeText(context, "Adding player: " + newPlayer.friend.displayName, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "Adding player: " + newPlayer.friend.displayName, Toast.LENGTH_SHORT).show();
                 scoresAdapter.playerList.add(newPlayer);
                 scoresAdapter.notifyDataSetChanged();
             });

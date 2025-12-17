@@ -38,6 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/my_profile"
+                android:fontFamily="@font/jetbrains_mono"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginTop="16dp"
@@ -49,6 +50,7 @@
                 android:id="@+id/tvEmail"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/jetbrains_mono"
                 android:layout_marginTop="8dp"
                 android:textAlignment="center"
                 android:textColor="#444444"
@@ -118,6 +120,7 @@
                         android:id="@+id/tvDisplayNameLabel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/jetbrains_mono"
                         android:text="@string/display_name"
                         android:textStyle="bold"/>
 
@@ -141,6 +144,7 @@
                         android:id="@+id/tvPrivacyOptions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/jetbrains_mono"
                         android:text="@string/privacy_options"
                         android:textStyle="bold" />
 
