@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/myProfileSheetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardUseCompatPadding="false"
+        android:elevation="0dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="@color/neutraltan"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance_App_BottomSheet">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- drag handle -->
+            <View
+                android:id="@+id/dragHandle"
+                android:layout_width="72dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="6dp"
+                android:background="@color/grey"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvProfileTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/my_profile"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/dragHandle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAlignment="center"
+                android:textColor="#444444"
+                app:layout_constraintTop_toBottomOf="@id/tvProfileTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="email@example.com"
+                android:textSize="18sp"/>
+
+            <LinearLayout
+                android:id="@+id/sectionEditFields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_section_outline"
+                app:layout_constraintTop_toBottomOf="@id/tvEmail">
+
+
+                <FrameLayout
+                    android:id="@+id/profilePhotoContainer"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:id="@+id/ivProfilePhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:contentDescription="@string/profile_photo"
+                        android:clickable="true"
+                        android:focusable="true"
+                        />
+
+                    <!-- edit icon overlay -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEditPhoto"
+                        style="@style/Widget.Material3.Button.IconButton"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="bottom|end"
+                        app:icon="@drawable/outline_edit_24"
+                        app:iconTint="@color/lightgrey"
+                        app:backgroundTint="#8f4f00"
+                        app:iconGravity="textStart"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/lightgrey"
+                        android:insetLeft="0dp"
+                        android:insetRight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:contentDescription="@string/edit_profile_photo" />
+                </FrameLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_section_outline"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/tvDisplayNameLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/display_name"
+                        android:textStyle="bold"/>
+
+                    <EditText
+                        android:id="@+id/etDisplayName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName"
+                        android:hint="@string/display_name"
+                        android:autofillHints="name"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_section_outline" >
+
+                    <TextView
+                        android:id="@+id/tvPrivacyOptions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/privacy_options"
+                        android:textStyle="bold" />
+
+                    <RadioGroup
+                        android:id="@+id/rgPrivacy"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rbPublic"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/public_option" />
+
+                        <RadioButton
+                            android:id="@+id/rbFriends"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/friends_only" />
+
+                        <RadioButton
+                            android:id="@+id/rbPrivate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/private_option" />
+                    </RadioGroup>
+
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnSaveProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/save"
+                    android:fontFamily="@font/jetbrains_mono"
+                    android:letterSpacing="0.1"
+                    android:autoSizeMaxTextSize="24sp"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeStepGranularity="1sp"
+                    android:maxLines="1"
+                    android:backgroundTint="#1b3b00"
+                    android:textColor="@color/lightgrey"/>
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonQuickGame"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/quick_game"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/sectionEditFields"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:fontFamily="@font/jetbrains_mono"
+                android:letterSpacing="0.1"
+                android:autoSizeMaxTextSize="24sp"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
+                android:backgroundTint="#8f4f00"
+                android:textColor="@color/lightgrey"/>
+
+            <Button
+                android:id="@+id/button_logout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/log_out"
+                android:layout_marginTop="10dp"
+                app:layout_constraintTop_toBottomOf="@id/buttonQuickGame"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginBottom="6dp"
+                android:fontFamily="@font/jetbrains_mono"
+                android:letterSpacing="0.1"
+                android:autoSizeMaxTextSize="24sp"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeStepGranularity="1sp"
+                android:maxLines="1"
+                android:backgroundTint="#4f0000"
+                android:textColor="@color/lightgrey"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.core.widget.NestedScrollView>

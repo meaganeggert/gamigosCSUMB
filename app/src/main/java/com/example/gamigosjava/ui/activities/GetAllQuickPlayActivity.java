@@ -46,7 +46,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setChildLayout(R.layout.activity_get_all_quick_play);
-        setTopTitle("Quick Play");
+        setTopTitle("Games");
 
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -104,46 +104,42 @@ public class GetAllQuickPlayActivity extends BaseActivity {
     }
 
     private void getAllMatches() {
-        if (currentUser == null) {
-            Log.d(TAG, "User not logged in.");
-            return;
-        }
+        if (currentUser == null) return;
 
-        db.collection("matches")
-                .whereEqualTo("eventId", "")
-                .orderBy("updatedAt", Query.Direction.DESCENDING)
-                .addSnapshotListener((snaps, e) -> {
-                    if (e != null || snaps.isEmpty()) {
-                        Log.d(TAG, "Match info is empty.");
-                        Log.e(TAG, e.getMessage());
-                        return;
-                    }
+        Query query = db.collection("matches")
+                        .orderBy("updatedAt", Query.Direction.DESCENDING);
+
+        query.addSnapshotListener((snaps, e) -> {
+            if (e != null || snaps.isEmpty()) {
+                Log.d(TAG, "Match info is empty.");
+                return;
+            }
 
 
-                    for (DocumentSnapshot matchSnap: snaps) {
-                        Match matchResult = new Match();
-                        matchResult.id = matchSnap.getId();
-                        matchResult.eventId = matchSnap.getString("eventId");
-                        matchResult.notes = matchSnap.getString("notes");
-                        matchResult.rulesVariant = matchSnap.getString("rules_variant");
-                        matchResult.startedAt = matchSnap.getTimestamp("startedAt");
-                        matchResult.endedAt = matchSnap.getTimestamp("endedAt");
-                        matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
-                        if (matchResult.gameRef != null) {
-                            matchResult.gameId = matchResult.gameRef.getId();
-                        }
+            for (DocumentSnapshot matchSnap: snaps) {
+                Match matchResult = new Match();
+                matchResult.id = matchSnap.getId();
+                matchResult.eventId = matchSnap.getString("eventId");
+                matchResult.notes = matchSnap.getString("notes");
+                matchResult.rulesVariant = matchSnap.getString("rules_variant");
+                matchResult.startedAt = matchSnap.getTimestamp("startedAt");
+                matchResult.endedAt = matchSnap.getTimestamp("endedAt");
+                matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+                if (matchResult.gameRef != null) {
+                    matchResult.gameId = matchResult.gameRef.getId();
+                }
 
-                        CollectionReference playersCollection = db
-                                .collection("matches")
-                                .document(matchResult.id)
-                                .collection("players");
+                CollectionReference playersCollection = db
+                        .collection("matches")
+                        .document(matchResult.id)
+                        .collection("players");
 
-                        matchResult.playersRef = playersCollection;
+                matchResult.playersRef = playersCollection;
 
-                        getGameDetails(matchResult);
-                        Log.d(TAG, "Found match: " + matchResult.id);
-                    }
-                });
+                getGameDetails(matchResult);
+                Log.d(TAG, "Found match: " + matchResult.id);
+            }
+        });
     }
 
     private void getGameDetails(Match match) {

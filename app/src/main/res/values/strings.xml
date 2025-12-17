@@ -57,4 +57,15 @@
     <string name="cancel">Cancel</string>
     <string name="conversation_info">Conversation Info</string>
     <string name="conversation_photo">Conversation Photo</string>
+    <string name="favorites">Favorites</string>
+    <string name="friends">Friends</string>
+    <string name="my_profile">My Profile</string>
+    <string name="privacy_options">Privacy Options</string>
+    <string name="public_option">Public</string>
+    <string name="friends_only">Friends only</string>
+    <string name="private_option">Private</string>
+    <string name="save">Save</string>
+    <string name="quick_game">Quick Game</string>
+    <string name="log_out">Log Out</string>
+    <string name="edit_profile_photo">Edit profile photo</string>
 </resources>

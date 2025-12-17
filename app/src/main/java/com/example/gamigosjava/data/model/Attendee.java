@@ -12,6 +12,10 @@ public class Attendee {
 
     public Attendee() {}
 
+    public Attendee(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
     // Generated getters/setters
     public String getUserId() {
         return userId;

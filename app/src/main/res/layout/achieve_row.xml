@@ -9,14 +9,15 @@
     android:minHeight="100dp"
     android:background="@drawable/bubble_feed">
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/achievementIcon"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:scaleType="centerCrop"
         android:background="@color/grey"
         android:layout_marginStart="2dp"
-        android:layout_gravity="center_vertical"/>
+        android:layout_gravity="center_vertical"
+        app:shapeAppearanceOverlay="@style/CircularImage"/>
 
     <LinearLayout
         android:orientation="vertical"

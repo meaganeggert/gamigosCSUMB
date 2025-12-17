@@ -3,6 +3,7 @@ package com.example.gamigosjava.ui.viewholder;
 import androidx.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -14,11 +15,13 @@ public class FriendViewHolder extends RecyclerView.ViewHolder {
     public TextView tvName;
     public ImageView ivPhoto;
     public Button btnMessage;
+    public ImageButton btnFavorite;
 
     public FriendViewHolder(@NonNull View itemView) {
         super(itemView);
         tvName = itemView.findViewById(R.id.tvName);
         ivPhoto = itemView.findViewById(R.id.ivPhoto);
         btnMessage = itemView.findViewById(R.id.btnMessageFriend);
+        btnFavorite = itemView.findViewById(R.id.btnFavoriteFriend);
     }
 }

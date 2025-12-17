@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.gamigosjava.R;
 import com.example.gamigosjava.data.model.AchievementSummary;
 
+import com.google.android.material.imageview.ShapeableImageView;
 import com.squareup.picasso.Picasso;
 
 import java.time.LocalDate;
@@ -28,7 +29,7 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
     private final List<AchievementSummary> achievements = new ArrayList<>();
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView image;
+        ShapeableImageView image;
         TextView title, description, progressBarText;
         ProgressBar progressBar;
 
@@ -87,12 +88,14 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         }
 
         if (achievement.iconUrl != null && !achievement.iconUrl.isEmpty()) {
+            Log.d(TAG, "Achievement Icon Loading");
             Picasso.get()
                     .load(achievement.iconUrl)
                     .placeholder(R.drawable.ic_launcher_background) // optional placeholder
                     .error(R.drawable.ic_launcher_foreground)       // fallback if broken
                     .into(holder.image);
         } else {
+            Log.d(TAG, "Achievement Icon Not Found");
             holder.image.setImageResource(R.drawable.ic_launcher_background);
         }
     }

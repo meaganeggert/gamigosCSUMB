@@ -5,6 +5,7 @@ import com.google.firebase.Timestamp;
 public class ActivityItem {
     private String id;
     private String actorImage;
+    private String targetImage;
     private String type; // ACHIEVEMENT_EARNED, EVENT_CREATED, GAME_WON, EVENT_ATTENDED,
     private String actorId; // user id
     private String actorName; // user who earned the achievement, created the event, etc.
@@ -12,6 +13,16 @@ public class ActivityItem {
     private String targetName; // achievement name, event name, game name
     private String message; // pre-built message
     private String visibility; // who can see this
+
+    public Long getWinStreak() {
+        return winStreak;
+    }
+
+    public void setWinStreak(Long winStreak) {
+        this.winStreak = winStreak;
+    }
+
+    private Long winStreak;
     private Timestamp createdAt; // when achievement was earned, event was created, game was won
 
     public ActivityItem() {}
@@ -31,6 +42,14 @@ public class ActivityItem {
 
     public void setActorImage(String avatarURL) {
         this.actorImage = avatarURL;
+    }
+
+    public String getTargetImage() {
+        return targetImage;
+    }
+
+    public void setTargetImage(String targetUrl) {
+        this.targetImage = targetUrl;
     }
 
 

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".ui.activities.MatchResultFragment"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/textView_teamName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Team"
+                android:layout_weight="9"
+                android:textStyle="bold"
+                android:textSize="18dp"/>
+
+            <EditText
+                android:id="@+id/editText_teamPlacement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="1st"
+                android:layout_weight="1"
+                android:textAlignment="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Player"
+                android:textSize="12dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Invitee/Custom"
+                android:textSize="12dp"
+                android:layout_gravity="center_vertical"/>
+            <Switch
+                android:id="@+id/switch_customPlayerToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/dropdown_invitees"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:background="@android:drawable/btn_dropdown"
+                android:spinnerMode="dropdown"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="4"/>
+            <EditText
+                android:id="@+id/editText_customPlayer"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:hint="Name..."
+                android:layout_gravity="center_vertical"
+                android:visibility="gone"
+                android:layout_weight="4"/>
+
+            <Button
+                android:id="@+id/button_addPlayer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="+"
+                android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="Player"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:id="@+id/textView_playerPlacementLabel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="#"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:id="@+id/textView_playerScoreLabel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Score"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Remove"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewPlayerScores"
+            android:background="#EEEEEE"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="6dp"
+            tools:listitem="@layout/row_player"
+            android:layout_gravity="center_horizontal"/>
+    </LinearLayout>
+
+</FrameLayout>
