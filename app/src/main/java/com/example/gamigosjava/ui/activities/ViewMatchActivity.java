@@ -758,7 +758,7 @@ public class ViewMatchActivity extends BaseActivity {
                         // If the user declined the invite, then bother getting
                         // user info or adding as a possible player.
                         String status = d.getString("status");
-                        if (!status.equals("accepted")) continue;
+//                        if (!status.equals("accepted")) continue;
 
                         // Get user info
                         DocumentReference inviteeRef = d.getDocumentReference("userRef");
