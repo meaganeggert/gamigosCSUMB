@@ -35,7 +35,7 @@
 
     <!--    Horizontal Rule -->
     <View
-        android:id="@+id/activeHR"
+        android:id="@+id/activeHRTop"
         android:layout_width="0dp"
         android:layout_height="3dp"
         android:background="@color/neutralbrown"
