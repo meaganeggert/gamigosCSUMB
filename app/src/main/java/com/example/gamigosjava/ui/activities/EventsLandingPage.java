@@ -35,7 +35,7 @@ public class EventsLandingPage extends BaseActivity {
     private FirebaseFirestore db;
 
     // Get EventsRepo
-    private EventsRepo eventsRepo = new EventsRepo(db);
+    private EventsRepo eventsRepo;
     private FirebaseAuth auth;
 
     @Override
@@ -76,6 +76,7 @@ public class EventsLandingPage extends BaseActivity {
         // Get Firestore instance
         db = FirebaseFirestore.getInstance();
 
+        // Get Event Repo
         eventsRepo = new EventsRepo(db);
 
         // RecyclerView + Adapter
