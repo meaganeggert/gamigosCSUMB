@@ -38,7 +38,7 @@ public class ScoresAdapter extends RecyclerView.Adapter<ScoresAdapter.ViewHolder
     private Context context;
     public String winRule = "highest";
     public Integer teamNumber;
-    private boolean isEditable = false;
+    private boolean isEditable = true;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView playerName;
