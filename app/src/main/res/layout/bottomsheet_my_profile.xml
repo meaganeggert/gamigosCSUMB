@@ -146,7 +146,6 @@
                         android:id="@+id/tvPrivacyOptions"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/jetbrains_mono"
                         android:text="@string/privacy_options"
                         android:textStyle="bold" />
 
