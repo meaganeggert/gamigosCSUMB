@@ -425,6 +425,10 @@ public class ViewMatchActivity extends BaseActivity {
                     friend.displayName = displayName;
                     friend.friendUId = playerId;
 
+                    if (friend.id != null && friend.id.equals(currentUser.getUid())) {
+                        isInvited = true;
+                    }
+
                     Player knownPlayer = new Player(friend, score, placement, team);
                     playerList.add(knownPlayer);
 
@@ -698,14 +702,14 @@ public class ViewMatchActivity extends BaseActivity {
                         Friend f = new Friend(id, friendUid, displayName);
 
                         if (f.id != null & f.id.equals(currentUser.getUid())) {
-                            isInvited = true;
+//                            isInvited = true;
                             setUIElements();
                         }
 
                         boolean inFriendList = false;
                         for (int i = 0; i < inviteeList.size(); i++) {
                             if (inviteeList.get(i).id.equals(f.id)) {
-                                inFriendList = true;
+//                                inFriendList = true;
                                 break;
                             }
                         }
@@ -758,7 +762,7 @@ public class ViewMatchActivity extends BaseActivity {
                         // If the user declined the invite, then bother getting
                         // user info or adding as a possible player.
                         String status = d.getString("status");
-//                        if (!status.equals("accepted")) continue;
+                        if (status.equals("declined")) continue;
 
                         // Get user info
                         DocumentReference inviteeRef = d.getDocumentReference("userRef");

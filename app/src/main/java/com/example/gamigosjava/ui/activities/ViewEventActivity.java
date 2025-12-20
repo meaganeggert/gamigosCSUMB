@@ -923,7 +923,7 @@ public class ViewEventActivity extends BaseActivity {
 
 
     private void setUIElements() {
-
+        Log.d(TAG, "SETTING UI ELEMENTS.");
 
         // Event Form Fragment UI Elements
         EditText title = eventContainer.findViewById(R.id.editText_eventTitle);

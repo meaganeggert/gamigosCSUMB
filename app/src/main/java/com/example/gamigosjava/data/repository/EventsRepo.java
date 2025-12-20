@@ -16,6 +16,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class EventsRepo {
@@ -101,7 +102,7 @@ public class EventsRepo {
         } else {
             Log.i(TAG, "Loading event details for past events");
             Query query = db.collection("events")
-                    .whereEqualTo("status", "past")
+                    .whereIn("status", Arrays.asList("past", "planned"))
                     .orderBy("scheduledAt", Query.Direction.DESCENDING)
                     .limit(viewLimit);
 

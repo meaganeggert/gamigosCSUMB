@@ -125,6 +125,7 @@ public class GetAllQuickPlayActivity extends BaseActivity {
                 matchResult.startedAt = matchSnap.getTimestamp("startedAt");
                 matchResult.endedAt = matchSnap.getTimestamp("endedAt");
                 matchResult.gameRef = matchSnap.getDocumentReference("gameRef");
+                matchResult.hostId = matchSnap.getString("hostId");
                 if (matchResult.gameRef != null) {
                     matchResult.gameId = matchResult.gameRef.getId();
                 }
