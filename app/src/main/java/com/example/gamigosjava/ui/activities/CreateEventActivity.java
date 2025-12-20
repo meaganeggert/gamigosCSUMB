@@ -188,7 +188,7 @@ public class CreateEventActivity extends BaseActivity {
         eventItem.hostId = currentUser.getUid();
         eventItem.title = titleText.getText().toString();
         eventItem.visibility = visibilityDropdown.getSelectedItem().toString().toLowerCase();
-        eventItem.status = "planned";
+        eventItem.status = "active";
         eventItem.notes = notesText.getText().toString();
         eventItem.createdAt = Timestamp.now();
         eventItem.endedAt = null;

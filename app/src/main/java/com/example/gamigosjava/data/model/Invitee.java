@@ -14,5 +14,8 @@ public class Invitee {
 
     public Friend userInfo;
 
+    public Invitee() {
+        userInfo = new Friend();
+    }
 
 }

@@ -36,7 +36,7 @@ public class MatchAdapter extends RecyclerView.Adapter<MatchAdapter.ViewHolder>{
 
     private final List<MatchSummary> matches = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-    public boolean isHost = true;
+    public boolean isHost = false;
     public boolean isRecent = true;
 
 //    public MatchAdapter(boolean isRecent) {
